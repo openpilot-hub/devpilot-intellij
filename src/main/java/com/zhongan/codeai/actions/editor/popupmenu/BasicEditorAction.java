@@ -14,21 +14,12 @@ import org.jetbrains.annotations.Nullable;
 
 public abstract class BasicEditorAction extends AnAction {
 
-    BasicEditorAction() {
-    }
-
     BasicEditorAction(
         @Nullable @NlsActions.ActionText String text,
         @Nullable @NlsActions.ActionDescription String description,
         @Nullable Icon icon) {
         super(text, description, icon);
         PopupMenuEditorActionGroupUtil.registerOrReplaceAction(this);
-    }
-
-    BasicEditorAction(
-        @Nullable @NlsActions.ActionText String text,
-        @Nullable @NlsActions.ActionDescription String description) {
-        this(text, description, null);
     }
 
     protected abstract void actionPerformed(Project project, Editor editor, String selectedText);
