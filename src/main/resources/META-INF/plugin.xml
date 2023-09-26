@@ -24,14 +24,29 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
+        <postStartupActivity implementation="com.zhongan.codeai.CodeAIStartupActivity"/>
+
         <applicationConfigurable id="settings.codeai" parentId="tools" displayName="CodeAI"
                                  instance="com.zhongan.codeai.settings.CodeAISettingsConfigurable"/>
+
         <applicationService serviceImplementation="com.zhongan.codeai.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.codeai.settings.state.CodeAILlmSettingsState"/>
+        <applicationService
+                serviceImplementation="com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState"/>
 
         <notificationGroup id="CodeAI Notification Group" displayType="BALLOON" key="notification.group.codeai"/>
     </extensions>
 
     <resource-bundle>messages.codeai</resource-bundle>
 
+    <actions>
+        <group id="org.intellij.sdk.action.GroupedActions" popup="true" text="CodeAI" description="CodeAI">
+            <action id="com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction"
+                    class="com.intellij.openapi.actionSystem.DefaultActionGroup"
+                    popup="true"
+                    text="CodeAI" description="Basic Actions of CodeAI">
+            </action>
+            <add-to-group group-id="EditorPopupMenu" anchor="first"/>
+        </group>
+    </actions>
 </idea-plugin>
