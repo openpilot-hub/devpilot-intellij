@@ -1,0 +1,36 @@
+<!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
+<idea-plugin>
+    <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
+    <id>com.zhongan.codeAI</id>
+
+    <!-- Public plugin name should be written in Title Case.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
+    <name>CodeAI</name>
+
+    <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
+    <vendor email="zhaopengjun@zhongan.com" url="https://www.zhongan.com">ZA</vendor>
+
+    <!-- Description of the plugin displayed on the Plugin Page and IDE Plugin Manager.
+         Simple HTML elements (text formatting, paragraphs, and lists) can be added inside of <![CDATA[ ]]> tag.
+         Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-description -->
+    <description><![CDATA[
+    When you need to talk, I'm here; when you need advice, I will be here; Build your dream right now!<br>
+  ]]></description>
+
+    <!-- Product and plugin compatibility requirements.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
+    <depends>com.intellij.modules.platform</depends>
+
+    <!-- Extension points defined by the plugin.
+         Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationConfigurable id="settings.codeai" parentId="tools" displayName="CodeAI"
+                                 instance="com.zhongan.codeai.settings.CodeAISettingsConfigurable"/>
+        <applicationService serviceImplementation="com.zhongan.codeai.settings.state.OpenAISettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.codeai.settings.state.CodeAILlmSettingsState"/>
+
+    </extensions>
+
+    <resource-bundle>messages.codeai</resource-bundle>
+
+</idea-plugin>
