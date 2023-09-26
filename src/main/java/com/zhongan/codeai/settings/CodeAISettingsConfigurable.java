@@ -32,13 +32,17 @@ public class CodeAISettingsConfigurable implements Configurable, Disposable {
 
     @Override
     public boolean isModified() {
+        var settings = CodeAILlmSettingsState.getInstance();
         var openAISettings = OpenAISettingsState.getInstance();
         var serviceForm = settingsComponent.getCodeAIConfigForm();
-        return !serviceForm.getOpenAIBaseHost().equals(openAISettings.getOpenAIBaseHost());
+        return !settingsComponent.getFullName().equals(settings.getFullName()) || !serviceForm.getOpenAIBaseHost().equals(openAISettings.getOpenAIBaseHost());
     }
 
     @Override
     public void apply() throws ConfigurationException {
+        var settings = CodeAILlmSettingsState.getInstance();
+        settings.setFullName(settingsComponent.getFullName());
+
         var openAISettings = OpenAISettingsState.getInstance();
         var serviceForm = settingsComponent.getCodeAIConfigForm();
         openAISettings.setOpenAIBaseHost(serviceForm.getOpenAIBaseHost());

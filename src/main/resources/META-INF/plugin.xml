@@ -29,6 +29,7 @@
         <applicationService serviceImplementation="com.zhongan.codeai.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.codeai.settings.state.CodeAILlmSettingsState"/>
 
+        <notificationGroup id="CodeAI Notification Group" displayType="BALLOON" key="notification.group.codeai"/>
     </extensions>
 
     <resource-bundle>messages.codeai</resource-bundle>

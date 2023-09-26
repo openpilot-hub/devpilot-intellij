@@ -9,6 +9,8 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 @State(name = "CodeAI_Settings", storages = @Storage("CodeAI_Settings.xml"))
 public class CodeAILlmSettingsState implements PersistentStateComponent<CodeAILlmSettingsState> {
 
+    private String fullName = "CodeAI";
+
     private boolean useOpenAIService = true;
 
     public static CodeAILlmSettingsState getInstance() {
@@ -27,5 +29,17 @@ public class CodeAILlmSettingsState implements PersistentStateComponent<CodeAILl
 
     public boolean isUseOpenAIService() {
         return useOpenAIService;
+    }
+
+    // getting fullName
+    public String getFullName() {
+        if (fullName == null || fullName.isEmpty()) {
+            return System.getProperty("user.name", "User");
+        }
+        return fullName;
+    }
+
+    public void setFullName(String displayName) {
+        this.fullName = displayName;
     }
 }
