@@ -1,6 +1,7 @@
 plugins {
     id("java")
     id("org.jetbrains.intellij") version "1.12.0"
+    id("checkstyle")
 }
 
 group = "com.zhongan"
@@ -17,6 +18,10 @@ intellij {
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf(/* Plugin Dependencies */))
+}
+
+dependencies {
+    compileOnly("com.puppycrawl.tools:checkstyle:8.44")
 }
 
 tasks {
@@ -39,5 +44,10 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+
+    checkstyle {
+        configFile = rootProject.file("checkstyle.xml")
+        maxWarnings = 0
     }
 }
