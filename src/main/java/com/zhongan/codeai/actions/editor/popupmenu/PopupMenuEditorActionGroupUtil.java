@@ -7,6 +7,7 @@ import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.project.Project;
+import com.zhongan.codeai.actions.notifications.CodeAINotification;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
 
 import java.util.LinkedHashMap;
@@ -35,7 +36,7 @@ public class PopupMenuEditorActionGroupUtil {
                 var action = new BasicEditorAction(label, label, ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
-                        System.out.println(label + ": " + prompt + ": " + selectedText);
+                        CodeAINotification.info(label + ": " + prompt + ": " + selectedText);
                     }
                 };
                 group.add(action);
