@@ -21,6 +21,8 @@ intellij {
 }
 
 dependencies {
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.2")
+    implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
     compileOnly("com.puppycrawl.tools:checkstyle:8.44")
 }
 

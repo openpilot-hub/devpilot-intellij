@@ -19,7 +19,9 @@ public class EditorActionConfigurationState implements PersistentStateComponent<
         "Generate Tests", "Generate tests for the selected code {{selectedCode}}",
         "Generate Docs", "Generate docs for the selected code {{selectedCode}}",
         "Fix This", "Find bugs in the selected code {{selectedCode}}",
-        "Explain This", "Explain the selected code {{selectedCode}}"));
+        "Explain This", "Explain the selected code {{selectedCode}}",
+        "Translate This", "translate to chinese: {{selectedCode}}"
+        ));
 
     public static EditorActionConfigurationState getInstance() {
         return ApplicationManager.getApplication().getService(EditorActionConfigurationState.class);

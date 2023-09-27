@@ -8,6 +8,9 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.project.Project;
 import com.zhongan.codeai.actions.notifications.CodeAINotification;
+import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
+import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
+import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
 
 import java.util.LinkedHashMap;
@@ -21,9 +24,10 @@ public class PopupMenuEditorActionGroupUtil {
         "Generate Tests", AllIcons.Modules.GeneratedTestRoot,
         "Generate Docs", AllIcons.Gutter.JavadocEdit,
         "Fix This", AllIcons.Actions.QuickfixBulb,
+        "Translate This", AllIcons.Actions.QuickfixBulb,
         "Explain This", AllIcons.Actions.Preview));
 
-    public static void refreshActions() {
+    public static void refreshActions(Project project) {
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction");
         if (actionGroup instanceof DefaultActionGroup) {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
@@ -36,7 +40,15 @@ public class PopupMenuEditorActionGroupUtil {
                 var action = new BasicEditorAction(label, label, ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
-                        CodeAINotification.info(label + ": " + prompt + ": " + selectedText);
+
+                        CodeAIMessage codeAIMessage = new CodeAIMessage();
+                        codeAIMessage.setRole("user");
+                        codeAIMessage.setContent(prompt.replace("{{selectedCode}}", selectedText));
+
+                        CodeAIChatCompletionRequest request = new CodeAIChatCompletionRequest();
+                        request.setMessages(java.util.List.of(codeAIMessage));
+                        String result = new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
+                        CodeAINotification.info(label + ": " + prompt + ": " + selectedText + ":result:" + result);
                     }
                 };
                 group.add(action);

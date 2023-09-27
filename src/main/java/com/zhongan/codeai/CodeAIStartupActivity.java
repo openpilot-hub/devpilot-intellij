@@ -9,6 +9,6 @@ import org.jetbrains.annotations.NotNull;
 public class CodeAIStartupActivity implements StartupActivity {
     @Override
     public void runActivity(@NotNull Project project) {
-        PopupMenuEditorActionGroupUtil.refreshActions();
+        PopupMenuEditorActionGroupUtil.refreshActions(project);
     }
 }
