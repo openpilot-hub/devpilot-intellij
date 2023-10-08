@@ -34,7 +34,7 @@
         <applicationService
                 serviceImplementation="com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState"/>
 
-        <toolWindow id="CodeAI" anchor="left" factoryClass="com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory"/>
+        <toolWindow id="CodeAI" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory"/>
 
         <notificationGroup id="CodeAI Notification Group" displayType="BALLOON" key="notification.group.codeai"/>
     </extensions>
