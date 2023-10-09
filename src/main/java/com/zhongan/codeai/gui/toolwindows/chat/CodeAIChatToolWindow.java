@@ -12,6 +12,7 @@ import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
+import org.apache.commons.lang3.StringUtils;
 
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
@@ -54,8 +55,15 @@ public class CodeAIChatToolWindow {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     // send message
-                    String result = sendMessage(project);
-                    showChatContent(result);
+                    String message = textArea.getText();
+
+                    if (StringUtils.isBlank(message)) {
+                        return;
+                    }
+
+                    showChatContent(message);
+                    syncSendAndDisplay(project, message);
+                    textArea.setText(null);
                 }
             }
         });
@@ -107,13 +115,22 @@ public class CodeAIChatToolWindow {
         chatContentPanel.repaint();
     }
 
-    private String sendMessage(Project project) {
+    private String sendMessage(Project project, String message) {
         CodeAIMessage codeAIMessage = new CodeAIMessage();
+        // FIXME
         codeAIMessage.setRole("user");
-        codeAIMessage.setContent(textArea.getText());
+        codeAIMessage.setContent(message);
 
         CodeAIChatCompletionRequest request = new CodeAIChatCompletionRequest();
         request.setMessages(List.of(codeAIMessage));
         return new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
+    }
+
+    private void syncSendAndDisplay(Project project, String message) {
+        // FIXME
+        new Thread(() -> {
+            String result = sendMessage(project, message);
+            showChatContent(result);
+        }).start();
     }
 }

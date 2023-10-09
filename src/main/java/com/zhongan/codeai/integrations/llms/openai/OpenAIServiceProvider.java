@@ -1,10 +1,12 @@
 package com.zhongan.codeai.integrations.llms.openai;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
-import com.zhongan.codeai.actions.notifications.CodeAINotification;
 import com.zhongan.codeai.integrations.llms.LlmProvider;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
+import com.zhongan.codeai.integrations.llms.entity.CodeAIFailedResponse;
+import com.zhongan.codeai.integrations.llms.entity.CodeAISuccessResponse;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
 
 import java.net.URI;
@@ -31,9 +33,34 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
             response = client.send(request, HttpResponse.BodyHandlers.ofString());
         } catch (Exception e) {
-            CodeAINotification.error("Chat completion failed: " + e.getMessage());
+            return "Chat completion failed: " + e.getMessage();
         }
-        return response.body();
+
+        try {
+            return parseResult(response);
+        } catch (JsonProcessingException e) {
+            return "Chat completion failed: " + e.getMessage();
+        }
     }
 
+    private String parseResult(HttpResponse<String> response) throws JsonProcessingException {
+        if (response == null) {
+            return "Nothing to see here.";
+        }
+
+        String result = response.body();
+
+        if (response.statusCode() >= 200 && response.statusCode() < 300) {
+            return objectMapper.readValue(result, CodeAISuccessResponse.class)
+                    .getChoices()
+                    .get(0)
+                    .getMessage()
+                    .getContent();
+
+        } else {
+            return objectMapper.readValue(result, CodeAIFailedResponse.class)
+                    .getError()
+                    .getMessage();
+        }
+    }
 }
