@@ -1,6 +1,7 @@
 package com.zhongan.codeai.integrations.llms.entity;
 
 public class CodeAIFailedResponse {
+
     private Error error;
 
     public Error getError() {
@@ -12,10 +13,15 @@ public class CodeAIFailedResponse {
     }
 
     public static class Error {
+
         private String message;
+
         private String type;
+
         private String param;
+
         private String code;
+
         private Integer status;
 
         public String getMessage() {

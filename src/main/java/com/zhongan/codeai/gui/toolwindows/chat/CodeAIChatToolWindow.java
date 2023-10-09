@@ -12,7 +12,6 @@ import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
-import org.apache.commons.lang3.StringUtils;
 
 import java.awt.BorderLayout;
 import java.awt.GridBagConstraints;
@@ -25,6 +24,8 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;

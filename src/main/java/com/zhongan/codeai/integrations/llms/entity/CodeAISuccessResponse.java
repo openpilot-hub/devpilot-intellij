@@ -1,13 +1,21 @@
 package com.zhongan.codeai.integrations.llms.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.List;
 
 public class CodeAISuccessResponse {
+
     private String id;
+
     private String object;
+
     private Long created;
+
     private String model;
+
     private List<Choice> choices;
+
     private Usage usage;
 
     public String getId() {
@@ -59,8 +67,12 @@ public class CodeAISuccessResponse {
     }
 
     public static class Choice {
+
         private Integer index;
-        private String finish_reason;
+
+        @JsonProperty("finish_reason")
+        private String finishReason;
+
         private Message message;
 
         public Integer getIndex() {
@@ -71,12 +83,12 @@ public class CodeAISuccessResponse {
             this.index = index;
         }
 
-        public String getFinish_reason() {
-            return finish_reason;
+        public String getFinishReason() {
+            return finishReason;
         }
 
-        public void setFinish_reason(String finish_reason) {
-            this.finish_reason = finish_reason;
+        public void setFinishReason(String finishReason) {
+            this.finishReason = finishReason;
         }
 
         public Message getMessage() {
@@ -89,37 +101,45 @@ public class CodeAISuccessResponse {
     }
 
     public static class Usage {
-        private String completion_tokens;
-        private String prompt_tokens;
-        private String total_tokens;
 
-        public String getCompletion_tokens() {
-            return completion_tokens;
+        @JsonProperty("completion_tokens")
+        private String completionTokens;
+
+        @JsonProperty("prompt_tokens")
+        private String promptTokens;
+
+        @JsonProperty("total_tokens")
+        private String totalTokens;
+
+        public String getCompletionTokens() {
+            return completionTokens;
         }
 
-        public void setCompletion_tokens(String completion_tokens) {
-            this.completion_tokens = completion_tokens;
+        public void setCompletionTokens(String completionTokens) {
+            this.completionTokens = completionTokens;
         }
 
-        public String getPrompt_tokens() {
-            return prompt_tokens;
+        public String getPromptTokens() {
+            return promptTokens;
         }
 
-        public void setPrompt_tokens(String prompt_tokens) {
-            this.prompt_tokens = prompt_tokens;
+        public void setPromptTokens(String promptTokens) {
+            this.promptTokens = promptTokens;
         }
 
-        public String getTotal_tokens() {
-            return total_tokens;
+        public String getTotalTokens() {
+            return totalTokens;
         }
 
-        public void setTotal_tokens(String total_tokens) {
-            this.total_tokens = total_tokens;
+        public void setTotalTokens(String totalTokens) {
+            this.totalTokens = totalTokens;
         }
     }
 
     public static class Message {
+
         private String role;
+
         private String content;
 
         public String getRole() {
