@@ -5,18 +5,20 @@ import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import com.zhongan.codeai.CodeAIIcons;
-import org.apache.commons.lang3.StringUtils;
 
-import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.JButton;
-import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.function.Consumer;
+
+import javax.swing.BorderFactory;
+import javax.swing.Icon;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class UserChatPanel extends JPanel {
     private final JBTextArea textArea;
@@ -55,7 +57,7 @@ public class UserChatPanel extends JPanel {
         var flowLayout = new FlowLayout(FlowLayout.RIGHT);
         flowLayout.setHgap(12);
         iconsPanel = new JPanel(flowLayout);
-        iconsPanel.add(createIconButton(CodeAIIcons.sendIcon));
+        iconsPanel.add(createIconButton(CodeAIIcons.SEND_ICON));
         this.add(JBUI.Panels.simplePanel().addToBottom(iconsPanel), BorderLayout.EAST);
     }
 
