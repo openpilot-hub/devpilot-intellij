@@ -21,6 +21,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(CodeAIChatCompletionRequest chatCompletionRequest) {
+        // FIXME use okhttp
         HttpResponse<String> response = null;
 
         try {
