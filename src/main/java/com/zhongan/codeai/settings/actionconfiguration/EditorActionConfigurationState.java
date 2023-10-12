@@ -16,6 +16,8 @@ import java.util.Map;
 public class EditorActionConfigurationState implements PersistentStateComponent<EditorActionConfigurationState> {
 
     private Map<String, String> defaultActions = new LinkedHashMap<>(Map.of(
+        "Performance Check", "Performance Check for the selected code {{selectedCode}}",
+        "Generate Comments", "Generate Comments for the selected code {{selectedCode}}",
         "Generate Tests", "Generate tests for the selected code {{selectedCode}}",
         "Generate Docs", "Generate docs for the selected code {{selectedCode}}",
         "Fix This", "Find bugs in the selected code {{selectedCode}}",

@@ -13,14 +13,15 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
 
+import javax.swing.*;
 import java.util.LinkedHashMap;
 import java.util.Map;
-
-import javax.swing.Icon;
 
 public class PopupMenuEditorActionGroupUtil {
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
+        "Performance Check", AllIcons.Plugins.Updated,
+        "Generate Comments", AllIcons.Actions.InlayRenameInCommentsActive,
         "Generate Tests", AllIcons.Modules.GeneratedTestRoot,
         "Generate Docs", AllIcons.Gutter.JavadocEdit,
         "Fix This", AllIcons.Actions.QuickfixBulb,
@@ -40,7 +41,9 @@ public class PopupMenuEditorActionGroupUtil {
                 var action = new BasicEditorAction(label, label, ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
-
+                        //todo 代码写入窗口
+                        if("Performance Check".equals(label)){
+                        }
                         CodeAIMessage codeAIMessage = new CodeAIMessage();
                         codeAIMessage.setRole("user");
                         codeAIMessage.setContent(prompt.replace("{{selectedCode}}", selectedText));
