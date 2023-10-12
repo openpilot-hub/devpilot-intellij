@@ -10,14 +10,9 @@ import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
-
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JTextPane;
-import javax.swing.ScrollPaneConstants;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
@@ -98,7 +93,7 @@ public class CodeAIChatToolWindow {
         return new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
     }
 
-    private void syncSendAndDisplay(String message) {
+    public void syncSendAndDisplay(String message) {
         // show prompt
         showChatContent(message);
 
