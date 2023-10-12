@@ -27,6 +27,8 @@ public class UserChatPanel extends JPanel {
 
     private final Consumer<String> bindEvent;
 
+    private final JButton button;
+
     public UserChatPanel(Consumer<String> event) {
         this.bindEvent = event;
 
@@ -55,10 +57,25 @@ public class UserChatPanel extends JPanel {
         this.add(textArea, BorderLayout.CENTER);
 
         var flowLayout = new FlowLayout(FlowLayout.RIGHT);
-        flowLayout.setHgap(12);
+        flowLayout.setHgap(10);
+        button = createIconButton(CodeAIIcons.SEND_ICON);
         iconsPanel = new JPanel(flowLayout);
-        iconsPanel.add(createIconButton(CodeAIIcons.SEND_ICON));
+        iconsPanel.add(button);
         this.add(JBUI.Panels.simplePanel().addToBottom(iconsPanel), BorderLayout.EAST);
+    }
+
+    public void setIconStop() {
+        button.setIcon(CodeAIIcons.STOP_ICON);
+        button.setContentAreaFilled(false);
+        button.setPreferredSize(new Dimension(
+                CodeAIIcons.STOP_ICON.getIconWidth(), CodeAIIcons.STOP_ICON.getIconHeight()));
+    }
+
+    public void setIconSend() {
+        button.setIcon(CodeAIIcons.SEND_ICON);
+        button.setContentAreaFilled(false);
+        button.setPreferredSize(new Dimension(
+                CodeAIIcons.SEND_ICON.getIconWidth(), CodeAIIcons.SEND_ICON.getIconHeight()));
     }
 
     private void handleEvent() {
@@ -72,7 +89,6 @@ public class UserChatPanel extends JPanel {
         textArea.setText(null);
     }
 
-    // FIXME
     private JButton createIconButton(Icon icon) {
         var button = new JButton(icon);
         button.setBorder(BorderFactory.createEmptyBorder());
