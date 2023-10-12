@@ -4,15 +4,12 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBScrollPane;
-import com.intellij.util.ui.AsyncProcessIcon;
-import com.intellij.util.ui.JBUI;
 import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.codeai.gui.toolwindows.components.UserChatPanel;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 
-import java.awt.FlowLayout;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.List;
@@ -31,21 +28,15 @@ public class CodeAIChatToolWindow {
 
     private final Project project;
 
-    private final AsyncProcessIcon loadingSpinner;
-
     public JPanel getCodeAIChatToolWindowPanel() {
         return codeAIChatToolWindowPanel;
     }
 
     public CodeAIChatToolWindow(Project project, ToolWindow toolWindow) {
         this.project = project;
-        this.loadingSpinner = new AsyncProcessIcon("network-waiting-spinner");
         this.codeAIChatToolWindowPanel = new JPanel(new GridBagLayout());
         this.chatContentPanel = new ScrollablePanel();
         this.userChatPanel = new UserChatPanel(this::syncSendAndDisplay);
-
-        loadingSpinner.setBorder(JBUI.Borders.emptyLeft(8));
-        loadingSpinner.setVisible(false);
 
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -68,7 +59,7 @@ public class CodeAIChatToolWindow {
         codeAIChatToolWindowPanel.add(userChatPanel, gbc);
     }
 
-    private void showChatContent(String content, int type) {
+    private JTextPane showChatContent(String content) {
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 0;
@@ -81,18 +72,17 @@ public class CodeAIChatToolWindow {
         text.setText(content);
         text.setEditable(false);
 
-        // response should show loading
-        if (type == 1) {
-            var panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
-            panel.setBorder(JBUI.Borders.empty());
-            loadingSpinner.resume();
-            loadingSpinner.setVisible(true);
-            panel.add(loadingSpinner);
-            chatContentPanel.add(panel);
-        }
-
         ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(text);
         chatContentPanel.add(chatDisplayPanel, gbc);
+        chatContentPanel.revalidate();
+        chatContentPanel.repaint();
+
+        return text;
+    }
+
+    private void updateChatContent(JTextPane text, String content) {
+        text.setText(content);
+
         chatContentPanel.revalidate();
         chatContentPanel.repaint();
     }
@@ -110,13 +100,15 @@ public class CodeAIChatToolWindow {
 
     private void syncSendAndDisplay(String message) {
         // show prompt
-        showChatContent(message, 0);
+        showChatContent(message);
+
+        // show thinking
+        var text = showChatContent("I am thinking...");
 
         // FIXME
         new Thread(() -> {
             String result = sendMessage(this.project, message);
-            showChatContent(result, 1);
-            loadingSpinner.setVisible(false);
+            updateChatContent(text, result);
         }).start();
     }
 }
