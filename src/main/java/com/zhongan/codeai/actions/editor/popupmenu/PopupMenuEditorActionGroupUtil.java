@@ -61,7 +61,7 @@ public class PopupMenuEditorActionGroupUtil {
                                 //virtual file process
                                 VirtualFile replaceFile = createVirtualReplaceFile(editor);
                                 //DiffContent process
-                                showDiffWindow(prompt, selectedText, project, editor, originalFile, replaceFile);
+                                showDiffWindow(selectedText, project, editor, originalFile, replaceFile);
                                 break;
                             case "Generate Comments":
                                 //todo 插入注释
@@ -99,14 +99,13 @@ public class PopupMenuEditorActionGroupUtil {
 
     /**
      *  display result, and open diff window
-     * @param prompt
      * @param selectedText
      * @param project
      * @param editor
      * @param originalFile
      * @param newFile
      */
-    private static void showDiffWindow(String prompt, String selectedText, Project project, Editor editor, VirtualFile originalFile, VirtualFile newFile) {
+    private static void showDiffWindow(String selectedText, Project project, Editor editor, VirtualFile originalFile, VirtualFile newFile) {
         final String code = getChatCompletionResult(selectedText, project, editor);
         var selectionModel = editor.getSelectionModel();
         Document replaceDocument = FileDocumentManager.getInstance().getDocument(newFile);
