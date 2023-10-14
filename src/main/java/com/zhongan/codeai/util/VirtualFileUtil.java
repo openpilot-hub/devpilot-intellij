@@ -12,7 +12,6 @@
  */
 package com.zhongan.codeai.util;
 
-import com.intellij.diff.DiffContentFactory;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -35,7 +34,6 @@ public class VirtualFileUtil {
      * @return
      */
     public static VirtualFile createParentEditorVirtualFile(Document document) {
-        DiffContentFactory diffContentFactory = DiffContentFactory.getInstance();
         //virtual file process
         VirtualFile originalFile = FileDocumentManager.getInstance().getFile(document);
         //do not create new file in git or svn project, because it will be added to git or svn
