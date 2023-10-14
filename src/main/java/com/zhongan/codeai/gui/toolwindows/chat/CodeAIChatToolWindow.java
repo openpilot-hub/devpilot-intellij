@@ -13,6 +13,8 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import javax.swing.*;
 import java.awt.*;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
@@ -93,17 +95,25 @@ public class CodeAIChatToolWindow {
         return new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
     }
 
-    public void syncSendAndDisplay(String message) {
+    public String syncSendAndDisplay(String message) {
         // show prompt
         showChatContent(message);
 
         // show thinking
         var text = showChatContent("I am thinking...");
 
-        // FIXME
-        new Thread(() -> {
-            String result = sendMessage(this.project, message);
-            updateChatContent(text, result);
-        }).start();
+        // todo use thread pool
+//        new Thread(() -> {
+//            String result = sendMessage(this.project, message);
+//            updateChatContent(text, result);
+//        }).start();
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
+        future.thenAccept(result -> updateChatContent(text, result));
+        try {
+            return future.get(5, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
+
 }

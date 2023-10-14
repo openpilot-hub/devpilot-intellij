@@ -6,7 +6,7 @@ public enum EditorAction {
           "{{selectedCode}}\nGiving the code above, please fix any performance issues.\nRemember you are very familiar with performance optimization.\n"),
   GENERATE_COMMENTS("Generate Comments",
           "Generate comments in the following code",
-          "{{selectedCode}}\nGiving the code above, please generate comments for it.");
+          "{{selectedCode}}\nGiving the code above, please generate code comments.");
 
   private final String label;
   private final String userMessage;

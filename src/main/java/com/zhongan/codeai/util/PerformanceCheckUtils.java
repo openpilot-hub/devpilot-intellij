@@ -12,18 +12,24 @@
  */
 package com.zhongan.codeai.util;
 
+import com.google.common.collect.Lists;
 import com.intellij.diff.DiffContentFactory;
 import com.intellij.diff.DiffManager;
 import com.intellij.diff.contents.DiffContent;
 import com.intellij.diff.requests.DiffRequest;
 import com.intellij.diff.requests.SimpleDiffRequest;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
+
+import java.util.List;
 
 import static com.zhongan.codeai.util.DiffEditorUtils.getDiffContent;
 
@@ -37,6 +43,10 @@ public class PerformanceCheckUtils {
 
     public static final String NO_PERFORMANCE_ISSUES_DESC = "There don't appear to be any performance issues with the given code.";
     public static final String NO_PERFORMANCE_ISSUES_EMPTY = "empty";
+
+    public static final List<String> NO_PERFORMANCE_ISSUES = Lists.newArrayList(NO_PERFORMANCE_ISSUES_DESC,
+            NO_PERFORMANCE_ISSUES_EMPTY,
+            "There are no performance issues with the given code");
 
     private static final String CUSTOM_PROMPT = "Giving the code above, please fix any performance issues.\n " +
             "If there are does not have any performance issues, please just return empty; \n" +
@@ -56,9 +66,9 @@ public class PerformanceCheckUtils {
         CodeAIChatCompletionRequest request = new CodeAIChatCompletionRequest();
         request.setMessages(java.util.List.of(codeAIMessage));
         String code = new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
-        //if code is empty, return original code
-        if(NO_PERFORMANCE_ISSUES_DESC.equals(code) || NO_PERFORMANCE_ISSUES_EMPTY.equals(code)) {
-            code = editor.getDocument().getText();
+        //if no performance issues, return original code
+        if(NO_PERFORMANCE_ISSUES.contains(code)) {
+            return editor.getDocument().getText();
         }
         return code;
 
@@ -79,6 +89,26 @@ public class PerformanceCheckUtils {
                 textContent, originalContent, "Code AI suggested code", originalFile.getName()+"(original code)");
         DiffManager diffManager = DiffManager.getInstance();
         diffManager.showDiff(project, diffRequest);
+    }
+
+    /**
+     *  display result, and open diff window
+     * @param selectedText
+     * @param project
+     * @param editor
+     * @param replaceFile
+     */
+    public static void showDiffWindow(String selectedText, Project project, Editor editor, VirtualFile replaceFile) {
+        final String code = getChatCompletionResult(selectedText, project, editor);
+        var selectionModel = editor.getSelectionModel();
+        Document replaceDocument = FileDocumentManager.getInstance().getDocument(replaceFile);
+        ApplicationManager.getApplication().invokeLater(() -> WriteCommandAction.runWriteCommandAction(project, () -> {
+            replaceDocument.setText(editor.getDocument().getText());
+            replaceDocument.setReadOnly(false);
+            replaceDocument.replaceString(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), code);
+        }));
+        //todo auto format code
+        showDiff(project, editor, FileDocumentManager.getInstance().getFile(editor.getDocument()), replaceDocument);
     }
 
 }

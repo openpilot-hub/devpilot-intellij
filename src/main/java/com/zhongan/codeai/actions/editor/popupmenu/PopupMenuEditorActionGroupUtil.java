@@ -5,9 +5,7 @@ import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -18,13 +16,14 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
+import com.zhongan.codeai.util.DocumentUtil;
+import com.zhongan.codeai.util.PerformanceCheckUtils;
 
 import javax.swing.*;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.zhongan.codeai.util.PerformanceCheckUtils.*;
 import static com.zhongan.codeai.util.VirtualFileUtil.createParentEditorVirtualFile;
 
 public class PopupMenuEditorActionGroupUtil {
@@ -37,6 +36,7 @@ public class PopupMenuEditorActionGroupUtil {
             "Fix This", AllIcons.Actions.QuickfixBulb,
             "Translate This", AllIcons.Actions.QuickfixBulb,
             "Explain This", AllIcons.Actions.Preview));
+
 
     public static void refreshActions(Project project) {
         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("CodeAI");
@@ -53,18 +53,15 @@ public class PopupMenuEditorActionGroupUtil {
                     @Override
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
                         toolWindow.show();
-                        CodeAIChatToolWindowFactory.codeAIChatToolWindow.syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText));
+                        String result = CodeAIChatToolWindowFactory.codeAIChatToolWindow.syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText));
                         switch (label) {
                             case "Performance Check":
                                 //display result, and open diff window
-                                VirtualFile originalFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
-                                //virtual file process
-                                VirtualFile replaceFile = createVirtualReplaceFile(editor);
-                                //DiffContent process
-                                showDiffWindow(selectedText, project, editor, originalFile, replaceFile);
+                                //virtual file and DiffContent process
+                                PerformanceCheckUtils.showDiffWindow(selectedText, project, editor, createVirtualReplaceFile(editor));
                                 break;
                             case "Generate Comments":
-                                //todo 插入注释
+                                DocumentUtil.insertCommentAndFormat(project, editor, result);
                                 break;
                             default:
                                 LOG.error("could not trigger action {}", label);
@@ -78,13 +75,13 @@ public class PopupMenuEditorActionGroupUtil {
                      * @return
                      */
                     private VirtualFile createVirtualReplaceFile(Editor editor) {
-                        VirtualFile originalFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
                         // process create parent virtualfile can not access excetion
                         return ApplicationManager.getApplication().runWriteAction((Computable<VirtualFile>) () -> {
                             VirtualFile createdFile = null;
                             try {
                                 createdFile = createParentEditorVirtualFile(editor.getDocument()).createChildData(this,
-                                        System.currentTimeMillis() + originalFile.getExtension());
+                                        System.currentTimeMillis() + FileDocumentManager.getInstance().
+                                                getFile(editor.getDocument()).getExtension());
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
                             }
@@ -95,26 +92,6 @@ public class PopupMenuEditorActionGroupUtil {
                 group.add(action);
             });
         }
-    }
-
-    /**
-     *  display result, and open diff window
-     * @param selectedText
-     * @param project
-     * @param editor
-     * @param originalFile
-     * @param newFile
-     */
-    private static void showDiffWindow(String selectedText, Project project, Editor editor, VirtualFile originalFile, VirtualFile newFile) {
-        final String code = getChatCompletionResult(selectedText, project, editor);
-        var selectionModel = editor.getSelectionModel();
-        Document replaceDocument = FileDocumentManager.getInstance().getDocument(newFile);
-        ApplicationManager.getApplication().invokeLater(() -> WriteCommandAction.runWriteCommandAction(project, () -> {
-            replaceDocument.setText(editor.getDocument().getText());
-            replaceDocument.setReadOnly(false);
-            replaceDocument.replaceString(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), code);
-        }));
-        showDiff(project, editor, originalFile, replaceDocument);
     }
 
     public static void registerOrReplaceAction(AnAction action) {
