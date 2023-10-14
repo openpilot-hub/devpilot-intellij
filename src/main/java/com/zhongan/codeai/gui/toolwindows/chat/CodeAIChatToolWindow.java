@@ -17,7 +17,7 @@ import java.util.List;
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
 
-    private final UserChatPanel userChatPanel;
+    private final JPanel userChatPanel;
 
     private final ScrollablePanel chatContentPanel;
 
@@ -100,13 +100,10 @@ public class CodeAIChatToolWindow {
         // show thinking
         var text = showChatContent("I am thinking...");
 
-        userChatPanel.setIconStop();
-
         // FIXME
         new Thread(() -> {
             String result = sendMessage(this.project, message);
             updateChatContent(text, result);
-            userChatPanel.setIconSend();
         }).start();
     }
 }

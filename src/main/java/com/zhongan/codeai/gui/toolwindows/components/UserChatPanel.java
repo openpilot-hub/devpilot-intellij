@@ -5,20 +5,13 @@ import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UIUtil;
 import com.zhongan.codeai.CodeAIIcons;
+import org.apache.commons.lang3.StringUtils;
 
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.function.Consumer;
-
-import javax.swing.BorderFactory;
-import javax.swing.Icon;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-
-import org.apache.commons.lang3.StringUtils;
 
 public class UserChatPanel extends JPanel {
     private final JBTextArea textArea;
@@ -26,8 +19,6 @@ public class UserChatPanel extends JPanel {
     private final JPanel iconsPanel;
 
     private final Consumer<String> bindEvent;
-
-    private final JButton button;
 
     public UserChatPanel(Consumer<String> event) {
         this.bindEvent = event;
@@ -57,25 +48,10 @@ public class UserChatPanel extends JPanel {
         this.add(textArea, BorderLayout.CENTER);
 
         var flowLayout = new FlowLayout(FlowLayout.RIGHT);
-        flowLayout.setHgap(10);
-        button = createIconButton(CodeAIIcons.SEND_ICON);
+        flowLayout.setHgap(12);
         iconsPanel = new JPanel(flowLayout);
-        iconsPanel.add(button);
+        iconsPanel.add(createIconButton(CodeAIIcons.SEND_ICON));
         this.add(JBUI.Panels.simplePanel().addToBottom(iconsPanel), BorderLayout.EAST);
-    }
-
-    public void setIconStop() {
-        button.setIcon(CodeAIIcons.STOP_ICON);
-        button.setContentAreaFilled(false);
-        button.setPreferredSize(new Dimension(
-                CodeAIIcons.STOP_ICON.getIconWidth(), CodeAIIcons.STOP_ICON.getIconHeight()));
-    }
-
-    public void setIconSend() {
-        button.setIcon(CodeAIIcons.SEND_ICON);
-        button.setContentAreaFilled(false);
-        button.setPreferredSize(new Dimension(
-                CodeAIIcons.SEND_ICON.getIconWidth(), CodeAIIcons.SEND_ICON.getIconHeight()));
     }
 
     private void handleEvent() {
@@ -89,6 +65,7 @@ public class UserChatPanel extends JPanel {
         textArea.setText(null);
     }
 
+    // FIXME
     private JButton createIconButton(Icon icon) {
         var button = new JButton(icon);
         button.setBorder(BorderFactory.createEmptyBorder());

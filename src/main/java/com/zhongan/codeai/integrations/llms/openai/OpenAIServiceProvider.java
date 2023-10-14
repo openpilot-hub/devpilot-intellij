@@ -7,15 +7,14 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIFailedResponse;
 import com.zhongan.codeai.integrations.llms.entity.CodeAISuccessResponse;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
-
-import java.io.IOException;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
-
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+
+import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Service(Service.Level.PROJECT)
 public final class OpenAIServiceProvider implements LlmProvider {
