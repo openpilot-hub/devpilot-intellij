@@ -14,7 +14,8 @@ repositories {
 // Configure Gradle IntelliJ Plugin
 // Read more: https://plugins.jetbrains.com/docs/intellij/tools-gradle-intellij-plugin.html
 intellij {
-    version.set("2022.1.4")
+//    version.set("2022.1.4")
+    version.set("2022.2.5")
     type.set("IC") // Target IDE Platform
 
     plugins.set(listOf(/* Plugin Dependencies */))
@@ -23,7 +24,8 @@ intellij {
 dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
-    compileOnly("com.puppycrawl.tools:checkstyle:8.44")
+    implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
 }
 
 tasks {

@@ -2,38 +2,71 @@ package com.zhongan.codeai.integrations.llms.openai;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
-import com.zhongan.codeai.actions.notifications.CodeAINotification;
 import com.zhongan.codeai.integrations.llms.LlmProvider;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
+import com.zhongan.codeai.integrations.llms.entity.CodeAIFailedResponse;
+import com.zhongan.codeai.integrations.llms.entity.CodeAISuccessResponse;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
-import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.io.IOException;
+import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 @Service(Service.Level.PROJECT)
 public final class OpenAIServiceProvider implements LlmProvider {
 
-    private ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final OkHttpClient client = new OkHttpClient.Builder()
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .build();
 
     @Override
     public String chatCompletion(CodeAIChatCompletionRequest chatCompletionRequest) {
-        HttpResponse<String> response = null;
+        okhttp3.Response response;
 
         try {
-            HttpClient client = HttpClient.newHttpClient();
-            HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(OpenAISettingsState.getInstance().getOpenAIBaseHost() + "/v1/chat/completions"))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(chatCompletionRequest)))
-                .build();
+            var request = new Request.Builder()
+                    .url(OpenAISettingsState.getInstance().getOpenAIBaseHost() + "/v1/chat/completions")
+                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .build();
 
-            response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            response = client.newCall(request).execute();
         } catch (Exception e) {
-            CodeAINotification.error("Chat completion failed: " + e.getMessage());
+            return "Chat completion failed: " + e.getMessage();
         }
-        return response.body();
+
+        try {
+            return parseResult(response);
+        } catch (IOException e) {
+            return "Chat completion failed: " + e.getMessage();
+        }
     }
 
+    private String parseResult(okhttp3.Response response) throws IOException {
+        if (response == null) {
+            return "Nothing to see here.";
+        }
+
+        String result = Objects.requireNonNull(response.body()).string();
+
+        if (response.isSuccessful()) {
+            return objectMapper.readValue(result, CodeAISuccessResponse.class)
+                    .getChoices()
+                    .get(0)
+                    .getMessage()
+                    .getContent();
+
+        } else {
+            return objectMapper.readValue(result, CodeAIFailedResponse.class)
+                    .getError()
+                    .getMessage();
+        }
+    }
 }

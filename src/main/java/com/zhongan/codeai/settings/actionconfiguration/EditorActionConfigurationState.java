@@ -9,6 +9,9 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import static com.zhongan.codeai.actions.editor.EditorAction.GENERATE_COMMENTS;
+import static com.zhongan.codeai.actions.editor.EditorAction.PERFORMANCE_CHECK;
+
 @State(
     name = "com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState",
     storages = @Storage("CodeAIActionConfiguration.xml")
@@ -16,6 +19,8 @@ import java.util.Map;
 public class EditorActionConfigurationState implements PersistentStateComponent<EditorActionConfigurationState> {
 
     private Map<String, String> defaultActions = new LinkedHashMap<>(Map.of(
+            PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt(),
+            GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt(),
         "Generate Tests", "Generate tests for the selected code {{selectedCode}}",
         "Generate Docs", "Generate docs for the selected code {{selectedCode}}",
         "Fix This", "Find bugs in the selected code {{selectedCode}}",
