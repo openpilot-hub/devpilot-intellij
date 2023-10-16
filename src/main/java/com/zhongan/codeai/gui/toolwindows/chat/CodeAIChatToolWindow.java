@@ -103,10 +103,6 @@ public class CodeAIChatToolWindow {
         var text = showChatContent("I am thinking...");
 
         // todo use thread pool
-//        new Thread(() -> {
-//            String result = sendMessage(this.project, message);
-//            updateChatContent(text, result);
-//        }).start();
         CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
         future.thenAccept(result -> updateChatContent(text, result));
         try {
@@ -117,3 +113,4 @@ public class CodeAIChatToolWindow {
     }
 
 }
+
