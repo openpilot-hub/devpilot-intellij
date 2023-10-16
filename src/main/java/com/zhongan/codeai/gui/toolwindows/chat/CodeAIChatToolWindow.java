@@ -12,14 +12,11 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
-
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JTextPane;
-import javax.swing.ScrollPaneConstants;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
@@ -104,7 +101,7 @@ public class CodeAIChatToolWindow {
         return llmProvider.chatCompletion(request);
     }
 
-    private void syncSendAndDisplay(String message) {
+    public String syncSendAndDisplay(String message) {
         // show prompt
         showChatContent(message);
 
@@ -115,11 +112,16 @@ public class CodeAIChatToolWindow {
         userChatPanel.setIconStop();
 
         // FIXME
-        new Thread(() -> {
-            String result = sendMessage(this.project, message);
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
+        future.thenAccept(result -> {
             updateChatContent(text, result);
             userChatPanel.setIconSend();
-        }).start();
+        });
+        try {
+            return future.get(15, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void stopSending() {
@@ -127,19 +129,4 @@ public class CodeAIChatToolWindow {
         userChatPanel.setIconSend();
     }
 
-    public String syncSendAndDisplay(String message) {
-        // show prompt
-        showChatContent(message);
-
-        // show thinking
-        var text = showChatContent("I am thinking...");
-
-        // todo use thread pool
-        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
-        future.thenAccept(result -> updateChatContent(text, result));
-        try {
-            return future.get(15, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+}
