@@ -12,14 +12,11 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
 
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
+import javax.swing.*;
+import java.awt.*;
 import java.util.List;
-
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JTextPane;
-import javax.swing.ScrollPaneConstants;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
@@ -113,11 +110,7 @@ public class CodeAIChatToolWindow {
         return llmProvider.chatCompletion(request);
     }
 
-    private void syncSendAndDisplay(String message) {
-        // set status sending
-        userChatPanel.setSending(true);
-        userChatPanel.setIconStop();
-
+    public String syncSendAndDisplay(String message) {
         // show prompt
         showChatContent(message, 0);
 
@@ -125,12 +118,16 @@ public class CodeAIChatToolWindow {
         var text = showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"), 1);
 
         // FIXME
-        new Thread(() -> {
-            String result = sendMessage(this.project, message);
+        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
+        future.thenAccept(result -> {
             updateChatContent(text, result);
             userChatPanel.setIconSend();
-            userChatPanel.setSending(false);
-        }).start();
+        });
+        try {
+            return future.get(15, TimeUnit.SECONDS);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void stopSending() {
@@ -138,4 +135,5 @@ public class CodeAIChatToolWindow {
         userChatPanel.setIconSend();
         userChatPanel.setSending(false);
     }
+
 }

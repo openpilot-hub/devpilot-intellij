@@ -8,7 +8,8 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 
 @State(name = "CodeAI_OpenAISettings", storages = @Storage("CodeAI_OpenAISettings.xml"))
 public class OpenAISettingsState implements PersistentStateComponent<OpenAISettingsState> {
-    private String openAIBaseHost = "https://codeai.zhongan.com";
+//    private String openAIBaseHost = "https://codeai.zhongan.com";
+    private String openAIBaseHost = "http://sky-gateway-test.zhonganonline.com";
 
     public String getOpenAIBaseHost() {
         return openAIBaseHost;

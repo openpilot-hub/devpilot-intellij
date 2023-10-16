@@ -10,9 +10,10 @@ import com.zhongan.codeai.gui.toolwindows.chat.CodeAIChatToolWindow;
 import org.jetbrains.annotations.NotNull;
 
 public class CodeAIChatToolWindowFactory implements ToolWindowFactory {
+    public static CodeAIChatToolWindow codeAIChatToolWindow = null;
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        CodeAIChatToolWindow codeAIChatToolWindow = new CodeAIChatToolWindow(project, toolWindow);
+        codeAIChatToolWindow = new CodeAIChatToolWindow(project, toolWindow);
 
         ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
 
