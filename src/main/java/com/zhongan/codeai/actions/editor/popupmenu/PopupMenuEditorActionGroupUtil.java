@@ -19,7 +19,7 @@ import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfiguration
 import com.zhongan.codeai.util.DocumentUtil;
 import com.zhongan.codeai.util.PerformanceCheckUtils;
 
-import javax.swing.*;
+import javax.swing.Icon;
 import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
