@@ -89,6 +89,7 @@ public class PerformanceCheckUtils {
                 textContent, originalContent, "Code AI suggested code", originalFile.getName()+"(original code)");
         DiffManager diffManager = DiffManager.getInstance();
         diffManager.showDiff(project, diffRequest);
+        // code format
     }
 
     /**
@@ -109,6 +110,7 @@ public class PerformanceCheckUtils {
         }));
         //todo auto format code
         showDiff(project, editor, FileDocumentManager.getInstance().getFile(editor.getDocument()), replaceDocument);
+
     }
 
 }

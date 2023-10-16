@@ -110,7 +110,7 @@ public class CodeAIChatToolWindow {
         CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
         future.thenAccept(result -> updateChatContent(text, result));
         try {
-            return future.get(5, TimeUnit.SECONDS);
+            return future.get(15, TimeUnit.SECONDS);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

@@ -80,7 +80,7 @@ public class PopupMenuEditorActionGroupUtil {
                             VirtualFile createdFile = null;
                             try {
                                 createdFile = createParentEditorVirtualFile(editor.getDocument()).createChildData(this,
-                                        System.currentTimeMillis() + FileDocumentManager.getInstance().
+                                        System.currentTimeMillis() + "." + FileDocumentManager.getInstance().
                                                 getFile(editor.getDocument()).getExtension());
                             } catch (IOException e) {
                                 throw new RuntimeException(e);
