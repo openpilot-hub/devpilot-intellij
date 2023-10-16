@@ -6,4 +6,6 @@ public interface LlmProvider {
 
     String chatCompletion(CodeAIChatCompletionRequest chatCompletionRequest);
 
+    void interruptSend();
+
 }

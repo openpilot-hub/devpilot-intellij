@@ -7,14 +7,16 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIFailedResponse;
 import com.zhongan.codeai.integrations.llms.entity.CodeAISuccessResponse;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 @Service(Service.Level.PROJECT)
 public final class OpenAIServiceProvider implements LlmProvider {
@@ -27,6 +29,8 @@ public final class OpenAIServiceProvider implements LlmProvider {
             .readTimeout(60, TimeUnit.SECONDS)
             .build();
 
+    private Call call;
+
     @Override
     public String chatCompletion(CodeAIChatCompletionRequest chatCompletionRequest) {
         okhttp3.Response response;
@@ -37,7 +41,8 @@ public final class OpenAIServiceProvider implements LlmProvider {
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
 
-            response = client.newCall(request).execute();
+            call = client.newCall(request);
+            response = call.execute();
         } catch (Exception e) {
             return "Chat completion failed: " + e.getMessage();
         }
@@ -46,6 +51,13 @@ public final class OpenAIServiceProvider implements LlmProvider {
             return parseResult(response);
         } catch (IOException e) {
             return "Chat completion failed: " + e.getMessage();
+        }
+    }
+
+    @Override
+    public void interruptSend() {
+        if (call != null && !call.isCanceled()) {
+            call.cancel();
         }
     }
 

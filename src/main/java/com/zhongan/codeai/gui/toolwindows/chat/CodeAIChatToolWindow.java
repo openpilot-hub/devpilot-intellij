@@ -6,24 +6,31 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBScrollPane;
 import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.codeai.gui.toolwindows.components.UserChatPanel;
+import com.zhongan.codeai.integrations.llms.LlmProvider;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
+import com.zhongan.codeai.util.CodeAIMessageBundle;
 
-import javax.swing.*;
-import java.awt.*;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.JTextPane;
+import javax.swing.ScrollPaneConstants;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
 
-    private final JPanel userChatPanel;
+    private final UserChatPanel userChatPanel;
 
     private final ScrollablePanel chatContentPanel;
 
     private final Project project;
+
+    private LlmProvider llmProvider;
 
     public JPanel getCodeAIChatToolWindowPanel() {
         return codeAIChatToolWindowPanel;
@@ -33,7 +40,7 @@ public class CodeAIChatToolWindow {
         this.project = project;
         this.codeAIChatToolWindowPanel = new JPanel(new GridBagLayout());
         this.chatContentPanel = new ScrollablePanel();
-        this.userChatPanel = new UserChatPanel(this::syncSendAndDisplay);
+        this.userChatPanel = new UserChatPanel(this::syncSendAndDisplay, this::stopSending);
 
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -92,7 +99,32 @@ public class CodeAIChatToolWindow {
 
         var request = new CodeAIChatCompletionRequest();
         request.setMessages(List.of(codeAIMessage));
-        return new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
+
+        llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        return llmProvider.chatCompletion(request);
+    }
+
+    private void syncSendAndDisplay(String message) {
+        // show prompt
+        showChatContent(message);
+
+        // show thinking
+        // FIXME
+        var text = showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"));
+
+        userChatPanel.setIconStop();
+
+        // FIXME
+        new Thread(() -> {
+            String result = sendMessage(this.project, message);
+            updateChatContent(text, result);
+            userChatPanel.setIconSend();
+        }).start();
+    }
+
+    private void stopSending() {
+        llmProvider.interruptSend();
+        userChatPanel.setIconSend();
     }
 
     public String syncSendAndDisplay(String message) {
@@ -111,6 +143,3 @@ public class CodeAIChatToolWindow {
             throw new RuntimeException(e);
         }
     }
-
-}
-
