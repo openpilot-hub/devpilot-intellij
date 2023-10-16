@@ -12,8 +12,12 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
 
-import javax.swing.*;
-import java.awt.*;
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.JTextPane;
+import javax.swing.ScrollPaneConstants;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
