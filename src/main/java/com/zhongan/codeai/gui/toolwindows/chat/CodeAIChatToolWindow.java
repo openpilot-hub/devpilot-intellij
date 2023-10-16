@@ -64,7 +64,7 @@ public class CodeAIChatToolWindow {
         codeAIChatToolWindowPanel.add(userChatPanel, gbc);
     }
 
-    private JTextPane showChatContent(String content) {
+    private JTextPane showChatContent(String content, int type) {
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 0;
@@ -78,6 +78,14 @@ public class CodeAIChatToolWindow {
         text.setEditable(false);
 
         ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(text);
+
+        // 0 - user, 1 - system
+        if (type == 0) {
+            chatDisplayPanel.setUserLabel();
+        } else {
+            chatDisplayPanel.setSystemLabel();
+        }
+
         chatContentPanel.add(chatDisplayPanel, gbc);
         chatContentPanel.revalidate();
         chatContentPanel.repaint();
@@ -87,6 +95,7 @@ public class CodeAIChatToolWindow {
 
     private void updateChatContent(JTextPane text, String content) {
         text.setText(content);
+        text.setCaretPosition(text.getDocument().getLength());
 
         chatContentPanel.revalidate();
         chatContentPanel.repaint();
@@ -107,13 +116,10 @@ public class CodeAIChatToolWindow {
 
     public String syncSendAndDisplay(String message) {
         // show prompt
-        showChatContent(message);
+        showChatContent(message, 0);
 
         // show thinking
-        // FIXME
-        var text = showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"));
-
-        userChatPanel.setIconStop();
+        var text = showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"), 1);
 
         // FIXME
         CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
@@ -131,6 +137,7 @@ public class CodeAIChatToolWindow {
     private void stopSending() {
         llmProvider.interruptSend();
         userChatPanel.setIconSend();
+        userChatPanel.setSending(false);
     }
 
 }
