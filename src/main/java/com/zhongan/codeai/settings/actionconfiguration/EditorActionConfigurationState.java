@@ -9,13 +9,8 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.EXPLAIN_THIS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.FIX_THIS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_COMMENTS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_DOCS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_TESTS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.PERFORMANCE_CHECK;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.REVIEW_CODE;
+import static com.zhongan.codeai.actions.editor.EditorAction.GENERATE_COMMENTS;
+import static com.zhongan.codeai.actions.editor.EditorAction.PERFORMANCE_CHECK;
 
 @State(
     name = "com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState",
@@ -24,14 +19,14 @@ import static com.zhongan.codeai.actions.editor.EditorActionEnum.REVIEW_CODE;
 public class EditorActionConfigurationState implements PersistentStateComponent<EditorActionConfigurationState> {
 
     private Map<String, String> defaultActions = new LinkedHashMap<>(Map.of(
-        PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt(),
-        GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt(),
-        GENERATE_TESTS.getLabel(), GENERATE_TESTS.getPrompt(),
-        GENERATE_DOCS.getLabel(), GENERATE_DOCS.getPrompt(),
-        FIX_THIS.getLabel(), FIX_THIS.getPrompt(),
-        EXPLAIN_THIS.getLabel(), EXPLAIN_THIS.getPrompt(),
-        REVIEW_CODE.getLabel(), REVIEW_CODE.getPrompt()
-    ));
+            PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt(),
+            GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt(),
+        "Generate Tests", "Generate tests for the selected code {{selectedCode}}",
+        "Generate Docs", "Generate docs for the selected code {{selectedCode}}",
+        "Fix This", "Find bugs in the selected code {{selectedCode}}",
+        "Explain This", "Explain the selected code {{selectedCode}}",
+        "Translate This", "translate to chinese: {{selectedCode}}"
+        ));
 
     public static EditorActionConfigurationState getInstance() {
         return ApplicationManager.getApplication().getService(EditorActionConfigurationState.class);
