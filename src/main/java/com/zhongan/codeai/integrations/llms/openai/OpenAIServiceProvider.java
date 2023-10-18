@@ -21,13 +21,13 @@ import okhttp3.RequestBody;
 @Service(Service.Level.PROJECT)
 public final class OpenAIServiceProvider implements LlmProvider {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-
     private static final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .build();
+        .connectTimeout(60, TimeUnit.SECONDS)
+        .writeTimeout(60, TimeUnit.SECONDS)
+        .readTimeout(60, TimeUnit.SECONDS)
+        .build();
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     private Call call;
 
@@ -37,9 +37,9 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
         try {
             var request = new Request.Builder()
-                    .url(OpenAISettingsState.getInstance().getOpenAIBaseHost() + "/v1/chat/completions")
-                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
-                    .build();
+                .url(OpenAISettingsState.getInstance().getOpenAIBaseHost() + "/v1/chat/completions")
+                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                .build();
 
             call = client.newCall(request);
             response = call.execute();
@@ -70,15 +70,15 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
         if (response.isSuccessful()) {
             return objectMapper.readValue(result, CodeAISuccessResponse.class)
-                    .getChoices()
-                    .get(0)
-                    .getMessage()
-                    .getContent();
+                .getChoices()
+                .get(0)
+                .getMessage()
+                .getContent();
 
         } else {
             return objectMapper.readValue(result, CodeAIFailedResponse.class)
-                    .getError()
-                    .getMessage();
+                .getError()
+                .getMessage();
         }
     }
 }

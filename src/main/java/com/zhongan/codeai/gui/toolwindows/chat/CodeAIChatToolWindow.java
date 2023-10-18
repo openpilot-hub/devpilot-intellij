@@ -14,7 +14,6 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
 import com.zhongan.codeai.util.MarkdownUtil;
 
-import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.List;
@@ -25,7 +24,6 @@ import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
@@ -37,10 +35,6 @@ public class CodeAIChatToolWindow {
     private final Project project;
 
     private LlmProvider llmProvider;
-
-    public JPanel getCodeAIChatToolWindowPanel() {
-        return codeAIChatToolWindowPanel;
-    }
 
     public CodeAIChatToolWindow(Project project, ToolWindow toolWindow) {
         this.project = project;
@@ -69,7 +63,11 @@ public class CodeAIChatToolWindow {
         codeAIChatToolWindowPanel.add(userChatPanel, gbc);
     }
 
-    private JPanel showChatContent(String content, int type) {
+    public JPanel getCodeAIChatToolWindowPanel() {
+        return codeAIChatToolWindowPanel;
+    }
+
+    private JTextPane showChatContent(String content, int type) {
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 0;
