@@ -5,22 +5,27 @@ import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBScrollPane;
 import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
+import com.zhongan.codeai.gui.toolwindows.components.ContentComponent;
 import com.zhongan.codeai.gui.toolwindows.components.UserChatPanel;
 import com.zhongan.codeai.integrations.llms.LlmProvider;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
+import com.zhongan.codeai.util.MarkdownUtil;
 
-import javax.swing.BoxLayout;
-import javax.swing.JPanel;
-import javax.swing.JTextPane;
-import javax.swing.ScrollPaneConstants;
+import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+
+import javax.swing.BoxLayout;
+import javax.swing.JPanel;
+import javax.swing.JTextPane;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
@@ -64,7 +69,7 @@ public class CodeAIChatToolWindow {
         codeAIChatToolWindowPanel.add(userChatPanel, gbc);
     }
 
-    private JTextPane showChatContent(String content, int type) {
+    private JPanel showChatContent(String content, int type) {
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 0;
@@ -72,12 +77,18 @@ public class CodeAIChatToolWindow {
         gbc.gridx = 0;
         gbc.gridy = 0;
 
-        var text = new JTextPane();
-        text.setLayout(new BoxLayout(text, BoxLayout.PAGE_AXIS));
-        text.setText(content);
-        text.setEditable(false);
+        ContentComponent contentPanel = new ContentComponent();
 
-        ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(text);
+        List<String> blocks = MarkdownUtil.splitBlocks(content);
+        for (String block : blocks) {
+            if (block.startsWith("```")) {
+                contentPanel.add(contentPanel.createCodeComponent(project, block));
+            } else {
+                contentPanel.add(contentPanel.createTextComponent(block));
+            }
+        }
+
+        ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(contentPanel);
 
         // 0 - user, 1 - system
         if (type == 0) {
@@ -90,7 +101,7 @@ public class CodeAIChatToolWindow {
         chatContentPanel.revalidate();
         chatContentPanel.repaint();
 
-        return text;
+        return contentPanel;
     }
 
     private void updateChatContent(JTextPane text, String content) {
@@ -124,8 +135,14 @@ public class CodeAIChatToolWindow {
         // FIXME
         CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
         future.thenAccept(result -> {
-            updateChatContent(text, result);
-            userChatPanel.setIconSend();
+            SwingUtilities.invokeLater(() -> {
+                int componentCount = chatContentPanel.getComponentCount();
+                Component loading = chatContentPanel.getComponent(componentCount - 1);
+                chatContentPanel.remove(loading);
+
+                showChatContent(result, 1);
+                userChatPanel.setIconSend();
+            });
         });
         try {
             return future.get(15, TimeUnit.SECONDS);
@@ -139,5 +156,4 @@ public class CodeAIChatToolWindow {
         userChatPanel.setIconSend();
         userChatPanel.setSending(false);
     }
-
 }
