@@ -29,9 +29,9 @@ public class MarkdownUtil {
         MutableDataSet options = new MutableDataSet();
         Document document = Parser.builder(options).build().parse(markdownText);
         return HtmlRenderer.builder(options)
-                .nodeRendererFactory(new ContentNodeRenderer.Factory())
-                .build()
-                .render(document);
+            .nodeRendererFactory(new ContentNodeRenderer.Factory())
+            .build()
+            .render(document);
     }
 
     /**
@@ -49,8 +49,8 @@ public class MarkdownUtil {
         }
         blocks.add(markdownText.substring(start));
         return blocks.stream()
-                .filter(item -> !item.isBlank())
-                .collect(Collectors.toList());
+            .filter(item -> !item.isBlank())
+            .collect(Collectors.toList());
     }
 
     private static final Map<String, String> languageFileExtMap = buildLanguageFileExtMap();
@@ -65,7 +65,7 @@ public class MarkdownUtil {
             });
             for (LanguageFileExtInfo languageFileExtInfo : languageFileExtInfos) {
                 languageFileExtMap.put(languageFileExtInfo.getName().toLowerCase(),
-                        languageFileExtInfo.getExtensions().get(0));
+                    languageFileExtInfo.getExtensions().get(0));
             }
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -108,6 +108,7 @@ public class MarkdownUtil {
         public void setExtensions(List<String> extensions) {
             this.extensions = extensions;
         }
+
     }
 
 }

@@ -17,14 +17,14 @@ import com.vladsch.flexmark.parser.Parser;
 import com.zhongan.codeai.gui.toolwindows.components.code.CodeHeaderComponent;
 import com.zhongan.codeai.util.MarkdownUtil;
 
-import org.apache.commons.lang3.StringUtils;
-
 import java.awt.BorderLayout;
 import java.awt.Component;
 
 import javax.swing.BoxLayout;
 import javax.swing.JEditorPane;
 import javax.swing.JPanel;
+
+import org.apache.commons.lang3.StringUtils;
 
 public class ContentComponent extends JPanel {
 

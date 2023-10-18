@@ -41,4 +41,5 @@ public abstract class BasicEditorAction extends AnAction {
         }
         event.getPresentation().setEnabled(menuAllowed);
     }
+
 }

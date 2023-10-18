@@ -31,4 +31,5 @@ public class InsertAtCaretAction implements ActionListener {
             editor.getDocument().insertString(offset, text);
         });
     }
+
 }

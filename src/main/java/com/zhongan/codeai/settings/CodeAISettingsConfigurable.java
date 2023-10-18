@@ -51,4 +51,5 @@ public class CodeAISettingsConfigurable implements Configurable, Disposable {
     @Override
     public void dispose() {
     }
+
 }

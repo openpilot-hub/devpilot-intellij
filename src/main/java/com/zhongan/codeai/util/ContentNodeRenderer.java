@@ -13,11 +13,11 @@ import com.vladsch.flexmark.html.renderer.NodeRenderingHandler;
 import com.vladsch.flexmark.util.ast.Block;
 import com.vladsch.flexmark.util.data.DataHolder;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import java.awt.Color;
 import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static java.lang.String.format;
 
@@ -25,8 +25,8 @@ public class ContentNodeRenderer implements NodeRenderer {
     @Override
     public @Nullable Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
         return Set.of(
-                new NodeRenderingHandler<>(Code.class, this::renderCodeSnippets),
-                new NodeRenderingHandler<>(Paragraph.class, this::renderTextParagraph)
+            new NodeRenderingHandler<>(Code.class, this::renderCodeSnippets),
+            new NodeRenderingHandler<>(Paragraph.class, this::renderTextParagraph)
         );
     }
 
@@ -54,5 +54,7 @@ public class ContentNodeRenderer implements NodeRenderer {
         public @NotNull NodeRenderer apply(@NotNull DataHolder dataHolder) {
             return new ContentNodeRenderer();
         }
+
     }
+
 }

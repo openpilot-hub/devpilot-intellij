@@ -33,4 +33,5 @@ public class CodeAIChatCompletionRequest {
     public void setStream(boolean stream) {
         this.stream = stream;
     }
+
 }

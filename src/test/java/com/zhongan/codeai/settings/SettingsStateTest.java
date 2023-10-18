@@ -26,7 +26,9 @@ public class SettingsStateTest extends BasePlatformTestCase {
 
     public void testEditorActionConfigurationState() {
         var settings = EditorActionConfigurationState.getInstance();
-        assertEquals("Generate tests for the selected code {{selectedCode}}", settings.getDefaultActions().get("Generate Tests"));
-        assertEquals(5, settings.getDefaultActions().size());
+
+        assertEquals("{{selectedCode}}\nGiving the code above, please help to generate JUnit test cases for it, be aware that if the code is untestable, please state it and give suggestions instead:", settings.getDefaultActions().get("Generate Tests"));
+        assertEquals(7, settings.getDefaultActions().size());
     }
+
 }

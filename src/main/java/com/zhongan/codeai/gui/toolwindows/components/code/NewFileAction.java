@@ -30,4 +30,5 @@ public class NewFileAction implements ActionListener {
         PsiFile psiFile = psiFileFactory.createFileFromText("test." + fileExtension, editor.getDocument().getText());
         EditorHelper.openInEditor(psiFile);
     }
+
 }

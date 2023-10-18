@@ -46,4 +46,5 @@ public class CodeAISettingsComponent {
     public String getFullName() {
         return fullNameField.getText();
     }
+
 }
