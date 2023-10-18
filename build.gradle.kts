@@ -24,6 +24,7 @@ dependencies {
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.15.2")
     implementation("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.2")
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
+    implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
 }
 
