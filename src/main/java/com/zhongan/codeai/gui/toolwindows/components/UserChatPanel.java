@@ -85,8 +85,8 @@ public class UserChatPanel extends JPanel {
         this.setOpaque(false);
         this.setLayout(new BorderLayout());
         this.setBorder(JBUI.Borders.compound(
-                JBUI.Borders.customLine(JBColor.border(), 0, 0, 0, 0),
-                JBUI.Borders.empty(10)));
+            JBUI.Borders.customLine(JBColor.border(), 0, 0, 0, 0),
+            JBUI.Borders.empty(10)));
         this.add(textArea, BorderLayout.CENTER);
 
         var flowLayout = new FlowLayout(FlowLayout.RIGHT);
@@ -101,7 +101,7 @@ public class UserChatPanel extends JPanel {
         button.setIcon(CodeAIIcons.STOP_ICON);
         button.setContentAreaFilled(false);
         button.setPreferredSize(new Dimension(
-                CodeAIIcons.STOP_ICON.getIconWidth(), CodeAIIcons.STOP_ICON.getIconHeight()));
+            CodeAIIcons.STOP_ICON.getIconWidth(), CodeAIIcons.STOP_ICON.getIconHeight()));
         removeAllActionListener();
         button.addActionListener(e -> handleStopEvent());
     }
@@ -110,17 +110,17 @@ public class UserChatPanel extends JPanel {
         button.setIcon(CodeAIIcons.SEND_ICON);
         button.setContentAreaFilled(false);
         button.setPreferredSize(new Dimension(
-                CodeAIIcons.SEND_ICON.getIconWidth(), CodeAIIcons.SEND_ICON.getIconHeight()));
+            CodeAIIcons.SEND_ICON.getIconWidth(), CodeAIIcons.SEND_ICON.getIconHeight()));
         removeAllActionListener();
         button.addActionListener(e -> handleSendEvent());
     }
 
-    public void setSending(boolean isSending) {
-        this.isSending.set(isSending);
-    }
-
     public boolean isSending() {
         return isSending.get();
+    }
+
+    public void setSending(boolean isSending) {
+        this.isSending.set(isSending);
     }
 
     private void handleSendEvent() {
@@ -177,4 +177,5 @@ public class UserChatPanel extends JPanel {
 
         return button;
     }
+
 }

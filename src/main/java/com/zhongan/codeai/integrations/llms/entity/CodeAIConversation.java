@@ -38,4 +38,5 @@ public class CodeAIConversation {
     public void setCreateTime(LocalDateTime createTime) {
         this.createTime = createTime;
     }
+
 }

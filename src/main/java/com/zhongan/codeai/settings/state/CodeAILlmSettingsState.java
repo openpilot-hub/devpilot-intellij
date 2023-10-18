@@ -42,4 +42,5 @@ public class CodeAILlmSettingsState implements PersistentStateComponent<CodeAILl
     public void setFullName(String displayName) {
         this.fullName = displayName;
     }
+
 }

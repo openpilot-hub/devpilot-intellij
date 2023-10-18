@@ -21,4 +21,5 @@ public class CopyAction implements ActionListener {
         Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         systemClipboard.setContents(new StringSelection(editor.getDocument().getText()), null);
     }
+
 }

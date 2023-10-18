@@ -25,4 +25,5 @@ public class NewChatAction extends AnAction {
             // send message
         }
     }
+
 }

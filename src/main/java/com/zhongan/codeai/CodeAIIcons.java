@@ -18,4 +18,5 @@ public class CodeAIIcons {
     public static final Icon SYSTEM_ICON = IconLoader.getIcon("/icons/codegpt.svg", CodeAIIcons.class);
 
     public static final Icon USER_ICON = IconLoader.getIcon("/icons/user.svg", CodeAIIcons.class);
+
 }

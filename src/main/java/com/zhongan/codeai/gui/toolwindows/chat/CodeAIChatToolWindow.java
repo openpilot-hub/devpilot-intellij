@@ -38,10 +38,6 @@ public class CodeAIChatToolWindow {
 
     private LlmProvider llmProvider;
 
-    public JPanel getCodeAIChatToolWindowPanel() {
-        return codeAIChatToolWindowPanel;
-    }
-
     public CodeAIChatToolWindow(Project project, ToolWindow toolWindow) {
         this.project = project;
         this.codeAIChatToolWindowPanel = new JPanel(new GridBagLayout());
@@ -67,6 +63,10 @@ public class CodeAIChatToolWindow {
         gbc.gridy = 1;
 
         codeAIChatToolWindowPanel.add(userChatPanel, gbc);
+    }
+
+    public JPanel getCodeAIChatToolWindowPanel() {
+        return codeAIChatToolWindowPanel;
     }
 
     private JPanel showChatContent(String content, int type) {
@@ -156,4 +156,5 @@ public class CodeAIChatToolWindow {
         userChatPanel.setIconSend();
         userChatPanel.setSending(false);
     }
+
 }

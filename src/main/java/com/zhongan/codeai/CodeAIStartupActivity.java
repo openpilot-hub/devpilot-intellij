@@ -11,4 +11,5 @@ public class CodeAIStartupActivity implements StartupActivity {
     public void runActivity(@NotNull Project project) {
         PopupMenuEditorActionGroupUtil.refreshActions(project);
     }
+
 }

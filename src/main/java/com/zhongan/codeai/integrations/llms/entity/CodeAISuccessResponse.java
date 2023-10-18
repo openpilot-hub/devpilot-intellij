@@ -98,6 +98,7 @@ public class CodeAISuccessResponse {
         public void setMessage(Message message) {
             this.message = message;
         }
+
     }
 
     public static class Usage {
@@ -134,6 +135,7 @@ public class CodeAISuccessResponse {
         public void setTotalTokens(String totalTokens) {
             this.totalTokens = totalTokens;
         }
+
     }
 
     public static class Message {
@@ -157,5 +159,7 @@ public class CodeAISuccessResponse {
         public void setContent(String content) {
             this.content = content;
         }
+
     }
+
 }

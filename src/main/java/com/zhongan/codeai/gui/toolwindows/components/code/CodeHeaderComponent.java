@@ -21,17 +21,17 @@ public class CodeHeaderComponent extends JPanel {
     private final String fileExtension;
 
     public CodeHeaderComponent(
-            String language,
-            Editor editor,
-            Project project,
-            String fileExtension
+        String language,
+        Editor editor,
+        Project project,
+        String fileExtension
     ) {
         super(new BorderLayout());
         this.codeEditor = editor;
         this.project = project;
         this.fileExtension = fileExtension;
         setBorder(JBUI.Borders.compound(JBUI.Borders.customLine(JBColor.border(), 1, 1, 1, 1),
-                JBUI.Borders.empty(8, 8, 8, 1)));
+            JBUI.Borders.empty(8, 8, 8, 1)));
         add(new JBLabel(language), BorderLayout.LINE_START);
         add(createCodeActionsGroup(), BorderLayout.LINE_END);
     }

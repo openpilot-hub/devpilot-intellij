@@ -71,15 +71,16 @@ public class ChatDisplayPanel extends JPanel {
 
         private JBLabel userLabel() {
             return new JBLabel(CodeAILlmSettingsState.getInstance().getFullName(), CodeAIIcons.USER_ICON, SwingConstants.LEADING)
-                    .setAllowAutoWrapping(true)
-                    .withFont(JBFont.label().asBold());
+                .setAllowAutoWrapping(true)
+                .withFont(JBFont.label().asBold());
         }
 
         private JBLabel systemLabel() {
             return new JBLabel("CodeAI", CodeAIIcons.SYSTEM_ICON, SwingConstants.LEADING)
-                    .setAllowAutoWrapping(true)
-                    .withFont(JBFont.label().asBold());
+                .setAllowAutoWrapping(true)
+                .withFont(JBFont.label().asBold());
         }
+
     }
 
     static class ResponseInfo extends JPanel {
@@ -88,8 +89,12 @@ public class ChatDisplayPanel extends JPanel {
         ResponseInfo() {
             super(new BorderLayout());
             setBorder(JBUI.Borders.compound(
-                    JBUI.Borders.customLine(JBColor.border(), 0, 0, 1, 0),
-                    JBUI.Borders.empty(5, 10, 10, 10)));
+                JBUI.Borders.customLine(JBColor.border(), 0, 0, 1, 0),
+                JBUI.Borders.empty(5, 10, 10, 10)));
+        }
+
+        public JComponent getText() {
+            return text;
         }
 
         public void setText(JComponent text) {
@@ -97,8 +102,6 @@ public class ChatDisplayPanel extends JPanel {
             this.add(text);
         }
 
-        public JComponent getText() {
-            return text;
-        }
     }
+
 }

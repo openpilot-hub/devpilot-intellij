@@ -20,4 +20,5 @@ public class CodeAIMessageBundle extends DynamicBundle {
     public static String get(@NotNull @PropertyKey(resourceBundle = "messages.codeai") String key, Object... params) {
         return INSTANCE.getMessage(key, params);
     }
+
 }
