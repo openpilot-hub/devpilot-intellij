@@ -27,6 +27,6 @@ public class SettingsStateTest extends BasePlatformTestCase {
     public void testEditorActionConfigurationState() {
         var settings = EditorActionConfigurationState.getInstance();
         assertEquals("Generate tests for the selected code {{selectedCode}}", settings.getDefaultActions().get("Generate Tests"));
-        assertEquals(7, settings.getDefaultActions().size());
+        assertEquals(5, settings.getDefaultActions().size());
     }
 }

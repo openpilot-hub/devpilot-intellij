@@ -11,7 +11,6 @@ import org.jetbrains.annotations.NotNull;
 
 public class CodeAIChatToolWindowFactory implements ToolWindowFactory {
     public static CodeAIChatToolWindow codeAIChatToolWindow = null;
-
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         codeAIChatToolWindow = new CodeAIChatToolWindow(project, toolWindow);
