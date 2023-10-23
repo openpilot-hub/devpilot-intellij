@@ -71,7 +71,10 @@ public class PopupMenuEditorActionGroupUtil {
                             return;
                         }
 
-                        String result = CodeAIChatToolWindowFactory.codeAIChatToolWindow.syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText));
+                        CodeAIChatToolWindowFactory.codeAIChatToolWindow.syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText));
+
+                        String result = CodeAIChatToolWindowFactory.codeAIChatToolWindow.futureGetChatResult();
+
                         if (validateResult(result)) {
                             CodeAINotification.info("The input length is too long, please reduce the length of the messages.");
                             return;

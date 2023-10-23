@@ -14,7 +14,7 @@ public class SettingsStateTest extends BasePlatformTestCase {
 
     public void testCodeAILlmSettings() {
         var settings = CodeAILlmSettingsState.getInstance();
-        assertEquals("CodeAI", settings.getFullName());
+        assertEquals("User", settings.getFullName());
 
         settings.setFullName(null);
         System.setProperty("user.name", "Alice");

@@ -9,7 +9,7 @@ import org.jetbrains.annotations.NotNull;
 public class NewChatAction extends AnAction {
 
     public NewChatAction() {
-        super("New CodeAI Chat", "New chat with CodeAI", AllIcons.Actions.Find);
+        super("New Open Pilot Chat", "New chat with Open Pilot", AllIcons.Actions.Find);
         PopupMenuEditorActionGroupUtil.registerOrReplaceAction(this);
     }
 
