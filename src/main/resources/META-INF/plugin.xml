@@ -1,11 +1,11 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.zhongan.codeAI</id>
+    <id>com.zhongan.openPilot</id>
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>CodeAI</name>
+    <name>Open Pilot</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="zhaopengjun@zhongan.com" url="https://www.zhongan.com">ZA</vendor>
@@ -26,7 +26,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="com.zhongan.codeai.CodeAIStartupActivity"/>
 
-        <applicationConfigurable id="settings.codeai" parentId="tools" displayName="CodeAI"
+        <applicationConfigurable id="settings.codeai" parentId="tools" displayName="Open Pilot"
                                  instance="com.zhongan.codeai.settings.CodeAISettingsConfigurable"/>
 
         <applicationService serviceImplementation="com.zhongan.codeai.settings.state.OpenAISettingsState"/>
@@ -34,19 +34,19 @@
         <applicationService
                 serviceImplementation="com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState"/>
 
-        <toolWindow id="CodeAI" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory"/>
+        <toolWindow id="Open Pilot" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory"/>
 
-        <notificationGroup id="CodeAI Notification Group" displayType="BALLOON" key="notification.group.codeai"/>
+        <notificationGroup id="Open Pilot Notification Group" displayType="BALLOON" key="notification.group.codeai"/>
     </extensions>
 
     <resource-bundle>messages.codeai</resource-bundle>
 
     <actions>
-        <group id="org.intellij.sdk.action.GroupedActions" popup="true" text="CodeAI" description="CodeAI">
+        <group id="org.intellij.sdk.action.GroupedActions" popup="true" text="Open Pilot" description="Open Pilot">
             <action id="com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction"
                     class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                     popup="true"
-                    text="CodeAI" description="Basic Actions of CodeAI">
+                    text="Open Pilot" description="Basic Actions of Open Pilot">
             </action>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>

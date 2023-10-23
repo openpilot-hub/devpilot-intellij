@@ -38,6 +38,8 @@ public class CodeAIChatToolWindow {
 
     private LlmProvider llmProvider;
 
+    private CompletableFuture<String> currentRequest;
+
     public CodeAIChatToolWindow(Project project, ToolWindow toolWindow) {
         this.project = project;
         this.codeAIChatToolWindowPanel = new JPanel(new GridBagLayout());
@@ -125,16 +127,16 @@ public class CodeAIChatToolWindow {
         return llmProvider.chatCompletion(request);
     }
 
-    public String syncSendAndDisplay(String message) {
+    public void syncSendAndDisplay(String message) {
         // show prompt
         showChatContent(message, 0);
 
         // show thinking
-        var text = showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"), 1);
+        showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"), 1);
 
         // FIXME
-        CompletableFuture<String> future = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
-        future.thenAccept(result -> {
+        currentRequest = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
+        currentRequest.thenAccept(result -> {
             SwingUtilities.invokeLater(() -> {
                 int componentCount = chatContentPanel.getComponentCount();
                 Component loading = chatContentPanel.getComponent(componentCount - 1);
@@ -144,8 +146,11 @@ public class CodeAIChatToolWindow {
                 userChatPanel.setIconSend();
             });
         });
+    }
+
+    public String futureGetChatResult() {
         try {
-            return future.get(15, TimeUnit.SECONDS);
+            return currentRequest.get(15, TimeUnit.SECONDS);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }

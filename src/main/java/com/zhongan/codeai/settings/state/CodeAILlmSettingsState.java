@@ -6,10 +6,10 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 
-@State(name = "CodeAI_Settings", storages = @Storage("CodeAI_Settings.xml"))
+@State(name = "OpenPilot_Settings", storages = @Storage("OpenPilot_Settings.xml"))
 public class CodeAILlmSettingsState implements PersistentStateComponent<CodeAILlmSettingsState> {
 
-    private String fullName = "CodeAI";
+    private String fullName = "User";
 
     private boolean useOpenAIService = true;
 

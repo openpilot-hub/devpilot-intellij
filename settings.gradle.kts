@@ -1,1 +1,1 @@
-rootProject.name = "codeAI"
+rootProject.name = "Open Pilot"
