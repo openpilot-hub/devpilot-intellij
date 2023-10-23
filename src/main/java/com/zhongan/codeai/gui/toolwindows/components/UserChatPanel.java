@@ -9,6 +9,7 @@ import com.zhongan.codeai.util.CodeAIMessageBundle;
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Graphics;
@@ -56,7 +57,7 @@ public class UserChatPanel extends JPanel {
             public void keyPressed(KeyEvent e) {
                 if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                     if ((e.getModifiersEx() & KeyEvent.SHIFT_DOWN_MASK) == 0) {
-                        if (isSending.get()) {
+                        if (isSending()) {
                             e.consume();
                             return;
                         }
@@ -99,6 +100,7 @@ public class UserChatPanel extends JPanel {
 
     public void setIconStop() {
         button.setIcon(CodeAIIcons.STOP_ICON);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         button.setContentAreaFilled(false);
         button.setPreferredSize(new Dimension(
             CodeAIIcons.STOP_ICON.getIconWidth(), CodeAIIcons.STOP_ICON.getIconHeight()));
@@ -108,6 +110,7 @@ public class UserChatPanel extends JPanel {
 
     public void setIconSend() {
         button.setIcon(CodeAIIcons.SEND_ICON);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         button.setContentAreaFilled(false);
         button.setPreferredSize(new Dimension(
             CodeAIIcons.SEND_ICON.getIconWidth(), CodeAIIcons.SEND_ICON.getIconHeight()));
@@ -160,6 +163,7 @@ public class UserChatPanel extends JPanel {
         var button = new JButton(icon);
         button.setBorder(BorderFactory.createEmptyBorder());
         button.setContentAreaFilled(false);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         button.setPreferredSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
         button.addActionListener(e -> handleSendEvent());
 

@@ -25,8 +25,10 @@ import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 
 import javax.swing.Icon;
+import javax.swing.SwingUtilities;
 
 import static com.zhongan.codeai.actions.editor.EditorActionEnum.EXPLAIN_THIS;
 import static com.zhongan.codeai.actions.editor.EditorActionEnum.FIX_THIS;
@@ -52,7 +54,7 @@ public class PopupMenuEditorActionGroupUtil {
         EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
-        ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("CodeAI");
+        ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Open Pilot");
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction");
         if (actionGroup instanceof DefaultActionGroup) {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
@@ -71,31 +73,31 @@ public class PopupMenuEditorActionGroupUtil {
                             return;
                         }
 
-                        CodeAIChatToolWindowFactory.codeAIChatToolWindow.syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText));
+                        Consumer<String> callback = result -> {
+                            if (validateResult(result)) {
+                                CodeAINotification.info("The input length is too long, please reduce the length of the messages.");
+                                return;
+                            }
 
-                        String result = CodeAIChatToolWindowFactory.codeAIChatToolWindow.futureGetChatResult();
+                            EditorActionEnum editorActionEnum = EditorActionEnum.getEnumByLable(label);
+                            if (Objects.isNull(editorActionEnum)) {
+                                return;
+                            }
+                            switch (editorActionEnum) {
+                                case PERFORMANCE_CHECK:
+                                    //display result, and open diff window
+                                    PerformanceCheckUtils.showDiffWindow(selectedText, project, editor, createVirtualReplaceFile(editor));
+                                    break;
+                                case GENERATE_COMMENTS:
+                                    DocumentUtil.insertCommentAndFormat(project, editor, result);
+                                    break;
+                                default:
+                                    break;
+                            }
+                        };
 
-                        if (validateResult(result)) {
-                            CodeAINotification.info("The input length is too long, please reduce the length of the messages.");
-                            return;
-                        }
-
-                        EditorActionEnum editorActionEnum = EditorActionEnum.getEnumByLable(label);
-                        if (Objects.isNull(editorActionEnum)) {
-                            return;
-                        }
-                        switch (editorActionEnum) {
-                            case PERFORMANCE_CHECK:
-                                //display result, and open diff window
-                                PerformanceCheckUtils.showDiffWindow(selectedText, project, editor, createVirtualReplaceFile(editor));
-                                break;
-                            case GENERATE_COMMENTS:
-                                DocumentUtil.insertCommentAndFormat(project, editor, result);
-                                break;
-                            default:
-                                break;
-                        }
-//                        CodeAINotification.info(label + ": " + prompt + ": " + selectedText + ":result:" + result);
+                        CodeAIChatToolWindowFactory.codeAIChatToolWindow
+                                .syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText), callback);
                     }
 
                     /**

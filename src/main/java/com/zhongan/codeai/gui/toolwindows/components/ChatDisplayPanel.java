@@ -76,7 +76,7 @@ public class ChatDisplayPanel extends JPanel {
         }
 
         private JBLabel systemLabel() {
-            return new JBLabel("CodeAI", CodeAIIcons.SYSTEM_ICON, SwingConstants.LEADING)
+            return new JBLabel("OpenPilot", CodeAIIcons.SYSTEM_ICON, SwingConstants.LEADING)
                 .setAllowAutoWrapping(true)
                 .withFont(JBFont.label().asBold());
         }

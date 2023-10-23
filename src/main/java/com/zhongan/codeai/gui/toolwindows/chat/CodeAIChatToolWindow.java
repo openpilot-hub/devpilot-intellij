@@ -18,12 +18,10 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
-import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 
@@ -37,8 +35,6 @@ public class CodeAIChatToolWindow {
     private final Project project;
 
     private LlmProvider llmProvider;
-
-    private CompletableFuture<String> currentRequest;
 
     public CodeAIChatToolWindow(Project project, ToolWindow toolWindow) {
         this.project = project;
@@ -71,7 +67,7 @@ public class CodeAIChatToolWindow {
         return codeAIChatToolWindowPanel;
     }
 
-    private JPanel showChatContent(String content, int type) {
+    private void showChatContent(String content, int type) {
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 0;
@@ -103,15 +99,8 @@ public class CodeAIChatToolWindow {
         chatContentPanel.revalidate();
         chatContentPanel.repaint();
 
-        return contentPanel;
-    }
-
-    private void updateChatContent(JTextPane text, String content) {
-        text.setText(content);
-        text.setCaretPosition(text.getDocument().getLength());
-
-        chatContentPanel.revalidate();
-        chatContentPanel.repaint();
+        // scroll to bottom
+        chatContentPanel.scrollRectToVisible(chatContentPanel.getVisibleRect());
     }
 
     private String sendMessage(Project project, String message) {
@@ -128,6 +117,19 @@ public class CodeAIChatToolWindow {
     }
 
     public void syncSendAndDisplay(String message) {
+        syncSendAndDisplay(message, null);
+    }
+
+    public void syncSendAndDisplay(String message, Consumer<String> callback) {
+        // check if sending
+        if (userChatPanel.isSending()) {
+            return;
+        }
+
+        // set status sending
+        userChatPanel.setSending(true);
+        userChatPanel.setIconStop();
+
         // show prompt
         showChatContent(message, 0);
 
@@ -135,8 +137,8 @@ public class CodeAIChatToolWindow {
         showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"), 1);
 
         // FIXME
-        currentRequest = CompletableFuture.supplyAsync(() -> sendMessage(this.project, message));
-        currentRequest.thenAccept(result -> {
+        new Thread(() -> {
+            String result = sendMessage(this.project, message);
             SwingUtilities.invokeLater(() -> {
                 int componentCount = chatContentPanel.getComponentCount();
                 Component loading = chatContentPanel.getComponent(componentCount - 1);
@@ -144,16 +146,13 @@ public class CodeAIChatToolWindow {
 
                 showChatContent(result, 1);
                 userChatPanel.setIconSend();
-            });
-        });
-    }
+                userChatPanel.setSending(false);
 
-    public String futureGetChatResult() {
-        try {
-            return currentRequest.get(15, TimeUnit.SECONDS);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+                if (callback != null) {
+                    callback.accept(result);
+                }
+            });
+        }).start();
     }
 
     private void stopSending() {
