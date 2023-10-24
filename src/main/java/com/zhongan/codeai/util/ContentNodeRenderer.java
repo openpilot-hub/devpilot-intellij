@@ -41,7 +41,7 @@ public class ContentNodeRenderer implements NodeRenderer {
     }
 
     private void renderCodeSnippets(Code node, NodeRendererContext context, HtmlWriter html) {
-        html.attr("style", "color: " + getRGB(new JBColor(0xFFC66D, 0xFFC66D)));
+        html.attr("style", "color: " + getRGB(new JBColor(0xA31515, 0xFFC66D)));
         context.delegateRender();
     }
 

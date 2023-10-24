@@ -1,5 +1,6 @@
 package com.zhongan.codeai.gui.toolwindows.components.code;
 
+import java.awt.Cursor;
 import java.awt.Dimension;
 import java.awt.event.ActionListener;
 
@@ -15,6 +16,7 @@ public class IconJButton extends JButton {
         setBorderPainted(false);
         setPreferredSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
         addActionListener(actionListener);
+        setCursor(new Cursor(Cursor.HAND_CURSOR));
     }
 
 }
