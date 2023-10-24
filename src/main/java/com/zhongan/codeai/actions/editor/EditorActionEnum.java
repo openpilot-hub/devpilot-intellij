@@ -45,7 +45,7 @@ public enum EditorActionEnum {
         this.prompt = prompt;
     }
 
-    public static EditorActionEnum getEnumByLable(String label) {
+    public static EditorActionEnum getEnumByLabel(String label) {
         if (Objects.isNull(label)) {
             return null;
         }

@@ -28,7 +28,6 @@ import java.util.Objects;
 import java.util.function.Consumer;
 
 import javax.swing.Icon;
-import javax.swing.SwingUtilities;
 
 import static com.zhongan.codeai.actions.editor.EditorActionEnum.EXPLAIN_THIS;
 import static com.zhongan.codeai.actions.editor.EditorActionEnum.FIX_THIS;
@@ -79,7 +78,7 @@ public class PopupMenuEditorActionGroupUtil {
                                 return;
                             }
 
-                            EditorActionEnum editorActionEnum = EditorActionEnum.getEnumByLable(label);
+                            EditorActionEnum editorActionEnum = EditorActionEnum.getEnumByLabel(label);
                             if (Objects.isNull(editorActionEnum)) {
                                 return;
                             }
@@ -106,7 +105,7 @@ public class PopupMenuEditorActionGroupUtil {
                      * @return
                      */
                     private VirtualFile createVirtualReplaceFile(Editor editor) {
-                        // process create parent virtualfile can not access excetion
+                        // process create parent virtual file can not access exception
                         return ApplicationManager.getApplication().runWriteAction((Computable<VirtualFile>) () -> {
                             VirtualFile createdFile = null;
                             try {
@@ -145,7 +144,7 @@ public class PopupMenuEditorActionGroupUtil {
     }
 
     /**
-     * check length of input grather than max limit
+     * check length of input rather than max limit
      * 1 token = 3 english character()
      *
      * @param content

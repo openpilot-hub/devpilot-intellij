@@ -9,7 +9,7 @@ public class CodeAINotification {
 
     public static void info(String content) {
         var notification = new Notification(
-            "CodeAI Notification Group",
+            "Open Pilot Notification Group",
             CodeAIMessageBundle.get("notification.group.codeai"),
             content,
             NotificationType.INFORMATION);
@@ -18,7 +18,7 @@ public class CodeAINotification {
 
     public static void warn(String content) {
         var notification = new Notification(
-            "CodeAI Notification Group",
+            "Open Pilot Notification Group",
             CodeAIMessageBundle.get("notification.group.codeai"),
             content,
             NotificationType.WARNING);
@@ -27,7 +27,7 @@ public class CodeAINotification {
 
     public static void error(String content) {
         var notification = new Notification(
-            "CodeAI Notification Group",
+            "Open Pilot Notification Group",
             CodeAIMessageBundle.get("notification.group.codeai"),
             content,
             NotificationType.ERROR);
