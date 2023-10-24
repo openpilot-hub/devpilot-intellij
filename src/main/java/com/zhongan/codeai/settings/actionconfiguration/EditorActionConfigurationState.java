@@ -23,7 +23,7 @@ import static com.zhongan.codeai.actions.editor.EditorActionEnum.REVIEW_CODE;
 )
 public class EditorActionConfigurationState implements PersistentStateComponent<EditorActionConfigurationState> {
 
-    private Map<String, String> defaultActions = new LinkedHashMap<>(Map.of(
+    private final Map<String, String> defaultActions = new LinkedHashMap<>(Map.of(
         PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt(),
         GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt(),
         GENERATE_TESTS.getLabel(), GENERATE_TESTS.getPrompt(),

@@ -42,7 +42,7 @@
     <resource-bundle>messages.codeai</resource-bundle>
 
     <actions>
-        <group id="org.intellij.sdk.action.GroupedActions" popup="true" text="Open Pilot" description="Open Pilot">
+        <group id="OpenPilotGroupedActions" popup="true" text="Open Pilot" description="Open Pilot">
             <action id="com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction"
                     class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                     popup="true"
