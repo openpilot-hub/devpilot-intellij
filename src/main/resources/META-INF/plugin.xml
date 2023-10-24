@@ -34,7 +34,7 @@
         <applicationService
                 serviceImplementation="com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState"/>
 
-        <toolWindow id="Open Pilot" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory"/>
+        <toolWindow id="Open Pilot" icon="com.zhongan.codeai.CodeAIIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory"/>
 
         <notificationGroup id="Open Pilot Notification Group" displayType="BALLOON" key="notification.group.codeai"/>
     </extensions>
@@ -42,7 +42,7 @@
     <resource-bundle>messages.codeai</resource-bundle>
 
     <actions>
-        <group id="OpenPilotGroupedActions" popup="true" text="Open Pilot" description="Open Pilot">
+        <group id="OpenPilotGroupedActions" icon="com.zhongan.codeai.CodeAIIcons.SYSTEM_ICON" popup="true" text="Open Pilot" description="Open Pilot">
             <action id="com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction"
                     class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                     popup="true"
