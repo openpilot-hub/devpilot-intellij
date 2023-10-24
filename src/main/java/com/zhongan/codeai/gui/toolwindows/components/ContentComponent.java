@@ -21,8 +21,8 @@ import java.awt.BorderLayout;
 import java.awt.Component;
 
 import javax.swing.BoxLayout;
-import javax.swing.JEditorPane;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -67,10 +67,11 @@ public class ContentComponent extends JPanel {
         return codePanel;
     }
 
-    public JEditorPane createTextComponent(String textBlock) {
-        JEditorPane textPane = new JEditorPane();
+    public JTextPane createTextComponent(String textBlock) {
+        JTextPane textPane = new JTextPane();
         textPane.setContentType("text/html");
         textPane.setEditable(false);
+        textPane.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
         textPane.setBorder(JBUI.Borders.empty());
         textPane.setText(MarkdownUtil.mark2Html(textBlock));
         textPane.setOpaque(false);
