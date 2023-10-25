@@ -53,7 +53,6 @@ public class PopupMenuEditorActionGroupUtil {
         EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
-        ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Open Pilot");
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction");
         if (actionGroup instanceof DefaultActionGroup) {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
@@ -66,6 +65,7 @@ public class PopupMenuEditorActionGroupUtil {
                 var action = new BasicEditorAction(label, label, ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
+                        ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Open Pilot");
                         toolWindow.show();
                         if (validateInput(selectedText, prompt)) {
                             CodeAINotification.info("The input length is too long, please reduce the length of the messages.");
@@ -95,7 +95,7 @@ public class PopupMenuEditorActionGroupUtil {
                             }
                         };
 
-                        CodeAIChatToolWindowFactory.codeAIChatToolWindow
+                        CodeAIChatToolWindowFactory.getCodeAIChatToolWindow(project)
                                 .syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText), callback);
                     }
 
