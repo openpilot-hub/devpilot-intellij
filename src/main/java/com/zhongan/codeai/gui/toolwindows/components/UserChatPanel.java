@@ -1,9 +1,11 @@
 package com.zhongan.codeai.gui.toolwindows.components;
 
+import com.intellij.ui.Gray;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.JBUI;
 import com.zhongan.codeai.CodeAIIcons;
+import com.zhongan.codeai.gui.toolwindows.components.code.IconJButton;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
 
 import java.awt.BasicStroke;
@@ -33,7 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 public class UserChatPanel extends JPanel {
     private final JBTextArea textArea;
 
-    private final JPanel iconsPanel;
+    private final RoundedPanel iconsPanel;
 
     private final Consumer<String> sendEvent;
 
@@ -92,28 +94,22 @@ public class UserChatPanel extends JPanel {
 
         var flowLayout = new FlowLayout(FlowLayout.RIGHT);
         flowLayout.setHgap(8);
-        button = createIconButton(CodeAIIcons.SEND_ICON);
-        iconsPanel = new JPanel(flowLayout);
-        iconsPanel.add(button);
+        iconsPanel = new RoundedPanel();
+        button = new IconJButton(CodeAIIcons.SEND_ICON, "Submit", e -> handleSendEvent());
+        iconsPanel.addIconJButton((IconJButton) button);
         this.add(JBUI.Panels.simplePanel().addToBottom(iconsPanel), BorderLayout.EAST);
     }
 
     public void setIconStop() {
         button.setIcon(CodeAIIcons.STOP_ICON);
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.setContentAreaFilled(false);
-        button.setPreferredSize(new Dimension(
-            CodeAIIcons.STOP_ICON.getIconWidth(), CodeAIIcons.STOP_ICON.getIconHeight()));
+        button.setToolTipText("Stop");
         removeAllActionListener();
         button.addActionListener(e -> handleStopEvent());
     }
 
     public void setIconSend() {
         button.setIcon(CodeAIIcons.SEND_ICON);
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.setContentAreaFilled(false);
-        button.setPreferredSize(new Dimension(
-            CodeAIIcons.SEND_ICON.getIconWidth(), CodeAIIcons.SEND_ICON.getIconHeight()));
+        button.setToolTipText("Submit");
         removeAllActionListener();
         button.addActionListener(e -> handleSendEvent());
     }
@@ -171,7 +167,7 @@ public class UserChatPanel extends JPanel {
 
         button.addMouseListener(new MouseAdapter() {
             public void mouseEntered(MouseEvent evt) {
-                iconsPanel.setBackground(JBColor.gray);
+                iconsPanel.setBackground(new JBColor(Gray._225, Gray._95));
             }
 
             public void mouseExited(MouseEvent evt) {
