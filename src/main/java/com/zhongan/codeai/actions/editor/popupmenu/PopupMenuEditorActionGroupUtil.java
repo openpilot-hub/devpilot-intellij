@@ -14,8 +14,10 @@ import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
-import com.zhongan.codeai.actions.editor.EditorActionEnum;
 import com.zhongan.codeai.actions.notifications.CodeAINotification;
+import com.zhongan.codeai.actions.toolbar.ToolbarClearAction;
+import com.zhongan.codeai.enums.EditorActionEnum;
+import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
 import com.zhongan.codeai.util.DocumentUtil;
@@ -29,13 +31,13 @@ import java.util.function.Consumer;
 
 import javax.swing.Icon;
 
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.EXPLAIN_THIS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.FIX_THIS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_COMMENTS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_DOCS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_TESTS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.PERFORMANCE_CHECK;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.REVIEW_CODE;
+import static com.zhongan.codeai.enums.EditorActionEnum.EXPLAIN_THIS;
+import static com.zhongan.codeai.enums.EditorActionEnum.FIX_THIS;
+import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_COMMENTS;
+import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_DOCS;
+import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_TESTS;
+import static com.zhongan.codeai.enums.EditorActionEnum.PERFORMANCE_CHECK;
+import static com.zhongan.codeai.enums.EditorActionEnum.REVIEW_CODE;
 import static com.zhongan.codeai.util.Const.MAX_TOKEN_EXCEPTION_MSG;
 import static com.zhongan.codeai.util.Const.TOKEN_MAX_LENGTH;
 import static com.zhongan.codeai.util.VirtualFileUtil.createParentEditorVirtualFile;
@@ -58,6 +60,7 @@ public class PopupMenuEditorActionGroupUtil {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
             group.removeAll();
             group.add(new NewChatAction());
+            group.add(new ToolbarClearAction());
             group.addSeparator();
 
             var defaultActions = EditorActionConfigurationState.getInstance().getDefaultActions();
@@ -68,13 +71,13 @@ public class PopupMenuEditorActionGroupUtil {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Open Pilot");
                         toolWindow.show();
                         if (validateInput(selectedText, prompt)) {
-                            CodeAINotification.info("The input length is too long, please reduce the length of the messages.");
+                            CodeAINotification.info("The input length is too long, please reduce the length of the messages or clear the conversation window.");
                             return;
                         }
 
                         Consumer<String> callback = result -> {
                             if (validateResult(result)) {
-                                CodeAINotification.info("The input length is too long, please reduce the length of the messages.");
+                                CodeAINotification.info("The input length is too long, please reduce the length of the messages or clear the conversation window.");
                                 return;
                             }
 
@@ -96,7 +99,7 @@ public class PopupMenuEditorActionGroupUtil {
                         };
 
                         CodeAIChatToolWindowFactory.getCodeAIChatToolWindow(project)
-                                .syncSendAndDisplay(prompt.replace("{{selectedCode}}", selectedText), callback);
+                                .syncSendAndDisplay(SessionTypeEnum.INDEPENDENT.getCode(), prompt.replace("{{selectedCode}}", selectedText), callback);
                     }
 
                     /**
