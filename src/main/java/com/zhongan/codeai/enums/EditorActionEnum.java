@@ -1,4 +1,4 @@
-package com.zhongan.codeai.actions.editor;
+package com.zhongan.codeai.enums;
 
 import java.util.Objects;
 

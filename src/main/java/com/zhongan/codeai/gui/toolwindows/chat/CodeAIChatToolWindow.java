@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBScrollPane;
+import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.codeai.gui.toolwindows.components.ContentComponent;
 import com.zhongan.codeai.gui.toolwindows.components.UserChatPanel;
@@ -36,11 +37,14 @@ public class CodeAIChatToolWindow {
 
     private LlmProvider llmProvider;
 
+    private CodeAIChatCompletionRequest multiSessionRequest = new CodeAIChatCompletionRequest();
+
     public CodeAIChatToolWindow(Project project, ToolWindow toolWindow) {
         this.project = project;
         this.codeAIChatToolWindowPanel = new JPanel(new GridBagLayout());
         this.chatContentPanel = new ScrollablePanel();
         this.userChatPanel = new UserChatPanel(this::syncSendAndDisplay, this::stopSending);
+        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -103,24 +107,31 @@ public class CodeAIChatToolWindow {
         chatContentPanel.scrollRectToVisible(chatContentPanel.getVisibleRect());
     }
 
-    private String sendMessage(Project project, String message) {
+    private String sendMessage(Integer sessionType, String message) {
         var codeAIMessage = new CodeAIMessage();
         // FIXME
         codeAIMessage.setRole("user");
         codeAIMessage.setContent(message);
+        //check session type,default multi session
+        CodeAIChatCompletionRequest codeAIChatCompletionRequest;
+        SessionTypeEnum sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
+        if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum) && !multiSessionRequest.getMessages().isEmpty()) {
+            codeAIChatCompletionRequest = new CodeAIChatCompletionRequest();
+        } else {
+            codeAIChatCompletionRequest = multiSessionRequest;
+        }
+        codeAIChatCompletionRequest.getMessages().add(codeAIMessage);
 
-        var request = new CodeAIChatCompletionRequest();
-        request.setMessages(List.of(codeAIMessage));
-
-        llmProvider = new LlmProviderFactory().getLlmProvider(project);
-        return llmProvider.chatCompletion(request);
+        return llmProvider.chatCompletion(codeAIChatCompletionRequest);
     }
 
     public void syncSendAndDisplay(String message) {
-        syncSendAndDisplay(message, null);
+        //chat窗口支持多轮会话
+        syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), message, null);
     }
 
-    public void syncSendAndDisplay(String message, Consumer<String> callback) {
+    public void syncSendAndDisplay(Integer sessionType, String message, Consumer<String> callback) {
+
         // check if sending
         if (userChatPanel.isSending()) {
             return;
@@ -138,13 +149,15 @@ public class CodeAIChatToolWindow {
 
         // FIXME
         new Thread(() -> {
-            String result = sendMessage(this.project, message);
+            String result = sendMessage(sessionType, message);
             SwingUtilities.invokeLater(() -> {
                 int componentCount = chatContentPanel.getComponentCount();
-                Component loading = chatContentPanel.getComponent(componentCount - 1);
-                chatContentPanel.remove(loading);
+                if (componentCount > 0) {
+                    Component loading = chatContentPanel.getComponent(componentCount - 1);
+                    chatContentPanel.remove(loading);
+                    showChatContent(result, 1);
+                }
 
-                showChatContent(result, 1);
                 userChatPanel.setIconSend();
                 userChatPanel.setSending(false);
 
@@ -159,6 +172,18 @@ public class CodeAIChatToolWindow {
         llmProvider.interruptSend();
         userChatPanel.setIconSend();
         userChatPanel.setSending(false);
+    }
+
+    public void clearSession() {
+        SwingUtilities.invokeLater(() -> {
+            if (userChatPanel.isSending()) {
+                stopSending();
+            }
+            chatContentPanel.setVisible(false);
+            chatContentPanel.removeAll();
+            chatContentPanel.setVisible(true);
+        });
+        multiSessionRequest.getMessages().clear();
     }
 
 }

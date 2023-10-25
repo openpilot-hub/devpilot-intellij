@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service;
 import com.zhongan.codeai.integrations.llms.LlmProvider;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIFailedResponse;
+import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.integrations.llms.entity.CodeAISuccessResponse;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
 
@@ -48,7 +49,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
         }
 
         try {
-            return parseResult(response);
+            return parseResult(chatCompletionRequest, response);
         } catch (IOException e) {
             return "Chat completion failed: " + e.getMessage();
         }
@@ -61,7 +62,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
         }
     }
 
-    private String parseResult(okhttp3.Response response) throws IOException {
+    private String parseResult(CodeAIChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
         if (response == null) {
             return "Nothing to see here.";
         }
@@ -69,11 +70,16 @@ public final class OpenAIServiceProvider implements LlmProvider {
         String result = Objects.requireNonNull(response.body()).string();
 
         if (response.isSuccessful()) {
-            return objectMapper.readValue(result, CodeAISuccessResponse.class)
-                .getChoices()
-                .get(0)
-                .getMessage()
-                .getContent();
+            CodeAISuccessResponse.Message message = objectMapper.readValue(result, CodeAISuccessResponse.class)
+                    .getChoices()
+                    .get(0)
+                    .getMessage();
+            //todo 多轮会话处理
+            CodeAIMessage codeAIMessage = new CodeAIMessage();
+            codeAIMessage.setRole("assistant");
+            codeAIMessage.setContent(message.getContent());
+            chatCompletionRequest.getMessages().add(codeAIMessage);
+            return message.getContent();
 
         } else {
             return objectMapper.readValue(result, CodeAIFailedResponse.class)

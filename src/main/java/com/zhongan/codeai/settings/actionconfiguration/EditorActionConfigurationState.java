@@ -9,13 +9,13 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.EXPLAIN_THIS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.FIX_THIS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_COMMENTS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_DOCS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.GENERATE_TESTS;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.PERFORMANCE_CHECK;
-import static com.zhongan.codeai.actions.editor.EditorActionEnum.REVIEW_CODE;
+import static com.zhongan.codeai.enums.EditorActionEnum.EXPLAIN_THIS;
+import static com.zhongan.codeai.enums.EditorActionEnum.FIX_THIS;
+import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_COMMENTS;
+import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_DOCS;
+import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_TESTS;
+import static com.zhongan.codeai.enums.EditorActionEnum.PERFORMANCE_CHECK;
+import static com.zhongan.codeai.enums.EditorActionEnum.REVIEW_CODE;
 
 @State(
     name = "com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState",

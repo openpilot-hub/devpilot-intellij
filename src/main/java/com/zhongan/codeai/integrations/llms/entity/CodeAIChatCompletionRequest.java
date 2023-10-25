@@ -1,12 +1,13 @@
 package com.zhongan.codeai.integrations.llms.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CodeAIChatCompletionRequest {
 
     String model;
 
-    List<CodeAIMessage> messages;
+    List<CodeAIMessage> messages = new ArrayList<>();
 
     boolean stream = Boolean.FALSE;
 
