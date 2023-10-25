@@ -13,7 +13,6 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
-import java.awt.FlowLayout;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.FocusEvent;
@@ -92,12 +91,10 @@ public class UserChatPanel extends JPanel {
             JBUI.Borders.empty(10)));
         this.add(textArea, BorderLayout.CENTER);
 
-        var flowLayout = new FlowLayout(FlowLayout.RIGHT);
-        flowLayout.setHgap(8);
         iconsPanel = new RoundedPanel();
         button = new IconJButton(CodeAIIcons.SEND_ICON, "Submit", e -> handleSendEvent());
         iconsPanel.addIconJButton((IconJButton) button);
-        this.add(JBUI.Panels.simplePanel().addToBottom(iconsPanel), BorderLayout.EAST);
+        this.add(iconsPanel, BorderLayout.EAST);
     }
 
     public void setIconStop() {

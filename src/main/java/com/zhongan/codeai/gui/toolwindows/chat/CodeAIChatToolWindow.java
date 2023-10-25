@@ -23,6 +23,7 @@ import java.util.function.Consumer;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
+import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
 
@@ -65,6 +66,7 @@ public class CodeAIChatToolWindow {
         gbc.gridy = 1;
 
         codeAIChatToolWindowPanel.add(userChatPanel, gbc);
+        chatContentPanel.add(createWelcomePanel());
     }
 
     public JPanel getCodeAIChatToolWindowPanel() {
@@ -184,6 +186,14 @@ public class CodeAIChatToolWindow {
             chatContentPanel.setVisible(true);
         });
         multiSessionRequest.getMessages().clear();
+    }
+
+    private ChatDisplayPanel createWelcomePanel() {
+        JTextPane jTextPane = new JTextPane();
+        jTextPane.setText("Welcome to OpenPilot: Your AI-Infused Code!");
+        ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(jTextPane);
+        chatDisplayPanel.setSystemLabel();
+        return chatDisplayPanel;
     }
 
 }
