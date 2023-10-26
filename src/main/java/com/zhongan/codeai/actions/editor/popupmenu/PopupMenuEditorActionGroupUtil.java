@@ -99,7 +99,7 @@ public class PopupMenuEditorActionGroupUtil {
                         };
 
                         CodeAIChatToolWindowFactory.getCodeAIChatToolWindow(project)
-                                .syncSendAndDisplay(SessionTypeEnum.INDEPENDENT.getCode(), prompt.replace("{{selectedCode}}", selectedText), callback);
+                                .syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), prompt.replace("{{selectedCode}}", selectedText), callback);
                     }
 
                     /**
