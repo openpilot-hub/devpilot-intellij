@@ -12,6 +12,7 @@ import com.zhongan.codeai.integrations.llms.LlmProvider;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
+import com.zhongan.codeai.settings.state.CodeAILlmSettingsState;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
 import com.zhongan.codeai.util.MarkdownUtil;
 
@@ -26,6 +27,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.event.HyperlinkEvent;
 
 public class CodeAIChatToolWindow {
     private final JPanel codeAIChatToolWindowPanel;
@@ -184,14 +186,64 @@ public class CodeAIChatToolWindow {
             chatContentPanel.setVisible(false);
             chatContentPanel.removeAll();
             chatContentPanel.setVisible(true);
+            chatContentPanel.add(createUserPromptPanel());
         });
         multiSessionRequest.getMessages().clear();
     }
 
     private ChatDisplayPanel createWelcomePanel() {
-        JTextPane jTextPane = new JTextPane();
-        jTextPane.setText("Welcome to OpenPilot: Your AI-Infused Code!");
-        ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(jTextPane);
+        JTextPane welcomePanel = new JTextPane();
+        welcomePanel.setContentType("text/html");
+        welcomePanel.setEditable(false);
+        welcomePanel.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
+        welcomePanel.setText(String.format("Welcome @<span style=\"font-weight: bold;\">%s</span>! " +
+                "It's a pleasure to have you here. " +
+                "I am your trusty Assistant,ready to assist you in achieving your tasks more efficiently." +
+                            "<br><br>" +
+                "While you can certainly ask general questions, my true expertise lies in assisting you with your coding needs." +
+                " Here are a few examples of how I can be of assistance:" +
+                    "<br><br>" +
+                "<a href=\"explain\"  >1. Provide detailed explanations for specific code snippets you select.</a><br> " +
+                "<a href=\"fix\"      >2. Offer suggestions and propose fixes for any bugs in your code.</a><br>" +
+                "<a href=\"comments\" >3. Generate comments for the selected code</a>" +
+                 "<br><br>" +
+                "As an AI-powered assistant, I strive to provide the best possible assistance." +
+                " However, please keep in mind that there might be occasional surprises or mistakes." +
+                " It's always a good idea to double-check any generated code or suggestions.", CodeAILlmSettingsState.getInstance().getFullName()));
+
+        welcomePanel.addHyperlinkListener(e -> {
+            if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
+                String description = e.getDescription();
+                switch (description) {
+                    case "explain":
+                        System.out.println("do explain action");
+                        break;
+                    case "fix":
+                        System.out.println("do fix action");
+                        break;
+                    case "comments":
+                        System.out.println("do generate comments action");
+                        break;
+                }
+            }
+        });
+        ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(welcomePanel);
+        chatDisplayPanel.setSystemLabel();
+        return chatDisplayPanel;
+    }
+
+    private ChatDisplayPanel createUserPromptPanel() {
+        JTextPane userPromptPanel = new JTextPane();
+        userPromptPanel.setContentType("text/html");
+        userPromptPanel.setEditable(false);
+        userPromptPanel.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
+        userPromptPanel.setText(String.format("Hello @<span style=\"font-weight: bold;\">%s</span>, how may I assist you today?" +
+                "<br><br>" +
+                "As an AI-powered assistant, I strive to provide the best possible assistance." +
+                " However, please keep in mind that there might be occasional surprises or mistakes." +
+                " It's always a good idea to double-check any generated code or suggestions.", CodeAILlmSettingsState.getInstance().getFullName()));
+
+        ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(userPromptPanel);
         chatDisplayPanel.setSystemLabel();
         return chatDisplayPanel;
     }
