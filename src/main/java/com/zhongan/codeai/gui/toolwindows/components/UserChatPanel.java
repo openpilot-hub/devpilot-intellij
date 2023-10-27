@@ -75,12 +75,20 @@ public class UserChatPanel extends JPanel {
         textArea.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                UserChatPanel.super.paintBorder(UserChatPanel.super.getGraphics());
+                Graphics g = UserChatPanel.super.getGraphics();
+                if (g == null) {
+                    return;
+                }
+                UserChatPanel.super.paintBorder(g);
             }
 
             @Override
             public void focusLost(FocusEvent e) {
-                UserChatPanel.super.paintBorder(UserChatPanel.super.getGraphics());
+                Graphics g = UserChatPanel.super.getGraphics();
+                if (g == null) {
+                    return;
+                }
+                UserChatPanel.super.paintBorder(g);
             }
         });
 
