@@ -142,6 +142,10 @@ public class UserChatPanel extends JPanel {
 
     @Override
     protected void paintBorder(Graphics g) {
+        if (g == null) {
+            return;
+        }
+
         Graphics2D g2 = (Graphics2D) g.create();
         if (textArea.isFocusOwner()) {
             g2.setColor(JBUI.CurrentTheme.Focus.focusColor());
