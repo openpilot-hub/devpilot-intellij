@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.ui.components.JBScrollPane;
+import com.zhongan.codeai.enums.EditorActionEnum;
 import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.codeai.gui.toolwindows.components.ContentComponent;
@@ -38,9 +39,9 @@ public class CodeAIChatToolWindow {
 
     private final Project project;
 
-    private LlmProvider llmProvider;
+    private final LlmProvider llmProvider;
 
-    private CodeAIChatCompletionRequest multiSessionRequest = new CodeAIChatCompletionRequest();
+    private final CodeAIChatCompletionRequest multiSessionRequest = new CodeAIChatCompletionRequest();
 
     public CodeAIChatToolWindow(Project project, ToolWindow toolWindow) {
         this.project = project;
@@ -76,6 +77,10 @@ public class CodeAIChatToolWindow {
     }
 
     private void showChatContent(String content, int type) {
+        showChatContent(content, type, null);
+    }
+
+    private void showChatContent(String content, int type, EditorActionEnum actionEnum) {
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 0;
@@ -85,12 +90,16 @@ public class CodeAIChatToolWindow {
 
         ContentComponent contentPanel = new ContentComponent();
 
-        List<String> blocks = MarkdownUtil.splitBlocks(content);
-        for (String block : blocks) {
-            if (block.startsWith("```")) {
-                contentPanel.add(contentPanel.createCodeComponent(project, block));
-            } else {
-                contentPanel.add(contentPanel.createTextComponent(block));
+        if (actionEnum != null) {
+            contentPanel.add(contentPanel.createTextComponent(actionEnum.getLabel()));
+        } else {
+            List<String> blocks = MarkdownUtil.splitBlocks(content);
+            for (String block : blocks) {
+                if (block.startsWith("```")) {
+                    contentPanel.add(contentPanel.createCodeComponent(project, block));
+                } else {
+                    contentPanel.add(contentPanel.createTextComponent(block));
+                }
             }
         }
 
@@ -131,10 +140,10 @@ public class CodeAIChatToolWindow {
 
     public void syncSendAndDisplay(String message) {
         //chat窗口支持多轮会话
-        syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), message, null);
+        syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), null, message, null);
     }
 
-    public void syncSendAndDisplay(Integer sessionType, String message, Consumer<String> callback) {
+    public void syncSendAndDisplay(Integer sessionType, EditorActionEnum editorActionEnum, String message, Consumer<String> callback) {
 
         // check if sending
         if (userChatPanel.isSending()) {
@@ -146,7 +155,7 @@ public class CodeAIChatToolWindow {
         userChatPanel.setIconStop();
 
         // show prompt
-        showChatContent(message, 0);
+        showChatContent(message, 0, editorActionEnum);
 
         // show thinking
         showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"), 1);
