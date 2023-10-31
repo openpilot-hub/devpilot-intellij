@@ -32,6 +32,10 @@ public abstract class BasicEditorAction extends AnAction {
         }
     }
 
+    public void fastAction(Project project, Editor editor, String selectedText) {
+        actionPerformed(project, editor, selectedText);
+    }
+
     public void update(AnActionEvent event) {
         Project project = event.getProject();
         Editor editor = event.getData(PlatformDataKeys.EDITOR);

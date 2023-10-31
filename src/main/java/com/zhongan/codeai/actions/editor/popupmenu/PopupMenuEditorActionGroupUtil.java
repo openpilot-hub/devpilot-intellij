@@ -133,7 +133,7 @@ public class PopupMenuEditorActionGroupUtil {
         if (actionManager.getAction(actionId) != null) {
             actionManager.replaceAction(actionId, action);
         } else {
-            actionManager.registerAction(actionId, action, PluginId.getId("com.zhongan.codeAI"));
+            actionManager.registerAction(actionId, action, PluginId.getId("com.zhongan.openPilot"));
         }
     }
 
