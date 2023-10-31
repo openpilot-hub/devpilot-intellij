@@ -1,9 +1,17 @@
 package com.zhongan.codeai.gui.toolwindows.chat;
 
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
+import com.intellij.openapi.ui.MessageType;
+import com.intellij.openapi.ui.popup.Balloon;
+import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.wm.ToolWindow;
+import com.intellij.ui.awt.RelativePoint;
 import com.intellij.ui.components.JBScrollPane;
+import com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.codeai.enums.EditorActionEnum;
 import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
@@ -20,10 +28,13 @@ import com.zhongan.codeai.util.MarkdownUtil;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.MouseInfo;
+import java.awt.Point;
 import java.util.List;
 import java.util.function.Consumer;
 
 import javax.swing.BoxLayout;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
@@ -208,14 +219,14 @@ public class CodeAIChatToolWindow {
         welcomePanel.setText(String.format("Welcome @<span style=\"font-weight: bold;\">%s</span>! " +
                 "It's a pleasure to have you here. " +
                 "I am your trusty Assistant,ready to assist you in achieving your tasks more efficiently." +
-                            "<br><br>" +
+                "<br><br>" +
                 "While you can certainly ask general questions, my true expertise lies in assisting you with your coding needs." +
                 " Here are a few examples of how I can be of assistance:" +
-                    "<br><br>" +
-                "<a href=\"explain\"  >1. Provide detailed explanations for specific code snippets you select.</a><br> " +
-                "<a href=\"fix\"      >2. Offer suggestions and propose fixes for any bugs in your code.</a><br>" +
-                "<a href=\"comments\" >3. Generate comments for the selected code</a>" +
-                 "<br><br>" +
+                "<br><br>" +
+                "<a href=\"Explain This\"      >1. Provide detailed explanations for selected code.</a><br> " +
+                "<a href=\"Fix This\"          >2. Offer bug fixes and suggestions for selected code.</a><br>" +
+                "<a href=\"Generate Comments\" >3. Create concise comments for selected code.</a>" +
+                "<br><br>" +
                 "As an AI-powered assistant, I strive to provide the best possible assistance." +
                 " However, please keep in mind that there might be occasional surprises or mistakes." +
                 " It's always a good idea to double-check any generated code or suggestions.", CodeAILlmSettingsState.getInstance().getFullName()));
@@ -223,17 +234,27 @@ public class CodeAIChatToolWindow {
         welcomePanel.addHyperlinkListener(e -> {
             if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                 String description = e.getDescription();
-                switch (description) {
-                    case "explain":
-                        System.out.println("do explain action");
-                        break;
-                    case "fix":
-                        System.out.println("do fix action");
-                        break;
-                    case "comments":
-                        System.out.println("do generate comments action");
-                        break;
+                ActionManager actionManager = ActionManager.getInstance();
+                BasicEditorAction myAction = (BasicEditorAction) actionManager.getAction(description);
+                Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+                if (editor == null || !editor.getSelectionModel().hasSelection()) {
+                    JLabel label = new JLabel(editor == null ? "Please open code file first" :
+                                                               "Please select code snippet first");
+                    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
+                    mouseLocation.translate(14, 12);
+                    Balloon balloon = JBPopupFactory.getInstance()
+                            .createBalloonBuilder(label)
+                            .setFillColor(MessageType.WARNING.getPopupBackground())
+                            .setBorderColor(MessageType.WARNING.getBorderColor())
+                            .setHideOnAction(true)
+                            .setHideOnFrameResize(true)
+                            .setHideOnKeyOutside(true)
+                            .setFadeoutTime(2000)
+                            .createBalloon();
+                    balloon.show(RelativePoint.fromScreen(mouseLocation), Balloon.Position.atRight);
+                    return;
                 }
+                myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText());
             }
         });
         ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(welcomePanel);

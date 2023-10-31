@@ -35,7 +35,7 @@ public class ContentNodeRenderer implements NodeRenderer {
         if (block instanceof OrderedListItem || block instanceof BulletListItem) {
             html.attr("style", "margin: 0; padding:0;");
         } else {
-            html.attr("style", "margin-top: 4px; margin-bottom: 4px;");
+            html.attr("style", "margin-top: 5px; margin-bottom: 5px;");
         }
         context.delegateRender();
     }
