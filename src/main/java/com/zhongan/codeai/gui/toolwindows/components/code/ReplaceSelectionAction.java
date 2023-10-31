@@ -11,13 +11,13 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-public class InsertAtCaretAction implements ActionListener {
+public class ReplaceSelectionAction implements ActionListener {
 
     private final Editor editor;
 
     private final Project project;
 
-    public InsertAtCaretAction(Editor editor, Project project) {
+    public ReplaceSelectionAction(Editor editor, Project project) {
         this.editor = editor;
         this.project = project;
     }
@@ -25,20 +25,23 @@ public class InsertAtCaretAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Editor textEditor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-        if (textEditor == null) {
+        if (textEditor == null || !textEditor.getSelectionModel().hasSelection()) {
             return;
         }
-        int offset = textEditor.getCaretModel().getOffset();
-        String generatedText = this.editor.getDocument().getText();
+        String generatedText = editor.getDocument().getText();
         WriteCommandAction.runWriteCommandAction(project, () -> {
-            textEditor.getDocument().insertString(offset, generatedText);
+            textEditor.getDocument().replaceString(textEditor.getSelectionModel().getSelectionStart(),
+                    textEditor.getSelectionModel().getSelectionEnd(), generatedText);
 
             PsiFile psiFile = PsiDocumentManager.getInstance(project).getPsiFile(textEditor.getDocument());
             if (psiFile != null) {
-                PsiDocumentManager.getInstance(project).commitDocument(textEditor.getDocument());
-                CodeStyleManager.getInstance(project).reformatText(psiFile, offset, offset + generatedText.length());
+                CodeStyleManager.getInstance(project).reformatText(psiFile, textEditor.getSelectionModel().getSelectionStart(),
+                        textEditor.getSelectionModel().getSelectionEnd());
             }
+
+            textEditor.getContentComponent().requestFocusInWindow();
         });
     }
 
 }
+

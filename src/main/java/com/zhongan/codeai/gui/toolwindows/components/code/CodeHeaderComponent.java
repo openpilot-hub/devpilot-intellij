@@ -46,6 +46,9 @@ public class CodeHeaderComponent extends JPanel {
         codeActionsGroup.add(new RoundedPanel()
                                 .addIconJButton(new IconJButton(CodeAIIcons.INSERT_AT_CARET_ICON, "Insert at Caret",
                                                 new InsertAtCaretAction(codeEditor, project))));
+        codeActionsGroup.add(new RoundedPanel()
+                                .addIconJButton(new IconJButton(CodeAIIcons.REPLACE_ICON, "Replace Selection",
+                                                new ReplaceSelectionAction(codeEditor, project))));
         return codeActionsGroup;
     }
 

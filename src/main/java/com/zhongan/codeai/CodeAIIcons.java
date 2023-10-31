@@ -15,6 +15,8 @@ public class CodeAIIcons {
 
     public static final Icon NEW_FILE_ICON = IconLoader.getIcon("/icons/new_file.svg", CodeAIIcons.class);
 
+    public static final Icon REPLACE_ICON = IconLoader.getIcon("/icons/replace.svg", CodeAIIcons.class);
+
     public static final Icon SYSTEM_ICON = IconLoader.getIcon("/icons/openpilot.svg", CodeAIIcons.class);
 
     public static final Icon USER_ICON = IconLoader.getIcon("/icons/user.svg", CodeAIIcons.class);
