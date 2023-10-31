@@ -19,7 +19,9 @@ public class CopyAction implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         Clipboard systemClipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-        systemClipboard.setContents(new StringSelection(editor.getDocument().getText()), null);
+        String generatedText = this.editor.getSelectionModel().hasSelection() ?
+                this.editor.getSelectionModel().getSelectedText() : this.editor.getDocument().getText();
+        systemClipboard.setContents(new StringSelection(generatedText), null);
     }
 
 }

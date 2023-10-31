@@ -28,7 +28,9 @@ public class ReplaceSelectionAction implements ActionListener {
         if (textEditor == null || !textEditor.getSelectionModel().hasSelection()) {
             return;
         }
-        String generatedText = editor.getDocument().getText();
+        String generatedText = this.editor.getSelectionModel().hasSelection() ?
+                this.editor.getSelectionModel().getSelectedText() : this.editor.getDocument().getText();
+
         WriteCommandAction.runWriteCommandAction(project, () -> {
             textEditor.getDocument().replaceString(textEditor.getSelectionModel().getSelectionStart(),
                     textEditor.getSelectionModel().getSelectionEnd(), generatedText);
