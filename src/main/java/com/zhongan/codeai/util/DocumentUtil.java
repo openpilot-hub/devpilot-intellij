@@ -8,6 +8,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.codeStyle.CodeStyleManager;
 
@@ -49,6 +50,31 @@ public class DocumentUtil {
             VirtualFile file = FileDocumentManager.getInstance().getFile(editor.getDocument());
             codeStyleManager.reformatText(PsiManager.getInstance(project).findFile(file),
                     caretOffset, caretOffset + result.length());
+        }));
+    }
+
+    /**
+     * diff comment and format
+     * @param project
+     * @param editor
+     * @param result
+     */
+    public static void diffCommentAndFormatWindow(Project project, Editor editor, String result) {
+        var selectionModel = editor.getSelectionModel();
+        ApplicationManager.getApplication().invokeLater(() -> WriteCommandAction.runWriteCommandAction(project, () -> {
+            VirtualFile createdFile = VirtualFileUtil.createVirtualReplaceFile(editor, project);
+            Document replaceDocument = FileDocumentManager.getInstance().getDocument(createdFile);
+
+            replaceDocument.setText(editor.getDocument().getText());
+            replaceDocument.setReadOnly(false);
+            replaceDocument.replaceString(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), result);
+
+            //auto code format
+            CodeStyleManager codeStyleManager = CodeStyleManager.getInstance(project);
+            codeStyleManager.reformatText(PsiDocumentManager.getInstance(project).getPsiFile(replaceDocument),
+                    selectionModel.getSelectionStart(), selectionModel.getSelectionStart() + result.length());
+            //show diff
+            PerformanceCheckUtils.showDiff(project, editor, FileDocumentManager.getInstance().getFile(editor.getDocument()), replaceDocument);
         }));
     }
 
