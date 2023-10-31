@@ -74,7 +74,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
                     .getChoices()
                     .get(0)
                     .getMessage();
-            //todo 多轮会话处理
+            //多轮会话处理
             CodeAIMessage codeAIMessage = new CodeAIMessage();
             codeAIMessage.setRole("assistant");
             codeAIMessage.setContent(message.getContent());

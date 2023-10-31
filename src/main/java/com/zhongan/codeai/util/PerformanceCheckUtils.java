@@ -7,20 +7,16 @@ import com.intellij.diff.DiffManager;
 import com.intellij.diff.contents.DiffContent;
 import com.intellij.diff.requests.DiffRequest;
 import com.intellij.diff.requests.SimpleDiffRequest;
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
-import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.zhongan.codeai.actions.editor.popupmenu.entity.PerformanceCheckResponse;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -61,7 +57,8 @@ public class PerformanceCheckUtils {
         codeAIMessage.setRole("user");
         codeAIMessage.setContent(selectedText + "\n" + CUSTOM_PROMPT);
         CodeAIChatCompletionRequest request = new CodeAIChatCompletionRequest();
-        request.setMessages(java.util.List.of(codeAIMessage));
+        //list content support update
+        request.setMessages(new ArrayList<CodeAIMessage>() {{ add(codeAIMessage); }});
         final String response = new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
         try {
             PerformanceCheckResponse performanceCheckResponse = objectMapper.readValue(response, PerformanceCheckResponse.class);
@@ -104,24 +101,10 @@ public class PerformanceCheckUtils {
      * @param selectedText
      * @param project
      * @param editor
-     * @param replaceFile
      */
-    public static void showDiffWindow(String selectedText, Project project, Editor editor, VirtualFile replaceFile) {
+    public static void showDiffWindow(String selectedText, Project project, Editor editor) {
         final String code = getChatCompletionResult(selectedText, project);
-        Document replaceDocument = FileDocumentManager.getInstance().getDocument(replaceFile);
-        var selectionModel = editor.getSelectionModel();
-        ApplicationManager.getApplication().invokeLater(() -> WriteCommandAction.runWriteCommandAction(project, () -> {
-            replaceDocument.setText(editor.getDocument().getText());
-            replaceDocument.setReadOnly(false);
-            replaceDocument.replaceString(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), code);
-
-            //auto code format
-            CodeStyleManager codeStyleManager = CodeStyleManager.getInstance(project);
-            codeStyleManager.reformatText(PsiDocumentManager.getInstance(project).getPsiFile(replaceDocument),
-                selectionModel.getSelectionStart(), selectionModel.getSelectionStart() + code.length());
-        }));
-        //todo auto format code
-        showDiff(project, editor, FileDocumentManager.getInstance().getFile(editor.getDocument()), replaceDocument);
+        DocumentUtil.diffCommentAndFormatWindow(project, editor, code);
     }
 
     private static String getCode(String result) {

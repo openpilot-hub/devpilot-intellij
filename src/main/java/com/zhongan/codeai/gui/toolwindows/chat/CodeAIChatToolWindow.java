@@ -137,16 +137,25 @@ public class CodeAIChatToolWindow {
         codeAIMessage.setRole("user");
         codeAIMessage.setContent(message);
         //check session type,default multi session
-        CodeAIChatCompletionRequest codeAIChatCompletionRequest;
+        CodeAIChatCompletionRequest codeAIChatCompletionRequest = new CodeAIChatCompletionRequest();
         SessionTypeEnum sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
-        if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum) && !multiSessionRequest.getMessages().isEmpty()) {
-            codeAIChatCompletionRequest = new CodeAIChatCompletionRequest();
+        if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
+            //independent message can not update, just readonly
+            codeAIChatCompletionRequest.getMessages().add(codeAIMessage);
         } else {
-            codeAIChatCompletionRequest = multiSessionRequest;
+            codeAIChatCompletionRequest.setStream(multiSessionRequest.isStream());
+            codeAIChatCompletionRequest.setModel(multiSessionRequest.getModel());
+            multiSessionRequest.getMessages().add(codeAIMessage);
+            codeAIChatCompletionRequest.getMessages().addAll(multiSessionRequest.getMessages());
         }
-        codeAIChatCompletionRequest.getMessages().add(codeAIMessage);
-
-        return llmProvider.chatCompletion(codeAIChatCompletionRequest);
+        String chatCompletion = llmProvider.chatCompletion(codeAIChatCompletionRequest);
+        if (SessionTypeEnum.MULTI_TURN.equals(sessionTypeEnum) &&
+                codeAIChatCompletionRequest.getMessages().size() > multiSessionRequest.getMessages().size()) {
+            //update multi session request
+            multiSessionRequest.getMessages().add(
+                    codeAIChatCompletionRequest.getMessages().get(codeAIChatCompletionRequest.getMessages().size() - 1));
+        }
+        return chatCompletion;
     }
 
     public void syncSendAndDisplay(String message) {
@@ -209,6 +218,16 @@ public class CodeAIChatToolWindow {
             chatContentPanel.add(createUserPromptPanel());
         });
         multiSessionRequest.getMessages().clear();
+    }
+
+    public void addClearSessionInfo() {
+        if (multiSessionRequest.getMessages().isEmpty()) {
+            return;
+        }
+        multiSessionRequest.getMessages().clear();
+        JTextPane clearSessionTip = new JTextPane();
+        clearSessionTip.setText(CodeAIMessageBundle.get("codeai.clear.session.tip"));
+        chatContentPanel.add(new ChatDisplayPanel().setText(clearSessionTip).setSystemLabel());
     }
 
     private ChatDisplayPanel createWelcomePanel() {
