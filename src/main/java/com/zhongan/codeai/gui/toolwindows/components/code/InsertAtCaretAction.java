@@ -29,7 +29,9 @@ public class InsertAtCaretAction implements ActionListener {
             return;
         }
         int offset = textEditor.getCaretModel().getOffset();
-        String generatedText = this.editor.getDocument().getText();
+        String generatedText = this.editor.getSelectionModel().hasSelection() ?
+                this.editor.getSelectionModel().getSelectedText() : this.editor.getDocument().getText();
+
         WriteCommandAction.runWriteCommandAction(project, () -> {
             textEditor.getDocument().insertString(offset, generatedText);
 
