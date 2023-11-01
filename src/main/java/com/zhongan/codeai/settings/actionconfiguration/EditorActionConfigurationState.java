@@ -12,7 +12,6 @@ import java.util.Map;
 import static com.zhongan.codeai.enums.EditorActionEnum.EXPLAIN_THIS;
 import static com.zhongan.codeai.enums.EditorActionEnum.FIX_THIS;
 import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_COMMENTS;
-import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_DOCS;
 import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_TESTS;
 import static com.zhongan.codeai.enums.EditorActionEnum.PERFORMANCE_CHECK;
 import static com.zhongan.codeai.enums.EditorActionEnum.REVIEW_CODE;
@@ -27,7 +26,6 @@ public class EditorActionConfigurationState implements PersistentStateComponent<
         PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt(),
         GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt(),
         GENERATE_TESTS.getLabel(), GENERATE_TESTS.getPrompt(),
-        GENERATE_DOCS.getLabel(), GENERATE_DOCS.getPrompt(),
         FIX_THIS.getLabel(), FIX_THIS.getPrompt(),
         EXPLAIN_THIS.getLabel(), EXPLAIN_THIS.getPrompt(),
         REVIEW_CODE.getLabel(), REVIEW_CODE.getPrompt()

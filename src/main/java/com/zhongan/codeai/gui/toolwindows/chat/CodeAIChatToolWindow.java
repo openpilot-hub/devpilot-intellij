@@ -101,7 +101,9 @@ public class CodeAIChatToolWindow {
 
         ContentComponent contentPanel = new ContentComponent();
 
-        if (actionEnum != null) {
+        if (type == 1 && actionEnum == EditorActionEnum.GENERATE_COMMENTS) {
+            contentPanel.add(contentPanel.createTextComponent("Please see diff view"));
+        } else if (type == 0 && actionEnum != null) {
             contentPanel.add(contentPanel.createTextComponent(actionEnum.getLabel()));
         } else {
             List<String> blocks = MarkdownUtil.splitBlocks(content);
@@ -188,7 +190,7 @@ public class CodeAIChatToolWindow {
                 if (componentCount > 0) {
                     Component loading = chatContentPanel.getComponent(componentCount - 1);
                     chatContentPanel.remove(loading);
-                    showChatContent(result, 1);
+                    showChatContent(result, 1, editorActionEnum);
                 }
 
                 userChatPanel.setIconSend();
@@ -258,7 +260,7 @@ public class CodeAIChatToolWindow {
                 Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                 if (editor == null || !editor.getSelectionModel().hasSelection()) {
                     JLabel label = new JLabel(editor == null ? "Please open code file first" :
-                                                               "Please select code snippet first");
+                            "Please select code snippet first");
                     Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
                     mouseLocation.translate(14, 12);
                     Balloon balloon = JBPopupFactory.getInstance()
