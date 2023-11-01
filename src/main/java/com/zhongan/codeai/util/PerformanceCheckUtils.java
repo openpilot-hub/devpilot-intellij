@@ -89,8 +89,8 @@ public class PerformanceCheckUtils {
         DiffContentFactory diffContentFactory = DiffContentFactory.getInstance();
         DiffContent replaceContent = getDiffContent(diffContentFactory, project, replaceDocument);
         DiffContent originalContent = getDiffContent(diffContentFactory, project, editor.getDocument());
-        DiffRequest diffRequest = new SimpleDiffRequest("Code AI: Diff view",
-            replaceContent, originalContent, "Code AI suggested code", originalFile.getName() + "(original code)");
+        DiffRequest diffRequest = new SimpleDiffRequest("Open Pilot: Diff view",
+            replaceContent, originalContent, "Open Pilot suggested code", originalFile.getName() + "(original code)");
         DiffManager diffManager = DiffManager.getInstance();
         diffManager.showDiff(project, diffRequest);
     }

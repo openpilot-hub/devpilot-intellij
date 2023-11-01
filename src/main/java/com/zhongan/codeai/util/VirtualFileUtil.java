@@ -1,7 +1,6 @@
 package com.zhongan.codeai.util;
 
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
@@ -12,10 +11,8 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import java.io.IOException;
 import java.nio.file.Path;
 
-import org.apache.commons.io.FilenameUtils;
-
 /**
- * Description
+ * VirtualFileUtil
  *
  * @author zhangzhisheng
  * @version v0.1 2023-10-14 13:25 zhangzhisheng Exp $
@@ -25,15 +22,11 @@ public class VirtualFileUtil {
     /**
      * create parent editor virtual file
      *
-     * @param document
      * @return
      */
-    public static VirtualFile createParentEditorVirtualFile(Document document) {
-        //virtual file process
-        VirtualFile originalFile = FileDocumentManager.getInstance().getFile(document);
-        //do not create new file in git or svn project, because it will be added to git or svn
-        return VirtualFileManager.getInstance().refreshAndFindFileByNioPath(Path.
-            of(FilenameUtils.getPrefix(originalFile.getPath())));
+    public static VirtualFile createParentEditorVirtualFile() {
+        //virtual file process,do not create new file in git or svn project, because it will be added to git or svn
+        return VirtualFileManager.getInstance().refreshAndFindFileByNioPath(Path.of(System.getProperty("user.home")));
     }
 
     /**
@@ -47,7 +40,7 @@ public class VirtualFileUtil {
         return ApplicationManager.getApplication().runWriteAction((Computable<VirtualFile>) () -> {
             VirtualFile createdFile = null;
             try {
-                createdFile = createParentEditorVirtualFile(editor.getDocument()).createChildData(project,
+                createdFile = createParentEditorVirtualFile().createChildData(project,
                         System.currentTimeMillis() + "." + FileDocumentManager.getInstance().
                                 getFile(editor.getDocument()).getExtension());
             } catch (IOException e) {
