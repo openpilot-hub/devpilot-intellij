@@ -11,7 +11,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.zhongan.codeai.actions.notifications.CodeAINotification;
-import com.zhongan.codeai.actions.toolbar.ToolbarClearAction;
 import com.zhongan.codeai.enums.EditorActionEnum;
 import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory;
@@ -55,7 +54,6 @@ public class PopupMenuEditorActionGroupUtil {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
             group.removeAll();
             group.add(new NewChatAction());
-            group.add(new ToolbarClearAction());
             group.addSeparator();
 
             var defaultActions = EditorActionConfigurationState.getInstance().getDefaultActions();
@@ -96,7 +94,7 @@ public class PopupMenuEditorActionGroupUtil {
                         CodeAIChatToolWindow codeAIChatToolWindow = CodeAIChatToolWindowFactory.getCodeAIChatToolWindow(project);
                         //right action clear session
                         codeAIChatToolWindow.addClearSessionInfo();
-                        codeAIChatToolWindow.syncSendAndDisplay(SessionTypeEnum.INDEPENDENT.getCode(), EditorActionEnum.getEnumByLabel(label), prompt.replace("{{selectedCode}}", selectedText), callback);
+                        codeAIChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), prompt.replace("{{selectedCode}}", selectedText), callback);
                     }
                 };
                 group.add(action);
