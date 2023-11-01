@@ -36,14 +36,14 @@ public class PerformanceCheckUtils {
     public static final String NO_PERFORMANCE_ISSUES_NULL = "null";
 
     public static final List<String> NO_PERFORMANCE_ISSUES = Lists.newArrayList(NO_PERFORMANCE_ISSUES_DESC,
-        NO_PERFORMANCE_ISSUES_NULL);
+            NO_PERFORMANCE_ISSUES_NULL);
 
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String CUSTOM_PROMPT = "Please optimize the code above for performance. " +
-        "Provide two outputs: one as 'null' indicating no performance issues, " +
-        "and the other as the code after performance optimization, " +
-        "returned in JSON format with the key 'rewriteCode'.";
+            "Provide two outputs: one as 'null' indicating no performance issues, " +
+            "and the other as the code after performance optimization, " +
+            "returned in JSON format with the key 'rewriteCode'.";
 
     /**
      * get performance check result
@@ -90,7 +90,7 @@ public class PerformanceCheckUtils {
         DiffContent replaceContent = getDiffContent(diffContentFactory, project, replaceDocument);
         DiffContent originalContent = getDiffContent(diffContentFactory, project, editor.getDocument());
         DiffRequest diffRequest = new SimpleDiffRequest("Open Pilot: Diff view",
-            replaceContent, originalContent, "Open Pilot suggested code", originalFile.getName() + "(original code)");
+                replaceContent, originalContent, "Open Pilot suggested code", originalFile.getName() + "(original code)");
         DiffManager diffManager = DiffManager.getInstance();
         diffManager.showDiff(project, diffRequest);
     }
@@ -104,6 +104,9 @@ public class PerformanceCheckUtils {
      */
     public static void showDiffWindow(String selectedText, Project project, Editor editor) {
         final String code = getChatCompletionResult(selectedText, project);
+        if (code.equals(selectedText)) {
+            return;
+        }
         DocumentUtil.diffCommentAndFormatWindow(project, editor, code);
     }
 

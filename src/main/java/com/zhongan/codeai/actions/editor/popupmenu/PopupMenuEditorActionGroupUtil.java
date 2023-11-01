@@ -29,7 +29,6 @@ import javax.swing.Icon;
 import static com.zhongan.codeai.enums.EditorActionEnum.EXPLAIN_THIS;
 import static com.zhongan.codeai.enums.EditorActionEnum.FIX_THIS;
 import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_COMMENTS;
-import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_DOCS;
 import static com.zhongan.codeai.enums.EditorActionEnum.GENERATE_TESTS;
 import static com.zhongan.codeai.enums.EditorActionEnum.PERFORMANCE_CHECK;
 import static com.zhongan.codeai.enums.EditorActionEnum.REVIEW_CODE;
@@ -43,7 +42,6 @@ public class PopupMenuEditorActionGroupUtil {
         PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
         GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
         GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
-        GENERATE_DOCS.getLabel(), AllIcons.Gutter.JavadocEdit,
         FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
         REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
         EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
