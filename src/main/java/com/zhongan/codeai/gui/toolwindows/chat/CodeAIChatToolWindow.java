@@ -135,7 +135,6 @@ public class CodeAIChatToolWindow {
 
     private String sendMessage(Integer sessionType, String message) {
         var codeAIMessage = new CodeAIMessage();
-        // FIXME
         codeAIMessage.setRole("user");
         codeAIMessage.setContent(message);
         //check session type,default multi session
