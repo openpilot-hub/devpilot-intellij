@@ -2,17 +2,10 @@ package com.zhongan.codeai.util;
 
 import com.google.common.collect.Lists;
 import com.intellij.diff.DiffContentFactory;
-import com.intellij.diff.DiffManager;
-import com.intellij.diff.contents.DiffContent;
-import com.intellij.diff.requests.DiffRequest;
-import com.intellij.diff.requests.SimpleDiffRequest;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.EditorFactory;
-import com.intellij.openapi.editor.event.EditorFactoryEvent;
-import com.intellij.openapi.editor.event.EditorFactoryListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
@@ -23,8 +16,6 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.jetbrains.annotations.NotNull;
 
 /**
  * DocumentUtil
@@ -87,53 +78,8 @@ public class DocumentUtil {
             codeStyleManager.reformatText(PsiDocumentManager.getInstance(project).getPsiFile(replaceDocument),
                     selectionModel.getSelectionStart(), selectionModel.getSelectionStart() + result.length());
             //show diff
-            showDiff(project, editor, FileDocumentManager.getInstance().getFile(editor.getDocument()), replaceDocument);
+            PerformanceCheckUtils.showDiff(project, editor, FileDocumentManager.getInstance().getFile(editor.getDocument()), replaceDocument);
         }));
-    }
-
-    /**
-     * show diff windows
-     *
-     * @param project
-     * @param editor
-     * @param originalFile
-     * @param replaceDocument
-     */
-    public static void showDiff(Project project, Editor editor, VirtualFile originalFile, Document replaceDocument) {
-        DiffContent replaceContent = getDiffContent(project, replaceDocument);
-        DiffContent originalContent = getDiffContent(project, editor.getDocument());
-        DiffRequest diffRequest = createDiffRequest("Open Pilot: Diff view", replaceContent, originalContent, "Open Pilot suggested code", originalFile.getName() + "(original code)");
-
-        DiffManager diffManager = DiffManager.getInstance();
-        diffManager.showDiff(project, diffRequest);
-
-        VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(replaceDocument);
-
-        EditorFactory.getInstance().addEditorFactoryListener(new EditorFactoryListener() {
-            @Override
-            public void editorReleased(@NotNull EditorFactoryEvent event) {
-                deleteVirtualFileIfNeeded(virtualFile);
-            }
-        }, () -> {
-        });
-    }
-
-    private static DiffContent getDiffContent(Project project, Document document) {
-        return diffContentFactory.create(project, document.getText());
-    }
-
-    private static DiffRequest createDiffRequest(String title, DiffContent replaceContent, DiffContent originalContent, String replaceContentTitle, String originalContentTitle) {
-        return new SimpleDiffRequest(title, replaceContent, originalContent, replaceContentTitle, originalContentTitle);
-    }
-
-    private static void deleteVirtualFileIfNeeded(VirtualFile virtualFile) {
-        if (virtualFile != null && virtualFile.exists()) {
-            try {
-                virtualFile.delete(null);
-            } catch (Exception e) {
-
-            }
-        }
     }
 
     public static boolean containsCode(String content) {
