@@ -104,7 +104,7 @@ public class CodeAIChatToolWindow {
         if (type == 1 && actionEnum == EditorActionEnum.GENERATE_COMMENTS) {
             contentPanel.add(contentPanel.createTextComponent("Please see diff view"));
         } else if (type == 0 && actionEnum != null) {
-            contentPanel.add(contentPanel.createTextComponent(actionEnum.getLabel()));
+            contentPanel.add(contentPanel.createTextComponent(CodeAIMessageBundle.get(actionEnum.getLabel())));
         } else {
             List<String> blocks = MarkdownUtil.splitBlocks(content);
             for (String block : blocks) {
@@ -202,6 +202,10 @@ public class CodeAIChatToolWindow {
         }).start();
     }
 
+    public void setSelectIntoTextArea(String message) {
+        userChatPanel.setTextArea(message);
+    }
+
     private void stopSending() {
         llmProvider.interruptSend();
         userChatPanel.setIconSend();
@@ -236,20 +240,7 @@ public class CodeAIChatToolWindow {
         welcomePanel.setContentType("text/html");
         welcomePanel.setEditable(false);
         welcomePanel.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
-        welcomePanel.setText(String.format("Welcome @<span style=\"font-weight: bold;\">%s</span>! " +
-                "It's a pleasure to have you here. " +
-                "I am your trusty Assistant,ready to assist you in achieving your tasks more efficiently." +
-                "<br><br>" +
-                "While you can certainly ask general questions, my true expertise lies in assisting you with your coding needs." +
-                " Here are a few examples of how I can be of assistance:" +
-                "<br><br>" +
-                "<a href=\"Explain This\"      >1. Provide detailed explanations for selected code.</a><br> " +
-                "<a href=\"Fix This\"          >2. Offer bug fixes and suggestions for selected code.</a><br>" +
-                "<a href=\"Generate Comments\" >3. Create concise comments for selected code.</a>" +
-                "<br><br>" +
-                "As an AI-powered assistant, I strive to provide the best possible assistance." +
-                " However, please keep in mind that there might be occasional surprises or mistakes." +
-                " It's always a good idea to double-check any generated code or suggestions.", CodeAILlmSettingsState.getInstance().getFullName()));
+        welcomePanel.setText(String.format(CodeAIMessageBundle.get("codeai.welcome.words"), CodeAILlmSettingsState.getInstance().getFullName()));
 
         welcomePanel.addHyperlinkListener(e -> {
             if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
@@ -287,11 +278,7 @@ public class CodeAIChatToolWindow {
         userPromptPanel.setContentType("text/html");
         userPromptPanel.setEditable(false);
         userPromptPanel.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
-        userPromptPanel.setText(String.format("Hello @<span style=\"font-weight: bold;\">%s</span>, how may I assist you today?" +
-                "<br><br>" +
-                "As an AI-powered assistant, I strive to provide the best possible assistance." +
-                " However, please keep in mind that there might be occasional surprises or mistakes." +
-                " It's always a good idea to double-check any generated code or suggestions.", CodeAILlmSettingsState.getInstance().getFullName()));
+        userPromptPanel.setText(String.format(CodeAIMessageBundle.get("codeai.welcome.assist"), CodeAILlmSettingsState.getInstance().getFullName()));
 
         ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(userPromptPanel);
         chatDisplayPanel.setSystemLabel();

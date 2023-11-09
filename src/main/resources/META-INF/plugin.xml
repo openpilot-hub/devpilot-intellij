@@ -31,6 +31,7 @@
 
         <applicationService serviceImplementation="com.zhongan.codeai.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.codeai.settings.state.CodeAILlmSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.codeai.settings.state.LanguageSettingsState"/>
         <applicationService
                 serviceImplementation="com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState"/>
 

@@ -16,6 +16,8 @@ import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory;
 import com.zhongan.codeai.gui.toolwindows.chat.CodeAIChatToolWindow;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
+import com.zhongan.codeai.settings.state.LanguageSettingsState;
+import com.zhongan.codeai.util.CodeAIMessageBundle;
 import com.zhongan.codeai.util.DocumentUtil;
 import com.zhongan.codeai.util.PerformanceCheckUtils;
 
@@ -39,12 +41,12 @@ public class PopupMenuEditorActionGroupUtil {
     private static final Logger LOG = Logger.getInstance(PopupMenuEditorActionGroupUtil.class);
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
-        PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
-        GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
-        GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
-        FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
-        REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
-        EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
+            PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
+            GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
+            GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
+            FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
+            REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
+            EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction");
@@ -56,7 +58,7 @@ public class PopupMenuEditorActionGroupUtil {
 
             var defaultActions = EditorActionConfigurationState.getInstance().getDefaultActions();
             defaultActions.forEach((label, prompt) -> {
-                var action = new BasicEditorAction(label, label, ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
+                var action = new BasicEditorAction(CodeAIMessageBundle.get(label), CodeAIMessageBundle.get(label), ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Open Pilot");
@@ -92,7 +94,11 @@ public class PopupMenuEditorActionGroupUtil {
                         CodeAIChatToolWindow codeAIChatToolWindow = CodeAIChatToolWindowFactory.getCodeAIChatToolWindow(project);
                         //right action clear session
                         codeAIChatToolWindow.addClearSessionInfo();
-                        codeAIChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), prompt.replace("{{selectedCode}}", selectedText), callback);
+                        String newPrompt = prompt.replace("{{selectedCode}}", selectedText);
+                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
+                            newPrompt = newPrompt + "Please response in Chinese ";
+                        }
+                        codeAIChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), newPrompt, callback);
                     }
                 };
                 group.add(action);
