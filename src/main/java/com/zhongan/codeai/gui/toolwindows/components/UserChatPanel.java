@@ -119,6 +119,12 @@ public class UserChatPanel extends JPanel {
         button.addActionListener(e -> handleSendEvent());
     }
 
+    public void setTextArea(String text) {
+        textArea.setText(text);
+        textArea.requestFocus();
+        textArea.requestFocusInWindow();
+    }
+
     public boolean isSending() {
         return isSending.get();
     }

@@ -5,13 +5,14 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
+import com.zhongan.codeai.util.CodeAIMessageBundle;
 
 import org.jetbrains.annotations.NotNull;
 
 public class NewChatAction extends AnAction {
 
     public NewChatAction() {
-        super("New Open Pilot Chat", "New chat with Open Pilot", AllIcons.Actions.Find);
+        super(CodeAIMessageBundle.get("codeai.action.new.chat"), CodeAIMessageBundle.get("codeai.action.new.chat.desc"), AllIcons.Actions.Find);
         PopupMenuEditorActionGroupUtil.registerOrReplaceAction(this);
     }
 
