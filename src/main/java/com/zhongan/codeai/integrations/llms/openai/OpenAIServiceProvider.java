@@ -8,6 +8,7 @@ import com.zhongan.codeai.integrations.llms.entity.CodeAIFailedResponse;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.integrations.llms.entity.CodeAISuccessResponse;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
+import com.zhongan.codeai.util.CodeAIMessageBundle;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -64,7 +65,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
     private String parseResult(CodeAIChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
         if (response == null) {
-            return "Nothing to see here.";
+            return CodeAIMessageBundle.get("codeai.chatWindow.response.null");
         }
 
         String result = Objects.requireNonNull(response.body()).string();

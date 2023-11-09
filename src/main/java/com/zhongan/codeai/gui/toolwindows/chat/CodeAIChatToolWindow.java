@@ -5,36 +5,35 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
-import com.intellij.openapi.ui.MessageType;
 import com.intellij.openapi.ui.popup.Balloon;
-import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.wm.ToolWindow;
-import com.intellij.ui.awt.RelativePoint;
+import com.intellij.ui.Gray;
+import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
+import com.intellij.util.ui.JBUI;
 import com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.codeai.enums.EditorActionEnum;
 import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.codeai.gui.toolwindows.components.ContentComponent;
+import com.zhongan.codeai.gui.toolwindows.components.EditorInfo;
 import com.zhongan.codeai.gui.toolwindows.components.UserChatPanel;
 import com.zhongan.codeai.integrations.llms.LlmProvider;
 import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 import com.zhongan.codeai.settings.state.CodeAILlmSettingsState;
+import com.zhongan.codeai.util.BalloonAlertUtils;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
 import com.zhongan.codeai.util.MarkdownUtil;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
-import java.awt.MouseInfo;
-import java.awt.Point;
 import java.util.List;
 import java.util.function.Consumer;
 
 import javax.swing.BoxLayout;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
 import javax.swing.ScrollPaneConstants;
@@ -88,10 +87,10 @@ public class CodeAIChatToolWindow {
     }
 
     private void showChatContent(String content, int type) {
-        showChatContent(content, type, null);
+        showChatContent(content, type, null, null);
     }
 
-    private void showChatContent(String content, int type, EditorActionEnum actionEnum) {
+    private void showChatContent(String content, int type, EditorActionEnum actionType, EditorInfo editorInfo) {
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
         gbc.weighty = 0;
@@ -101,15 +100,16 @@ public class CodeAIChatToolWindow {
 
         ContentComponent contentPanel = new ContentComponent();
 
-        if (type == 1 && actionEnum == EditorActionEnum.GENERATE_COMMENTS) {
-            contentPanel.add(contentPanel.createTextComponent("Please see diff view"));
-        } else if (type == 0 && actionEnum != null) {
-            contentPanel.add(contentPanel.createTextComponent(CodeAIMessageBundle.get(actionEnum.getLabel())));
+        if (type == 1 && actionType == EditorActionEnum.GENERATE_COMMENTS) {
+            contentPanel.add(contentPanel.createTextComponent(CodeAIMessageBundle.get("codeai.chatWindow.diff")));
+        } else if (type == 0 && actionType != null) {
+            contentPanel.add(contentPanel.createRightActionComponent(CodeAIMessageBundle.get(actionType.getLabel()), project, editorInfo));
         } else {
             List<String> blocks = MarkdownUtil.splitBlocks(content);
             for (String block : blocks) {
                 if (block.startsWith("```")) {
-                    contentPanel.add(contentPanel.createCodeComponent(project, block));
+                    contentPanel.add(contentPanel.createCodeComponent(project, block, actionType,
+                                                            editorInfo == null ? null : editorInfo.getChosenEditor()));
                 } else {
                     contentPanel.add(contentPanel.createTextComponent(block));
                 }
@@ -161,10 +161,10 @@ public class CodeAIChatToolWindow {
 
     public void syncSendAndDisplay(String message) {
         //chat窗口支持多轮会话
-        syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), null, message, null);
+        syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), null, message, null, null);
     }
 
-    public void syncSendAndDisplay(Integer sessionType, EditorActionEnum editorActionEnum, String message, Consumer<String> callback) {
+    public void syncSendAndDisplay(Integer sessionType, EditorActionEnum editorActionEnum, String message, Consumer<String> callback, EditorInfo editorInfo) {
 
         // check if sending
         if (userChatPanel.isSending()) {
@@ -176,7 +176,7 @@ public class CodeAIChatToolWindow {
         userChatPanel.setIconStop();
 
         // show prompt
-        showChatContent(message, 0, editorActionEnum);
+        showChatContent(message, 0, editorActionEnum, editorInfo);
 
         // show thinking
         showChatContent(CodeAIMessageBundle.get("codeai.thinking.content"), 1);
@@ -189,7 +189,7 @@ public class CodeAIChatToolWindow {
                 if (componentCount > 0) {
                     Component loading = chatContentPanel.getComponent(componentCount - 1);
                     chatContentPanel.remove(loading);
-                    showChatContent(result, 1, editorActionEnum);
+                    showChatContent(result, 1, editorActionEnum, editorInfo);
                 }
 
                 userChatPanel.setIconSend();
@@ -200,10 +200,6 @@ public class CodeAIChatToolWindow {
                 }
             });
         }).start();
-    }
-
-    public void setSelectIntoTextArea(String message) {
-        userChatPanel.setTextArea(message);
     }
 
     private void stopSending() {
@@ -239,30 +235,21 @@ public class CodeAIChatToolWindow {
         JTextPane welcomePanel = new JTextPane();
         welcomePanel.setContentType("text/html");
         welcomePanel.setEditable(false);
+        welcomePanel.setOpaque(true);
+        welcomePanel.setBackground(new JBColor(Gray._248, Gray._54));
         welcomePanel.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
         welcomePanel.setText(String.format(CodeAIMessageBundle.get("codeai.welcome.words"), CodeAILlmSettingsState.getInstance().getFullName()));
+        welcomePanel.setBorder(JBUI.Borders.emptyLeft(5));
 
         welcomePanel.addHyperlinkListener(e -> {
             if (e.getEventType() == HyperlinkEvent.EventType.ACTIVATED) {
                 String description = e.getDescription();
                 ActionManager actionManager = ActionManager.getInstance();
-                BasicEditorAction myAction = (BasicEditorAction) actionManager.getAction(description);
+                BasicEditorAction myAction = (BasicEditorAction) actionManager.getAction(CodeAIMessageBundle.get(description));
                 Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
                 if (editor == null || !editor.getSelectionModel().hasSelection()) {
-                    JLabel label = new JLabel(editor == null ? "Please open code file first" :
-                            "Please select code snippet first");
-                    Point mouseLocation = MouseInfo.getPointerInfo().getLocation();
-                    mouseLocation.translate(14, 12);
-                    Balloon balloon = JBPopupFactory.getInstance()
-                            .createBalloonBuilder(label)
-                            .setFillColor(MessageType.WARNING.getPopupBackground())
-                            .setBorderColor(MessageType.WARNING.getBorderColor())
-                            .setHideOnAction(true)
-                            .setHideOnFrameResize(true)
-                            .setHideOnKeyOutside(true)
-                            .setFadeoutTime(2000)
-                            .createBalloon();
-                    balloon.show(RelativePoint.fromScreen(mouseLocation), Balloon.Position.atRight);
+                    String msg = editor == null ? CodeAIMessageBundle.get("codeai.alter.welcome.openFile") : CodeAIMessageBundle.get("codeai.alter.welcome.selectCode");
+                    BalloonAlertUtils.showWarningAlert(msg, 14, 12, Balloon.Position.atRight);
                     return;
                 }
                 myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText());
@@ -277,9 +264,11 @@ public class CodeAIChatToolWindow {
         JTextPane userPromptPanel = new JTextPane();
         userPromptPanel.setContentType("text/html");
         userPromptPanel.setEditable(false);
+        userPromptPanel.setOpaque(true);
+        userPromptPanel.setBackground(new JBColor(Gray._248, Gray._54));
         userPromptPanel.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
+        userPromptPanel.setBorder(JBUI.Borders.emptyLeft(5));
         userPromptPanel.setText(String.format(CodeAIMessageBundle.get("codeai.welcome.assist"), CodeAILlmSettingsState.getInstance().getFullName()));
-
         ChatDisplayPanel chatDisplayPanel = new ChatDisplayPanel().setText(userPromptPanel);
         chatDisplayPanel.setSystemLabel();
         return chatDisplayPanel;
