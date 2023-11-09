@@ -11,14 +11,21 @@ import com.intellij.openapi.project.Project;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.testFramework.LightVirtualFile;
+import com.intellij.ui.Gray;
+import com.intellij.ui.JBColor;
+import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.JBUI;
 import com.vladsch.flexmark.ast.FencedCodeBlock;
 import com.vladsch.flexmark.parser.Parser;
+import com.zhongan.codeai.enums.EditorActionEnum;
 import com.zhongan.codeai.gui.toolwindows.components.code.CodeHeaderComponent;
+import com.zhongan.codeai.gui.toolwindows.components.code.GoToCode;
+import com.zhongan.codeai.util.CodeAIMessageBundle;
 import com.zhongan.codeai.util.MarkdownUtil;
 
 import java.awt.BorderLayout;
 import java.awt.Component;
+import java.awt.FlowLayout;
 
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
@@ -32,7 +39,7 @@ public class ContentComponent extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
     }
 
-    public Component createCodeComponent(Project project, String codeBlock) {
+    public Component createCodeComponent(Project project, String codeBlock, EditorActionEnum actionType, Editor chosenEditor) {
         com.vladsch.flexmark.util.ast.Document parse = Parser.builder().build().parse(codeBlock);
         FencedCodeBlock codeNode = (FencedCodeBlock) parse.getChildOfType(FencedCodeBlock.class);
         if (codeNode == null) {
@@ -48,9 +55,9 @@ public class ContentComponent extends JPanel {
             document = EditorFactory.getInstance().createDocument(code);
         }
 
-        Editor editor = EditorFactory.getInstance().createEditor(document, project, lightVirtualFile, true, EditorKind.MAIN_EDITOR);
-        editor.setHeaderComponent(new CodeHeaderComponent(language, editor, project, fileExt));
-        EditorSettings editorSettings = editor.getSettings();
+        Editor codeViewer = EditorFactory.getInstance().createEditor(document, project, lightVirtualFile, true, EditorKind.MAIN_EDITOR);
+        codeViewer.setHeaderComponent(new CodeHeaderComponent(language, codeViewer, project, fileExt, actionType, chosenEditor));
+        EditorSettings editorSettings = codeViewer.getSettings();
         editorSettings.setGutterIconsShown(false);
         editorSettings.setShowIntentionBulb(false);
         editorSettings.setAdditionalLinesCount(0);
@@ -63,7 +70,7 @@ public class ContentComponent extends JPanel {
 
         JPanel codePanel = new JPanel();
         codePanel.setLayout(new BorderLayout());
-        codePanel.add(editor.getComponent(), BorderLayout.CENTER);
+        codePanel.add(codeViewer.getComponent(), BorderLayout.CENTER);
         return codePanel;
     }
 
@@ -71,11 +78,32 @@ public class ContentComponent extends JPanel {
         JTextPane textPane = new JTextPane();
         textPane.setContentType("text/html");
         textPane.setEditable(false);
+        textPane.setOpaque(true);
+        textPane.setBackground(new JBColor(Gray._248, Gray._54));
         textPane.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
-        textPane.setBorder(JBUI.Borders.empty());
+        textPane.setBorder(JBUI.Borders.emptyLeft(5));
         textPane.setText(MarkdownUtil.mark2Html(textBlock));
-        textPane.setOpaque(false);
         return textPane;
+    }
+
+    public JPanel createRightActionComponent(String labelText, Project project, EditorInfo editorInfo) {
+        JPanel rightActionPane = new JPanel();
+        rightActionPane.setLayout(new BoxLayout(rightActionPane, BoxLayout.Y_AXIS));
+
+        JTextPane rightActionLabel = createTextComponent(labelText);
+        // to emphasize
+        rightActionLabel.setBackground(new JBColor(Gray._252, Gray._60));
+        rightActionPane.add(rightActionLabel);
+
+        JPanel selectedCodeJumpPane = new JPanel();
+
+        selectedCodeJumpPane.add(new JBLabel(CodeAIMessageBundle.get("codeai.reference.content")));
+        selectedCodeJumpPane.setBackground(new JBColor(Gray._248, Gray._54));
+        selectedCodeJumpPane.setLayout(new FlowLayout(FlowLayout.LEFT));
+        selectedCodeJumpPane.add(new GoToCode(project, editorInfo));
+
+        rightActionPane.add(selectedCodeJumpPane);
+        return rightActionPane;
     }
 
 }

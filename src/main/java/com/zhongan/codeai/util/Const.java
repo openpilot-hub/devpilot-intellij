@@ -8,7 +8,7 @@ package com.zhongan.codeai.util;
  */
 public class Const {
 
-    public final static String MAX_TOKEN_EXCEPTION_MSG = "This model's maximum context length is 4096 tokens.";
+    public final static String MAX_TOKEN_EXCEPTION_MSG = CodeAIMessageBundle.get("codeai.chatWindow.context.overflow");
 
     public final static int TOKEN_MAX_LENGTH = 4096;
 

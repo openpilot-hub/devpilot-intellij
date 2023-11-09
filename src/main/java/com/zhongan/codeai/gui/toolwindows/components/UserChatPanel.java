@@ -100,21 +100,21 @@ public class UserChatPanel extends JPanel {
         this.add(textArea, BorderLayout.CENTER);
 
         iconsPanel = new RoundedPanel();
-        button = new IconJButton(CodeAIIcons.SEND_ICON, "Submit", e -> handleSendEvent());
+        button = new IconJButton(CodeAIIcons.SEND_ICON, CodeAIMessageBundle.get("codeai.chatWindow.submit"), e -> handleSendEvent());
         iconsPanel.addIconJButton((IconJButton) button);
         this.add(iconsPanel, BorderLayout.EAST);
     }
 
     public void setIconStop() {
         button.setIcon(CodeAIIcons.STOP_ICON);
-        button.setToolTipText("Stop");
+        button.setToolTipText(CodeAIMessageBundle.get("codeai.chatWindow.stop"));
         removeAllActionListener();
         button.addActionListener(e -> handleStopEvent());
     }
 
     public void setIconSend() {
         button.setIcon(CodeAIIcons.SEND_ICON);
-        button.setToolTipText("Submit");
+        button.setToolTipText(CodeAIMessageBundle.get("codeai.chatWindow.submit"));
         removeAllActionListener();
         button.addActionListener(e -> handleSendEvent());
     }

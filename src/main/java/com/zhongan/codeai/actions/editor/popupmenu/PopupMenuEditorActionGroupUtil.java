@@ -15,6 +15,7 @@ import com.zhongan.codeai.enums.EditorActionEnum;
 import com.zhongan.codeai.enums.SessionTypeEnum;
 import com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory;
 import com.zhongan.codeai.gui.toolwindows.chat.CodeAIChatToolWindow;
+import com.zhongan.codeai.gui.toolwindows.components.EditorInfo;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
 import com.zhongan.codeai.settings.state.LanguageSettingsState;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
@@ -64,13 +65,13 @@ public class PopupMenuEditorActionGroupUtil {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("Open Pilot");
                         toolWindow.show();
                         if (validateInput(selectedText, prompt)) {
-                            CodeAINotification.info("The input length is too long, please reduce the length of the messages or clear the conversation window.");
+                            CodeAINotification.info(CodeAIMessageBundle.get("codeai.notification.input.tooLong"));
                             return;
                         }
 
                         Consumer<String> callback = result -> {
                             if (validateResult(result)) {
-                                CodeAINotification.info("The input length is too long, please reduce the length of the messages or clear the conversation window.");
+                                CodeAINotification.info(CodeAIMessageBundle.get("codeai.notification.input.tooLong"));
                                 return;
                             }
 
@@ -91,6 +92,8 @@ public class PopupMenuEditorActionGroupUtil {
                             }
                         };
 
+                        EditorInfo editorInfo = new EditorInfo(editor);
+
                         CodeAIChatToolWindow codeAIChatToolWindow = CodeAIChatToolWindowFactory.getCodeAIChatToolWindow(project);
                         //right action clear session
                         codeAIChatToolWindow.addClearSessionInfo();
@@ -98,7 +101,8 @@ public class PopupMenuEditorActionGroupUtil {
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
                             newPrompt = newPrompt + "Please response in Chinese ";
                         }
-                        codeAIChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), newPrompt, callback);
+                        codeAIChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), newPrompt,
+                                callback, editorInfo);
                     }
                 };
                 group.add(action);
