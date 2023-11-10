@@ -150,7 +150,7 @@ public class NewFileAction implements ActionListener {
     private String modifyGeneratedTextClassName(String generatedText, String testFileName) {
         String testClassName = testFileName.substring(0, testFileName.lastIndexOf("."));
         String generateClassName = extraClassNameFromGeneratedText(generatedText);
-        return generatedText.replace(generateClassName, testClassName);
+        return generateClassName == null ? generatedText : generatedText.replace(generateClassName, testClassName);
     }
 
     private PsiDirectory getCurrentSelectedFilePsiDir(@NotNull Project project) {
