@@ -38,6 +38,8 @@ tasks {
     patchPluginXml {
         sinceBuild.set("212")
         untilBuild.set("232.*")
+
+        pluginDescription.set(provider { file("description.html").readText() })
     }
 
     signPlugin {
