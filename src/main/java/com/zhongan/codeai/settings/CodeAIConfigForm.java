@@ -1,12 +1,11 @@
 package com.zhongan.codeai.settings;
 
 import com.intellij.openapi.ui.ComboBox;
-import com.intellij.ui.components.JBRadioButton;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UI;
-import com.zhongan.codeai.settings.state.CodeAILlmSettingsState;
+import com.zhongan.codeai.enums.ModelTypeEnum;
 import com.zhongan.codeai.settings.state.LanguageSettingsState;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
 import com.zhongan.codeai.util.CodeAIMessageBundle;
@@ -16,7 +15,9 @@ import javax.swing.JPanel;
 
 public class CodeAIConfigForm {
 
-    private final JBRadioButton useOpenAIServiceRadioButton;
+    private final JPanel comboBoxPanel;
+
+    private final ComboBox<ModelTypeEnum> modelComboBox;
 
     private final JPanel openAIServicePanel;
 
@@ -24,44 +25,50 @@ public class CodeAIConfigForm {
 
     private Integer index;
 
-    public CodeAIConfigForm(CodeAILlmSettingsState settingsState) {
+    public CodeAIConfigForm() {
         var openAISettings = OpenAISettingsState.getInstance();
+
+        var selectedModel = openAISettings.getSelectedModel();
+        ModelTypeEnum selectedEnum = ModelTypeEnum.fromName(selectedModel);
+
+        var host = openAISettings.getModelBaseHost(selectedModel);
+        openAIBaseHostField = new JBTextField(host, 30);
+        openAIServicePanel = createOpenAIServiceSectionPanel(
+                CodeAIMessageBundle.get("codeai.settins.service.modelHostLabel"), openAIBaseHostField);
+
+        var combo = new ComboBox<>(ModelTypeEnum.values());
+        combo.setSelectedItem(selectedEnum);
+        combo.addItemListener(e -> {
+            var selected = (ModelTypeEnum) e.getItem();
+            openAISettings.setSelectedModel(selected.getName());
+            openAIBaseHostField.setText(openAISettings.getModelBaseHost(selected.getName()));
+        });
+
+        modelComboBox = combo;
+        comboBoxPanel = createOpenAIServiceSectionPanel(
+                CodeAIMessageBundle.get("codeai.settins.service.modelTypeLabel"), modelComboBox);
+
         var instance = LanguageSettingsState.getInstance();
-        useOpenAIServiceRadioButton = new JBRadioButton(
-            CodeAIMessageBundle.get("codeai.settins.service.useOpenAIServiceRadioButtonLabel"), settingsState.isUseOpenAIService());
-        openAIBaseHostField = new JBTextField(openAISettings.getOpenAIBaseHost(), 30);
-        openAIServicePanel = createOpenAIServiceSectionPanel();
         index = instance.getLanguageIndex();
-        registerPanelsVisibility(settingsState);
     }
 
     public JComponent getForm() {
         var form = FormBuilder.createFormBuilder()
-            .addComponent(useOpenAIServiceRadioButton)
+            .addComponent(comboBoxPanel)
             .addComponent(openAIServicePanel)
             .getPanel();
         form.setBorder(JBUI.Borders.emptyLeft(16));
         return form;
     }
 
-    private JPanel createOpenAIServiceSectionPanel() {
-        var panel = UI.PanelFactory.grid()
-            .add(UI.PanelFactory.panel(openAIBaseHostField)
-                .withLabel(CodeAIMessageBundle.get("codeai.settins.service.openAIServiceHost"))
-                .resizeX(false))
-            .createPanel();
-        panel.setBorder(JBUI.Borders.emptyLeft(16));
-        return panel;
-    }
-
     public JPanel createLanguageSectionPanel(Integer languageIndex) {
-        ComboBox comboBox = new ComboBox();
+        var comboBox = new ComboBox<>();
         comboBox.addItem("English");
         comboBox.addItem("中文");
         comboBox.setSelectedIndex(languageIndex);
 
         comboBox.addActionListener(e -> {
-            ComboBox box = (ComboBox) e.getSource();
+            var box = (ComboBox<?>) e.getSource();
             index = box.getSelectedIndex();
         });
 
@@ -74,18 +81,25 @@ public class CodeAIConfigForm {
         return panel;
     }
 
-    private void registerPanelsVisibility(CodeAILlmSettingsState settings) {
-        openAIServicePanel.setVisible(settings.isUseOpenAIService());
-        // enforce using open ai api
-        useOpenAIServiceRadioButton.addChangeListener(e -> useOpenAIServiceRadioButton.setSelected(true));
+    private JPanel createOpenAIServiceSectionPanel(String label, JComponent component) {
+        var panel = UI.PanelFactory.grid()
+            .add(UI.PanelFactory.panel(component)
+                .withLabel(label)
+                .resizeX(false))
+            .createPanel();
+        panel.setBorder(JBUI.Borders.emptyLeft(16));
+        return panel;
     }
 
     public String getOpenAIBaseHost() {
         return openAIBaseHostField.getText();
     }
 
+    public ModelTypeEnum getSelectedModel() {
+        return (ModelTypeEnum) modelComboBox.getSelectedItem();
+    }
+
     public Integer getLanguageIndex() {
         return index;
     }
-
 }

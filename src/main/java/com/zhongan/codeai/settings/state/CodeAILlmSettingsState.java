@@ -6,15 +6,29 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 
+import java.util.UUID;
+
 @State(name = "OpenPilot_Settings", storages = @Storage("OpenPilot_Settings.xml"))
 public class CodeAILlmSettingsState implements PersistentStateComponent<CodeAILlmSettingsState> {
 
     private String fullName = "User";
 
-    private boolean useOpenAIService = true;
+    private String uuid;
 
     public static CodeAILlmSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(CodeAILlmSettingsState.class);
+    }
+
+    public String getUuid() {
+        if (uuid == null || uuid.isEmpty()) {
+            uuid = UUID.randomUUID().toString();
+        }
+
+        return uuid;
+    }
+
+    public void setUuid(String uuid) {
+        this.uuid = uuid;
     }
 
     @Override
@@ -25,10 +39,6 @@ public class CodeAILlmSettingsState implements PersistentStateComponent<CodeAILl
     @Override
     public void loadState(CodeAILlmSettingsState state) {
         XmlSerializerUtil.copyBean(state, this);
-    }
-
-    public boolean isUseOpenAIService() {
-        return useOpenAIService;
     }
 
     // getting fullName

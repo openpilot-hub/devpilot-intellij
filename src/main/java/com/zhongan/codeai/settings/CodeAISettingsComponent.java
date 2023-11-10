@@ -19,7 +19,7 @@ public class CodeAISettingsComponent {
     private final CodeAIConfigForm codeAIConfigForm;
 
     public CodeAISettingsComponent(CodeAISettingsConfigurable codeAISettingsConfigurable, CodeAILlmSettingsState settings) {
-        codeAIConfigForm = new CodeAIConfigForm(settings);
+        codeAIConfigForm = new CodeAIConfigForm();
 
         fullNameField = new JBTextField(settings.getFullName(), 20);
 
@@ -54,5 +54,4 @@ public class CodeAISettingsComponent {
     public Integer getLanguageIndex() {
         return codeAIConfigForm.getLanguageIndex();
     }
-
 }
