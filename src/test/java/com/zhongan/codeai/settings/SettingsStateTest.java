@@ -1,6 +1,7 @@
 package com.zhongan.codeai.settings;
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
+import com.zhongan.codeai.enums.ModelTypeEnum;
 import com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState;
 import com.zhongan.codeai.settings.state.CodeAILlmSettingsState;
 import com.zhongan.codeai.settings.state.OpenAISettingsState;
@@ -8,8 +9,10 @@ import com.zhongan.codeai.settings.state.OpenAISettingsState;
 public class SettingsStateTest extends BasePlatformTestCase {
     public void testOpenAISettings() {
         var settings = OpenAISettingsState.getInstance();
-        settings.setOpenAIBaseHost("https://test.codeai.com");
-        assertEquals("https://test.codeai.com", settings.getOpenAIBaseHost());
+        settings.setModelBaseHost(ModelTypeEnum.TYQW.getName(), "https://test1.codeai.com");
+        settings.setModelBaseHost(ModelTypeEnum.GPT3_5.getName(), "https://test2.codeai.com");
+        assertEquals("https://test1.codeai.com", settings.getModelBaseHost(ModelTypeEnum.TYQW.getName()));
+        assertEquals("https://test2.codeai.com", settings.getModelBaseHost(ModelTypeEnum.GPT3_5.getName()));
     }
 
     public void testCodeAILlmSettings() {

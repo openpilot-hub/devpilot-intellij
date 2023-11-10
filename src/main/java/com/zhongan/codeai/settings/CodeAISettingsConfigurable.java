@@ -38,8 +38,11 @@ public class CodeAISettingsConfigurable implements Configurable, Disposable {
         var openAISettings = OpenAISettingsState.getInstance();
         var languageSettings = LanguageSettingsState.getInstance();
         var serviceForm = settingsComponent.getCodeAIConfigForm();
+        var selectedModel = serviceForm.getSelectedModel();
+
         return !settingsComponent.getFullName().equals(settings.getFullName())
-                || !serviceForm.getOpenAIBaseHost().equals(openAISettings.getOpenAIBaseHost())
+                || !selectedModel.getName().equals(openAISettings.getSelectedModel())
+                || !serviceForm.getOpenAIBaseHost().equals(openAISettings.getModelBaseHost(selectedModel.getName()))
                 || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex());
     }
 
@@ -56,7 +59,10 @@ public class CodeAISettingsConfigurable implements Configurable, Disposable {
 
         var openAISettings = OpenAISettingsState.getInstance();
         var serviceForm = settingsComponent.getCodeAIConfigForm();
-        openAISettings.setOpenAIBaseHost(serviceForm.getOpenAIBaseHost());
+        var selectedModel = serviceForm.getSelectedModel();
+
+        openAISettings.setSelectedModel(selectedModel.getName());
+        openAISettings.setModelBaseHost(selectedModel.getName(), serviceForm.getOpenAIBaseHost());
     }
 
     @Override
