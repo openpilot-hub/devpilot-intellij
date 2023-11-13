@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.zhongan"
-version = "1.0-SNAPSHOT"
+version = "1.0.0-RELEASE"
 
 repositories {
     mavenCentral()
