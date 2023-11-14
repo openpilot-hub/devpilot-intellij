@@ -13,12 +13,6 @@
 
 package com.zhongan.codeai.actions.editor.popupmenu.entity;
 
-/**
- * PerformanceCheckResponse
- *
- * @author zhangzhisheng
- * @version v0.1 2023-10-17 19:06 zhangzhisheng Exp $
- */
 public class PerformanceCheckResponse {
 
     private String rewriteCode;

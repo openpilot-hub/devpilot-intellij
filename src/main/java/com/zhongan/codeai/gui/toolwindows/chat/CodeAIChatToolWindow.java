@@ -137,11 +137,11 @@ public class CodeAIChatToolWindow {
         var codeAIMessage = new CodeAIMessage();
         codeAIMessage.setRole("user");
         codeAIMessage.setContent(message);
-        //check session type,default multi session
+        // check session type,default multi session
         CodeAIChatCompletionRequest codeAIChatCompletionRequest = new CodeAIChatCompletionRequest();
         SessionTypeEnum sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
         if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
-            //independent message can not update, just readonly
+            // independent message can not update, just readonly
             codeAIChatCompletionRequest.getMessages().add(codeAIMessage);
         } else {
             codeAIChatCompletionRequest.setStream(multiSessionRequest.isStream());
@@ -152,7 +152,7 @@ public class CodeAIChatToolWindow {
         String chatCompletion = llmProvider.chatCompletion(codeAIChatCompletionRequest);
         if (SessionTypeEnum.MULTI_TURN.equals(sessionTypeEnum) &&
                 codeAIChatCompletionRequest.getMessages().size() > multiSessionRequest.getMessages().size()) {
-            //update multi session request
+            // update multi session request
             multiSessionRequest.getMessages().add(
                     codeAIChatCompletionRequest.getMessages().get(codeAIChatCompletionRequest.getMessages().size() - 1));
         }
@@ -160,7 +160,7 @@ public class CodeAIChatToolWindow {
     }
 
     public void syncSendAndDisplay(String message) {
-        //chat窗口支持多轮会话
+        // support multi session
         syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), null, message, null, null);
     }
 

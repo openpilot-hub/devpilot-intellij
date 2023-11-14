@@ -22,7 +22,6 @@ import com.zhongan.codeai.integrations.llms.LlmProviderFactory;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIChatCompletionRequest;
 import com.zhongan.codeai.integrations.llms.entity.CodeAIMessage;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -30,12 +29,6 @@ import org.jetbrains.annotations.NotNull;
 
 import static com.zhongan.codeai.util.DiffEditorUtils.getDiffContent;
 
-/**
- * Description
- *
- * @author zhangzhisheng
- * @version v0.1 2023-10-14 10:27 zhangzhisheng Exp $
- */
 public class PerformanceCheckUtils {
 
     public static final String NO_PERFORMANCE_ISSUES_DESC = "There don't appear to be any performance issues with the given code.";
@@ -64,8 +57,8 @@ public class PerformanceCheckUtils {
         codeAIMessage.setRole("user");
         codeAIMessage.setContent(selectedText + "\n" + CUSTOM_PROMPT);
         CodeAIChatCompletionRequest request = new CodeAIChatCompletionRequest();
-        //list content support update
-        request.setMessages(new ArrayList<CodeAIMessage>() {{ add(codeAIMessage); }});
+        // list content support update
+        request.setMessages(List.of(codeAIMessage));
         final String response = new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
         try {
             PerformanceCheckResponse performanceCheckResponse = objectMapper.readValue(response, PerformanceCheckResponse.class);
@@ -79,7 +72,7 @@ public class PerformanceCheckUtils {
             }
             return performanceCheckResponse.getRewriteCode();
         } catch (Exception e) {
-            //return original code if return result is error
+            // return original code if return result is error
             return selectedText;
         }
     }

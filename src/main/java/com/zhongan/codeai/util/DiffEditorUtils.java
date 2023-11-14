@@ -7,12 +7,6 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 
-/**
- * Description
- *
- * @author zhangzhisheng
- * @version v0.1 2023-10-14 10:34 zhangzhisheng Exp $
- */
 public class DiffEditorUtils {
 
     /**
