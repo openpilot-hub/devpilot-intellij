@@ -17,12 +17,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * DocumentUtil
- *
- * @author zhangzhisheng
- * @version v0.1 2023-10-14 16:58 zhangzhisheng Exp $
- */
 public class DocumentUtil {
 
     public static final List<String> CODE_FLAGS = Lists.newArrayList("(?s)```[\\s\\S]*?```", "\\b(public|class|def|function|var|let)\\b");

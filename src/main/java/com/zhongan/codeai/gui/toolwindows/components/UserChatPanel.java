@@ -1,6 +1,5 @@
 package com.zhongan.codeai.gui.toolwindows.components;
 
-import com.intellij.ui.Gray;
 import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBTextArea;
 import com.intellij.util.ui.JBUI;
@@ -10,22 +9,15 @@ import com.zhongan.codeai.util.CodeAIMessageBundle;
 
 import java.awt.BasicStroke;
 import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Cursor;
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
-import javax.swing.BorderFactory;
-import javax.swing.Icon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 
@@ -119,12 +111,6 @@ public class UserChatPanel extends JPanel {
         button.addActionListener(e -> handleSendEvent());
     }
 
-    public void setTextArea(String text) {
-        textArea.setText(text);
-        textArea.requestFocus();
-        textArea.requestFocusInWindow();
-    }
-
     public boolean isSending() {
         return isSending.get();
     }
@@ -168,29 +154,6 @@ public class UserChatPanel extends JPanel {
             g2.setColor(JBColor.border());
         }
         g2.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 12, 12);
-    }
-
-    private JButton createIconButton(Icon icon) {
-        var button = new JButton(icon);
-        button.setBorder(BorderFactory.createEmptyBorder());
-        button.setContentAreaFilled(false);
-        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        button.setPreferredSize(new Dimension(icon.getIconWidth(), icon.getIconHeight()));
-        button.addActionListener(e -> handleSendEvent());
-
-        Color defaultColor = button.getBackground();
-
-        button.addMouseListener(new MouseAdapter() {
-            public void mouseEntered(MouseEvent evt) {
-                iconsPanel.setBackground(new JBColor(Gray._225, Gray._95));
-            }
-
-            public void mouseExited(MouseEvent evt) {
-                iconsPanel.setBackground(defaultColor);
-            }
-        });
-
-        return button;
     }
 
 }

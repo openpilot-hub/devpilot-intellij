@@ -11,12 +11,6 @@ import com.intellij.openapi.vfs.VirtualFileManager;
 import java.io.IOException;
 import java.nio.file.Path;
 
-/**
- * VirtualFileUtil
- *
- * @author zhangzhisheng
- * @version v0.1 2023-10-14 13:25 zhangzhisheng Exp $
- */
 public class VirtualFileUtil {
 
     /**

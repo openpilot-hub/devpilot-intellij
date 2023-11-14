@@ -97,7 +97,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
                     .getChoices()
                     .get(0)
                     .getMessage();
-            //多轮会话处理
+            // multi chat message
             var codeAIMessage = new CodeAIMessage();
             codeAIMessage.setRole("assistant");
             codeAIMessage.setContent(message.getContent());

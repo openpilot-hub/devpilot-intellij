@@ -4,7 +4,6 @@ import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.extensions.PluginId;
 import com.intellij.openapi.project.Project;
@@ -39,7 +38,6 @@ import static com.zhongan.codeai.util.Const.MAX_TOKEN_EXCEPTION_MSG;
 import static com.zhongan.codeai.util.Const.TOKEN_MAX_LENGTH;
 
 public class PopupMenuEditorActionGroupUtil {
-    private static final Logger LOG = Logger.getInstance(PopupMenuEditorActionGroupUtil.class);
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
             PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
