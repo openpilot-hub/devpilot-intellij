@@ -97,7 +97,7 @@ public class PopupMenuEditorActionGroupUtil {
                         codeAIChatToolWindow.addClearSessionInfo();
                         String newPrompt = prompt.replace("{{selectedCode}}", selectedText);
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
-                            newPrompt = newPrompt + "Please response in Chinese ";
+                            newPrompt = newPrompt + "Please response in Chinese.";
                         }
                         codeAIChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), newPrompt,
                                 callback, editorInfo);
