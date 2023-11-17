@@ -30,7 +30,7 @@ public class SettingsStateTest extends BasePlatformTestCase {
     public void testEditorActionConfigurationState() {
         var settings = EditorActionConfigurationState.getInstance();
 
-        assertEquals("{{selectedCode}}\nGiving the code above, please help to generate JUnit test cases for it, be aware that if the code is untestable, please state it and give suggestions instead:", settings.getDefaultActions().get("codeai.action.generate.tests"));
+        assertEquals("{{selectedCode}}\nGiving the code above, please help to generate JUnit test cases for it, be aware that if the code is untestable, please state it and give suggestions instead.Put the code in code block.\n", settings.getDefaultActions().get("codeai.action.generate.tests"));
         assertEquals(6, settings.getDefaultActions().size());
     }
 

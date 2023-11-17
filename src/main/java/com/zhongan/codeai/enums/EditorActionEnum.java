@@ -21,8 +21,7 @@ public enum EditorActionEnum {
             "- Use better names as replacement to magic numbers or arbitrary acronyms.\n" +
             "- Simplify the code so that it's more strait forward and easy to understand.\n" +
             "- Optimize it for performance reasons.\n" +
-            "- Refactor it using best practice in software engineering.\n\n" +
-                "Must only provide the code to be fixed and explain why it should be fixed.\n"+
+            "- Refactor it using best practice in software engineering.\n" + "\nMust only provide the code to be fixed and explain why it should be fixed.\n" +
             "Attention: generate the response using markdown format with single backticks for single lines of code or short snippets, and three backticks for quoting entire code blocks.\n"),
 
     REVIEW_CODE("codeai.action.review", "Review code in the following code",
@@ -30,7 +29,7 @@ public enum EditorActionEnum {
             "- Think carefully, you should be extremely careful.\n" +
             "- Find out if any bugs exists.\n" +
             "- Reveal any bad smell in the code.\n" +
-            "- Give optimization or best practice suggestion.\n"+
+            "- Give optimization or best practice suggestion.\n" +
             "Attention: generate the response using markdown format with single backticks for single lines of code or short snippets, and three backticks for quoting entire code blocks.\n"),
 
     EXPLAIN_THIS("codeai.action.explain", "Explain this in the following code",
