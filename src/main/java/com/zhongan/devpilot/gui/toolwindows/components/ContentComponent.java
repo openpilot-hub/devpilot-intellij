@@ -82,7 +82,7 @@ public class ContentComponent extends JPanel {
         textPane.setBackground(new JBColor(Gray._248, Gray._54));
         textPane.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
         textPane.setBorder(JBUI.Borders.emptyLeft(5));
-        textPane.setText(MarkdownUtil.mark2Html(textBlock));
+        textPane.setText(MarkdownUtil.textContent2Html(textBlock));
         return textPane;
     }
 

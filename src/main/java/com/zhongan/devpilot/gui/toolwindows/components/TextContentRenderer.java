@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.util;
+package com.zhongan.devpilot.gui.toolwindows.components;
 
 import com.intellij.ui.JBColor;
 import com.vladsch.flexmark.ast.BulletListItem;
@@ -21,23 +21,18 @@ import org.jetbrains.annotations.Nullable;
 
 import static java.lang.String.format;
 
-public class ContentNodeRenderer implements NodeRenderer {
+public class TextContentRenderer implements NodeRenderer {
+
+    private static final String DEFAULT_PARAGRAPH_STYLE = "margin-top: 5px; margin-bottom: 5px;";
+
+    private static final String LIST_ITEM_STYLE = "margin-bottom: 5px; margin-left: 3px;";
+
     @Override
     public @Nullable Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
         return Set.of(
             new NodeRenderingHandler<>(Code.class, this::renderCodeSnippets),
             new NodeRenderingHandler<>(Paragraph.class, this::renderTextParagraph)
         );
-    }
-
-    private void renderTextParagraph(Paragraph node, NodeRendererContext context, HtmlWriter html) {
-        Block block = node.getParent();
-        if (block instanceof OrderedListItem || block instanceof BulletListItem) {
-            html.attr("style", "margin: 0; padding:0;");
-        } else {
-            html.attr("style", "margin-top: 5px; margin-bottom: 5px;");
-        }
-        context.delegateRender();
     }
 
     private void renderCodeSnippets(Code node, NodeRendererContext context, HtmlWriter html) {
@@ -49,10 +44,19 @@ public class ContentNodeRenderer implements NodeRenderer {
         return format("rgb(%d, %d, %d)", color.getRed(), color.getGreen(), color.getBlue());
     }
 
+    private void renderTextParagraph(Paragraph node, NodeRendererContext context, HtmlWriter html) {
+        Block block = node.getParent();
+        String style = block instanceof OrderedListItem || block instanceof BulletListItem
+                ? LIST_ITEM_STYLE
+                : DEFAULT_PARAGRAPH_STYLE;
+        html.attr("style", style);
+        context.delegateRender();
+    }
+
     public static class Factory implements NodeRendererFactory {
         @Override
         public @NotNull NodeRenderer apply(@NotNull DataHolder dataHolder) {
-            return new ContentNodeRenderer();
+            return new TextContentRenderer();
         }
 
     }

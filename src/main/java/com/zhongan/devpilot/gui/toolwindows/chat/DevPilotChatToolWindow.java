@@ -105,7 +105,7 @@ public class DevPilotChatToolWindow {
         } else if (type == 0 && actionType != null) {
             contentPanel.add(contentPanel.createRightActionComponent(DevPilotMessageBundle.get(actionType.getLabel()), project, editorInfo));
         } else {
-            List<String> blocks = MarkdownUtil.splitBlocks(content);
+            List<String> blocks = MarkdownUtil.divideMarkdown(content);
             for (String block : blocks) {
                 if (block.startsWith("```")) {
                     contentPanel.add(contentPanel.createCodeComponent(project, block, actionType,

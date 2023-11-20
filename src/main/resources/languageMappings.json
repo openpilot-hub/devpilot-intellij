@@ -1,0 +1,740 @@
+[
+  {
+    "languageName": "ABAP",
+    "fileExtensions": [
+      ".abap"
+    ]
+  },
+  {
+    "languageName": "Agda",
+    "fileExtensions": [
+      ".agda"
+    ]
+  },
+  {
+    "languageName": "Arduino",
+    "fileExtensions": [
+      ".ino"
+    ]
+  },
+  {
+    "languageName": "Assembly",
+    "fileExtensions": [
+      ".asm",
+      ".a51",
+      ".inc",
+      ".nasm"
+    ]
+  },
+  {
+    "languageName": "C",
+    "fileExtensions": [
+      ".c",
+      ".cats",
+      ".h",
+      ".idc",
+      ".w"
+    ]
+  },
+  {
+    "languageName": "C#",
+    "fileExtensions": [
+      ".cs",
+      ".cake",
+      ".cshtml",
+      ".csx"
+    ]
+  },
+  {
+    "languageName": "Cpp",
+    "fileExtensions": [
+      ".cpp",
+      ".c++",
+      ".cc",
+      ".cp",
+      ".cxx",
+      ".h",
+      ".h++",
+      ".hh",
+      ".hpp",
+      ".hxx",
+      ".inc",
+      ".inl",
+      ".ipp",
+      ".tcc",
+      ".tpp"
+    ]
+  },
+  {
+    "languageName": "CMake",
+    "fileExtensions": [
+      ".cmake",
+      ".cmake.in"
+    ]
+  },
+  {
+    "languageName": "COBOL",
+    "fileExtensions": [
+      ".cob",
+      ".cbl",
+      ".ccp",
+      ".cobol",
+      ".cpy"
+    ]
+  },
+  {
+    "languageName": "CSS",
+    "fileExtensions": [
+      ".css"
+    ]
+  },
+  {
+    "languageName": "CSV",
+    "fileExtensions": [
+      ".csv"
+    ]
+  },
+  {
+    "languageName": "CoffeeScript",
+    "fileExtensions": [
+      ".coffee",
+      "._coffee",
+      ".cake",
+      ".cjsx",
+      ".cson",
+      ".iced"
+    ]
+  },
+  {
+    "languageName": "Coq",
+    "fileExtensions": [
+      ".coq",
+      ".v"
+    ]
+  },
+  {
+    "languageName": "Dart",
+    "fileExtensions": [
+      ".dart"
+    ]
+  },
+  {
+    "languageName": "Elixir",
+    "fileExtensions": [
+      ".ex",
+      ".exs"
+    ]
+  },
+  {
+    "languageName": "Elm",
+    "fileExtensions": [
+      ".elm"
+    ]
+  },
+  {
+    "languageName": "Erlang",
+    "fileExtensions": [
+      ".erl",
+      ".es",
+      ".escript",
+      ".hrl",
+      ".xrl",
+      ".yrl"
+    ]
+  },
+  {
+    "languageName": "F#",
+    "fileExtensions": [
+      ".fs",
+      ".fsi",
+      ".fsx"
+    ]
+  },
+  {
+    "languageName": "FORTRAN",
+    "fileExtensions": [
+      ".f90",
+      ".f",
+      ".f03",
+      ".f08",
+      ".f77",
+      ".f95",
+      ".for",
+      ".fpp"
+    ]
+  },
+  {
+    "languageName": "Go",
+    "fileExtensions": [
+      ".go"
+    ]
+  },
+  {
+    "languageName": "Golo",
+    "fileExtensions": [
+      ".golo"
+    ]
+  },
+  {
+    "languageName": "Grace",
+    "fileExtensions": [
+      ".grace"
+    ]
+  },
+  {
+    "languageName": "Groovy",
+    "fileExtensions": [
+      ".groovy",
+      ".grt",
+      ".gtpl",
+      ".gvy"
+    ]
+  },
+  {
+    "languageName": "Haskell",
+    "fileExtensions": [
+      ".hs",
+      ".hsc"
+    ]
+  },
+  {
+    "languageName": "HTML",
+    "fileExtensions": [
+      ".html",
+      ".htm",
+      ".html.hl",
+      ".inc",
+      ".st",
+      ".xht",
+      ".xhtml"
+    ]
+  },
+  {
+    "languageName": "Idris",
+    "fileExtensions": [
+      ".idr",
+      ".lidr"
+    ]
+  },
+  {
+    "languageName": "Java",
+    "fileExtensions": [
+      ".java"
+    ]
+  },
+  {
+    "languageName": "Java Server Pages",
+    "fileExtensions": [
+      ".jsp"
+    ]
+  },
+  {
+    "languageName": "JavaScript",
+    "fileExtensions": [
+      ".js",
+      "._js",
+      ".bones",
+      ".es",
+      ".es6",
+      ".frag",
+      ".gs",
+      ".jake",
+      ".jsb",
+      ".jscad",
+      ".jsfl",
+      ".jsm",
+      ".jss",
+      ".njs",
+      ".pac",
+      ".sjs",
+      ".ssjs",
+      ".sublime-build",
+      ".sublime-commands",
+      ".sublime-completions",
+      ".sublime-keymap",
+      ".sublime-macro",
+      ".sublime-menu",
+      ".sublime-mousemap",
+      ".sublime-project",
+      ".sublime-settings",
+      ".sublime-theme",
+      ".sublime-workspace",
+      ".sublime_metrics",
+      ".sublime_session",
+      ".xsjs",
+      ".xsjslib"
+    ]
+  },
+  {
+    "languageName": "Jupyter Notebook",
+    "fileExtensions": [
+      ".ipynb"
+    ]
+  },
+  {
+    "languageName": "JSON",
+    "fileExtensions": [
+      ".json",
+      ".geojson",
+      ".lock",
+      ".topojson"
+    ]
+  },
+  {
+    "languageName": "Julia",
+    "fileExtensions": [
+      ".jl"
+    ]
+  },
+  {
+    "languageName": "Kotlin",
+    "fileExtensions": [
+      ".kt",
+      ".ktm",
+      ".kts"
+    ]
+  },
+  {
+    "languageName": "Less",
+    "fileExtensions": [
+      ".less"
+    ]
+  },
+  {
+    "languageName": "NewLisp",
+    "fileExtensions": [
+      ".nl",
+      ".lisp",
+      ".lsp"
+    ]
+  },
+  {
+    "languageName": "LiveScript",
+    "fileExtensions": [
+      ".ls",
+      "._ls"
+    ]
+  },
+  {
+    "languageName": "LLVM",
+    "fileExtensions": [
+      ".ll"
+    ]
+  },
+  {
+    "languageName": "Lua",
+    "fileExtensions": [
+      ".lua",
+      ".fcgi",
+      ".nse",
+      ".pd_lua",
+      ".rbxs",
+      ".wlua"
+    ]
+  },
+  {
+    "languageName": "Makefile",
+    "fileExtensions": [
+      ".mak",
+      ".d",
+      ".mk",
+      ".mkfile"
+    ]
+  },
+  {
+    "languageName": "Mako",
+    "fileExtensions": [
+      ".mako",
+      ".mao"
+    ]
+  },
+  {
+    "languageName": "Markdown",
+    "fileExtensions": [
+      ".md",
+      ".markdown",
+      ".mkd",
+      ".mkdn",
+      ".mkdown",
+      ".ron"
+    ]
+  },
+  {
+    "languageName": "Matlab",
+    "fileExtensions": [
+      ".matlab",
+      ".m"
+    ]
+  },
+  {
+    "languageName": "Mathematica",
+    "fileExtensions": [
+      ".mathematica",
+      ".cdf",
+      ".m",
+      ".ma",
+      ".mt",
+      ".nb",
+      ".nbp",
+      ".wl",
+      ".wlt"
+    ]
+  },
+  {
+    "languageName": "Nix",
+    "fileExtensions": [
+      ".nix"
+    ]
+  },
+  {
+    "languageName": "Objective-C",
+    "fileExtensions": [
+      ".m",
+      ".h"
+    ]
+  },
+  {
+    "languageName": "Objective-C++",
+    "fileExtensions": [
+      ".mm"
+    ]
+  },
+  {
+    "languageName": "Objective-J",
+    "fileExtensions": [
+      ".j",
+      ".sj"
+    ]
+  },
+  {
+    "languageName": "Pascal",
+    "fileExtensions": [
+      ".pas",
+      ".dfm",
+      ".dpr",
+      ".inc",
+      ".lpr",
+      ".pp"
+    ]
+  },
+  {
+    "languageName": "Perl",
+    "fileExtensions": [
+      ".pl",
+      ".al",
+      ".cgi",
+      ".fcgi",
+      ".perl",
+      ".ph",
+      ".plx",
+      ".pm",
+      ".pod",
+      ".psgi",
+      ".t"
+    ]
+  },
+  {
+    "languageName": "Perl6",
+    "fileExtensions": [
+      ".6pl",
+      ".6pm",
+      ".nqp",
+      ".p6",
+      ".p6l",
+      ".p6m",
+      ".pl",
+      ".pl6",
+      ".pm",
+      ".pm6",
+      ".t"
+    ]
+  },
+  {
+    "languageName": "PHP",
+    "fileExtensions": [
+      ".php",
+      ".aw",
+      ".ctp",
+      ".fcgi",
+      ".inc",
+      ".php3",
+      ".php4",
+      ".php5",
+      ".phps",
+      ".phpt"
+    ]
+  },
+  {
+    "languageName": "PowerShell",
+    "fileExtensions": [
+      ".ps1",
+      ".psd1",
+      ".psm1"
+    ]
+  },
+  {
+    "languageName": "Prolog",
+    "fileExtensions": [
+      ".pl",
+      ".pro",
+      ".prolog",
+      ".yap"
+    ]
+  },
+  {
+    "languageName": "Propeller Spin",
+    "fileExtensions": [
+      ".spin"
+    ]
+  },
+  {
+    "languageName": "Protocol Buffer",
+    "fileExtensions": [
+      ".proto"
+    ]
+  },
+  {
+    "languageName": "PureScript",
+    "fileExtensions": [
+      ".purs"
+    ]
+  },
+  {
+    "languageName": "Python",
+    "fileExtensions": [
+      ".py",
+      ".bzl",
+      ".cgi",
+      ".fcgi",
+      ".gyp",
+      ".lmi",
+      ".pyde",
+      ".pyp",
+      ".pyt",
+      ".pyw",
+      ".rpy",
+      ".tac",
+      ".wsgi",
+      ".xpy"
+    ]
+  },
+  {
+    "languageName": "R",
+    "fileExtensions": [
+      ".r",
+      ".rd",
+      ".rsx"
+    ]
+  },
+  {
+    "languageName": "Racket",
+    "fileExtensions": [
+      ".rkt",
+      ".rktd",
+      ".rktl",
+      ".scrbl"
+    ]
+  },
+  {
+    "languageName": "Rust",
+    "fileExtensions": [
+      ".rs",
+      ".rs.in"
+    ]
+  },
+  {
+    "languageName": "SAS",
+    "fileExtensions": [
+      ".sas"
+    ]
+  },
+  {
+    "languageName": "Scala",
+    "fileExtensions": [
+      ".scala",
+      ".sbt",
+      ".sc"
+    ]
+  },
+  {
+    "languageName": "Scheme",
+    "fileExtensions": [
+      ".scm",
+      ".sld",
+      ".sls",
+      ".sps",
+      ".ss"
+    ]
+  },
+  {
+    "languageName": "SCSS",
+    "fileExtensions": [
+      ".scss"
+    ]
+  },
+  {
+    "languageName": "Shell",
+    "fileExtensions": [
+      ".sh",
+      ".bash",
+      ".bats",
+      ".cgi",
+      ".command",
+      ".fcgi",
+      ".ksh",
+      ".sh.in",
+      ".tmux",
+      ".tool",
+      ".zsh"
+    ]
+  },
+  {
+    "languageName": "SQL",
+    "fileExtensions": [
+      ".sql",
+      ".cql",
+      ".ddl",
+      ".inc",
+      ".prc",
+      ".tab",
+      ".udf",
+      ".viw"
+    ]
+  },
+  {
+    "languageName": "Swift",
+    "fileExtensions": [
+      ".swift"
+    ]
+  },
+  {
+    "languageName": "TOML",
+    "fileExtensions": [
+      ".toml"
+    ]
+  },
+  {
+    "languageName": "TypeScript",
+    "fileExtensions": [
+      ".ts",
+      ".tsx"
+    ]
+  },
+  {
+    "languageName": "Verilog",
+    "fileExtensions": [
+      ".v",
+      ".veo"
+    ]
+  },
+  {
+    "languageName": "Visual Basic",
+    "fileExtensions": [
+      ".vb",
+      ".bas",
+      ".cls",
+      ".frm",
+      ".frx",
+      ".vba",
+      ".vbhtml",
+      ".vbs"
+    ]
+  },
+  {
+    "languageName": "XML",
+    "fileExtensions": [
+      ".xml",
+      ".ant",
+      ".axml",
+      ".ccxml",
+      ".clixml",
+      ".cproject",
+      ".csl",
+      ".csproj",
+      ".ct",
+      ".dita",
+      ".ditamap",
+      ".ditaval",
+      ".dll.config",
+      ".dotsettings",
+      ".filters",
+      ".fsproj",
+      ".fxml",
+      ".glade",
+      ".gml",
+      ".grxml",
+      ".iml",
+      ".ivy",
+      ".jelly",
+      ".jsproj",
+      ".kml",
+      ".launch",
+      ".mdpolicy",
+      ".mm",
+      ".mod",
+      ".mxml",
+      ".nproj",
+      ".nuspec",
+      ".odd",
+      ".osm",
+      ".plist",
+      ".pluginspec",
+      ".props",
+      ".ps1xml",
+      ".psc1",
+      ".pt",
+      ".rdf",
+      ".rss",
+      ".scxml",
+      ".srdf",
+      ".storyboard",
+      ".stTheme",
+      ".sublime-snippet",
+      ".targets",
+      ".tmCommand",
+      ".tml",
+      ".tmLanguage",
+      ".tmPreferences",
+      ".tmSnippet",
+      ".tmTheme",
+      ".ts",
+      ".tsx",
+      ".ui",
+      ".urdf",
+      ".ux",
+      ".vbproj",
+      ".vcxproj",
+      ".vssettings",
+      ".vxml",
+      ".wsdl",
+      ".wsf",
+      ".wxi",
+      ".wxl",
+      ".wxs",
+      ".x3d",
+      ".xacro",
+      ".xaml",
+      ".xib",
+      ".xlf",
+      ".xliff",
+      ".xmi",
+      ".xml.dist",
+      ".xproj",
+      ".xsd",
+      ".xul",
+      ".zcml"
+    ]
+  },
+  {
+    "languageName": "YAML",
+    "fileExtensions": [
+      ".yml",
+      ".reek",
+      ".rviz",
+      ".sublime-syntax",
+      ".syntax",
+      ".yaml",
+      ".yaml-tmlanguage"
+    ]
+  }
+]
