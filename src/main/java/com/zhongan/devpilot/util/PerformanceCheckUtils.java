@@ -22,6 +22,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionReque
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.PerformanceCheckResponse;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -56,7 +57,7 @@ public class PerformanceCheckUtils {
         devPilotMessage.setContent(selectedText + "\n" + CUSTOM_PROMPT);
         DevPilotChatCompletionRequest request = new DevPilotChatCompletionRequest();
         // list content support update
-        request.setMessages(List.of(devPilotMessage));
+        request.setMessages(new ArrayList<>() {{ add(devPilotMessage); }});
         final String response = new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
         try {
             PerformanceCheckResponse performanceCheckResponse = objectMapper.readValue(response, PerformanceCheckResponse.class);
