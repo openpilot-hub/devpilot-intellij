@@ -1,1 +1,1 @@
-rootProject.name = "Open Pilot"
+rootProject.name = "DevPilot"
