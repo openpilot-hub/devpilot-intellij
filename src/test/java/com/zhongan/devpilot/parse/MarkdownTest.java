@@ -59,7 +59,7 @@ public class MarkdownTest {
 
     @Test
     public void testMarkdownSpilt() {
-        var list = MarkdownUtil.splitBlocks(markdown);
+        var list = MarkdownUtil.divideMarkdown(markdown);
 
         var result = new String[]{
                 "The most commonly used fast sort algorithm in Java is the QuickSort algorithm. Here's an example implementation of the QuickSort algorithm in Java:\n",
@@ -120,7 +120,7 @@ public class MarkdownTest {
 
     @Test
     public void testMark2Html() {
-        var result = MarkdownUtil.mark2Html(markdown);
+        var result = MarkdownUtil.textContent2Html(markdown);
 
         var expected = "<p style=\"margin-top: 5px; margin-bottom: 5px;\">The most commonly used fast sort algorithm in Java is the QuickSort algorithm. Here's an example implementation of the QuickSort algorithm in Java:</p>\n" +
                 "<pre><code class=\"language-java\">public class QuickSort {\n" +
