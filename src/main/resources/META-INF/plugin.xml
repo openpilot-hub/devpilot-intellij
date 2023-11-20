@@ -1,11 +1,11 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
-    <id>com.zhongan.openPilot</id>
+    <id>com.zhongan.devPilot</id>
 
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
-    <name>Open Pilot</name>
+    <name>DevPilot</name>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="zhaopengjun@zhongan.com" url="https://www.zhongan.com">ZA</vendor>
@@ -24,30 +24,30 @@
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="com.zhongan.codeai.CodeAIStartupActivity"/>
+        <postStartupActivity implementation="com.zhongan.devpilot.DevPilotStartupActivity"/>
 
-        <applicationConfigurable id="settings.codeai" parentId="tools" displayName="Open Pilot"
-                                 instance="com.zhongan.codeai.settings.CodeAISettingsConfigurable"/>
+        <applicationConfigurable id="settings.devpilot" parentId="tools" displayName="DevPilot"
+                                 instance="com.zhongan.devpilot.settings.DevPilotSettingsConfigurable"/>
 
-        <applicationService serviceImplementation="com.zhongan.codeai.settings.state.OpenAISettingsState"/>
-        <applicationService serviceImplementation="com.zhongan.codeai.settings.state.CodeAILlmSettingsState"/>
-        <applicationService serviceImplementation="com.zhongan.codeai.settings.state.LanguageSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OpenAISettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LanguageSettingsState"/>
         <applicationService
-                serviceImplementation="com.zhongan.codeai.settings.actionconfiguration.EditorActionConfigurationState"/>
+                serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
 
-        <toolWindow id="Open Pilot" icon="com.zhongan.codeai.CodeAIIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.codeai.gui.toolwindows.CodeAIChatToolWindowFactory"/>
+        <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
 
-        <notificationGroup id="Open Pilot Notification Group" displayType="BALLOON" key="notification.group.codeai"/>
+        <notificationGroup id="DevPilot Notification Group" displayType="BALLOON" key="notification.group.devpilot"/>
     </extensions>
 
-    <resource-bundle>messages.codeai</resource-bundle>
+    <resource-bundle>messages.devpilot</resource-bundle>
 
     <actions>
-        <group id="OpenPilotGroupedActions" icon="com.zhongan.codeai.CodeAIIcons.SYSTEM_ICON" popup="true" text="Open Pilot" description="Open Pilot">
-            <action id="com.zhongan.codeai.actions.editor.popupmenu.BasicEditorAction"
+        <group id="DevPilotGroupedActions" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" popup="true" text="DevPilot" description="DevPilot">
+            <action id="com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction"
                     class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                     popup="true"
-                    text="Open Pilot" description="Basic Actions of Open Pilot">
+                    text="DevPilot" description="Basic actions of DevPilot">
             </action>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
