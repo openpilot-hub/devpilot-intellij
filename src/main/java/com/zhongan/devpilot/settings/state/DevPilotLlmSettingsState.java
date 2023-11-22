@@ -11,7 +11,7 @@ import java.util.UUID;
 @State(name = "DevPilot_Settings", storages = @Storage("DevPilot_Settings.xml"))
 public class DevPilotLlmSettingsState implements PersistentStateComponent<DevPilotLlmSettingsState> {
 
-    private String fullName = "User";
+    private String fullName;
 
     private String uuid;
 
