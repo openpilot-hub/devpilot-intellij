@@ -1,17 +1,24 @@
 package com.zhongan.devpilot.enums;
 
 public enum ModelTypeEnum {
-    TYQW("TYQW", "ali/qwen"),
-    GPT3_5("GPT-3.5", "azure/gpt-3.5-turbo");
+    GPT3_5("GPT-3.5", "azure/gpt-3.5-turbo", "GPT-3.5"),
+    GPT3_5_16K("GPT-3.5-16k", "azure/gpt-3.5-turbo-16k", "GPT-3.5-16k"),
+    TYQW("TYQW", "ali/qwen-plus", "Qwen"),
+    SENSENOVA("sensenova", "sensenova/nova-ptc-xl-v1", "Sense Nova");
 
-    // model show name
+    // model name
     private final String name;
+
     // model code
     private final String code;
 
-    ModelTypeEnum(String name, String code) {
+    // model display name
+    private final String displayName;
+
+    ModelTypeEnum(String name, String code, String displayName) {
         this.name = name;
         this.code = code;
+        this.displayName = displayName;
     }
 
     public String getCode() {
@@ -32,5 +39,10 @@ public enum ModelTypeEnum {
             }
         }
         return null;
+    }
+
+    @Override
+    public String toString() {
+        return displayName;
     }
 }

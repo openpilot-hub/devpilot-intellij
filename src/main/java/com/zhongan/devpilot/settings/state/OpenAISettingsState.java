@@ -29,7 +29,7 @@ public class OpenAISettingsState implements PersistentStateComponent<OpenAISetti
     }
 
     public String getModelBaseHost(String selectedModel) {
-        String openAIBaseHost = "http://sky-gateway-test.zhonganonline.com";
+        String openAIBaseHost = "http://openapi-cloud-pub.zhonganinfo.com";
         return modelBaseHostMap.getOrDefault(selectedModel, openAIBaseHost);
     }
 
