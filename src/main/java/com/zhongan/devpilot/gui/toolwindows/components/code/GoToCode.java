@@ -20,12 +20,12 @@ public class GoToCode extends JPanel {
 
         setCursor(new Cursor(Cursor.HAND_CURSOR));
         setOpaque(false);
-        this.setToolTipText(editorInfo.getFileLocalPath());
+        this.setToolTipText(editorInfo.getFilePresentableUrl());
         this.add(createSimpleColoredComponent(editorInfo));
         this.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                EditorUtils.openFileAndSelectLines(project, editorInfo.getFileLocalPath(),
+                EditorUtils.openFileAndSelectLines(project, editorInfo.getFileUrl(),
                         editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine());
             }
         });

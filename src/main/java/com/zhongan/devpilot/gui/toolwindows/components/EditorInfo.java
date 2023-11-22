@@ -17,7 +17,9 @@ public class EditorInfo {
 
     private String fileName;
 
-    private String fileLocalPath;
+    private String fileUrl;
+
+    private String filePresentableUrl;
 
     private Integer selectedStartLine;
 
@@ -28,9 +30,10 @@ public class EditorInfo {
 
         VirtualFile file = FileDocumentManager.getInstance().getFile(chosenEditor.getDocument());
         if (file != null) {
-            this.fileLocalPath = file.getPath();
+            this.fileUrl = file.getUrl();
+            this.filePresentableUrl = file.getPresentableUrl();
             this.fileName = file.getName();
-            LocalFilePath localFilePath = new LocalFilePath(this.fileLocalPath, false);
+            LocalFilePath localFilePath = new LocalFilePath(file.getPath(), false);
             this.fileIcon = VcsUtil.getIcon(chosenEditor.getProject(), localFilePath);
         }
 
@@ -63,12 +66,20 @@ public class EditorInfo {
         this.fileName = fileName;
     }
 
-    public String getFileLocalPath() {
-        return fileLocalPath;
+    public String getFileUrl() {
+        return fileUrl;
     }
 
-    public void setFileLocalPath(String fileLocalPath) {
-        this.fileLocalPath = fileLocalPath;
+    public void setFileUrl(String fileUrl) {
+        this.fileUrl = fileUrl;
+    }
+
+    public String getFilePresentableUrl() {
+        return filePresentableUrl;
+    }
+
+    public void setFilePresentableUrl(String filePresentableUrl) {
+        this.filePresentableUrl = filePresentableUrl;
     }
 
     public Integer getSelectedStartLine() {
