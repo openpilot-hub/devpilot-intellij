@@ -54,7 +54,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
         try {
             var request = new Request.Builder()
-                    .url(host + "/v1/chat/completions")
+                    .url(host + "/devpilot/v1/chat/completions")
                     .header("User-Agent", parseUserAgent())
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
