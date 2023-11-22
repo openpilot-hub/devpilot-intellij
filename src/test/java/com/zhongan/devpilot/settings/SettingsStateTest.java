@@ -17,14 +17,15 @@ public class SettingsStateTest extends BasePlatformTestCase {
 
     public void testDevPilotLlmSettings() {
         var settings = DevPilotLlmSettingsState.getInstance();
-        assertEquals("User", settings.getFullName());
-
         settings.setFullName(null);
         System.setProperty("user.name", "Alice");
         assertEquals("Alice", settings.getFullName());
 
         settings.setFullName("Bob");
         assertEquals("Bob", settings.getFullName());
+
+        settings.setFullName(null);
+        assertEquals("Alice", settings.getFullName());
     }
 
     public void testEditorActionConfigurationState() {
