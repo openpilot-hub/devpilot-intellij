@@ -25,7 +25,7 @@ public class TextContentRenderer implements NodeRenderer {
 
     private static final String DEFAULT_PARAGRAPH_STYLE = "margin-top: 5px; margin-bottom: 5px;";
 
-    private static final String LIST_ITEM_STYLE = "margin-bottom: 5px; margin-left: 3px;";
+    private static final String LIST_ITEM_STYLE = "margin: 0px; padding: 0px;";
 
     @Override
     public @Nullable Set<NodeRenderingHandler<?>> getNodeRenderingHandlers() {
