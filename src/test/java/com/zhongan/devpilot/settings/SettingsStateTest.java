@@ -1,18 +1,25 @@
 package com.zhongan.devpilot.settings;
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase;
-import com.zhongan.devpilot.enums.ModelTypeEnum;
+import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState;
+import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 
 public class SettingsStateTest extends BasePlatformTestCase {
     public void testOpenAISettings() {
         var settings = OpenAISettingsState.getInstance();
-        settings.setModelBaseHost(ModelTypeEnum.TYQW.getName(), "https://test1.devpilot.com");
-        settings.setModelBaseHost(ModelTypeEnum.GPT3_5.getName(), "https://test2.devpilot.com");
-        assertEquals("https://test1.devpilot.com", settings.getModelBaseHost(ModelTypeEnum.TYQW.getName()));
-        assertEquals("https://test2.devpilot.com", settings.getModelBaseHost(ModelTypeEnum.GPT3_5.getName()));
+        settings.setModelHost("https://test1.devpilot.com");
+        settings.setPrivateKey("privateKey");
+        assertEquals("https://test1.devpilot.com", settings.getModelHost());
+        assertEquals("privateKey", settings.getPrivateKey());
+    }
+
+    public void testCodeLlamaSettings() {
+        var settings = CodeLlamaSettingsState.getInstance();
+        settings.setModelHost("https://test2.devpilot.com");
+        assertEquals("https://test2.devpilot.com", settings.getModelHost());
     }
 
     public void testDevPilotLlmSettings() {
@@ -26,6 +33,9 @@ public class SettingsStateTest extends BasePlatformTestCase {
 
         settings.setFullName(null);
         assertEquals("Alice", settings.getFullName());
+
+        settings.setSelectedModel(ModelServiceEnum.OPENAI.getName());
+        assertEquals(ModelServiceEnum.OPENAI.getName(), settings.getSelectedModel());
     }
 
     public void testEditorActionConfigurationState() {

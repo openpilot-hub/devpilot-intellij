@@ -5,44 +5,31 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import com.zhongan.devpilot.enums.ModelTypeEnum;
-
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @State(name = "DevPilot_OpenAISettings", storages = @Storage("DevPilot_OpenAISettings.xml"))
 public class OpenAISettingsState implements PersistentStateComponent<OpenAISettingsState> {
-    private String selectedModel = ModelTypeEnum.GPT3_5.getName();
+    private String modelHost;
 
-    private Map<String, String> modelBaseHostMap = new ConcurrentHashMap<>();
+    private String privateKey;
 
     public static OpenAISettingsState getInstance() {
         return ApplicationManager.getApplication().getService(OpenAISettingsState.class);
     }
 
-    public String getSelectedModel() {
-        return selectedModel;
+    public String getModelHost() {
+        return modelHost;
     }
 
-    public void setSelectedModel(String selectedModel) {
-        this.selectedModel = selectedModel;
+    public void setModelHost(String modelHost) {
+        this.modelHost = modelHost;
     }
 
-    public String getModelBaseHost(String selectedModel) {
-        String openAIBaseHost = "http://openapi-cloud-pub.zhonganinfo.com";
-        return modelBaseHostMap.getOrDefault(selectedModel, openAIBaseHost);
+    public String getPrivateKey() {
+        return privateKey;
     }
 
-    public void setModelBaseHost(String model, String host) {
-        this.modelBaseHostMap.put(model, host);
-    }
-
-    public Map<String, String> getModelBaseHostMap() {
-        return modelBaseHostMap;
-    }
-
-    public void setModelBaseHostMap(Map<String, String> modelBaseHostMap) {
-        this.modelBaseHostMap = modelBaseHostMap;
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 
     @Override

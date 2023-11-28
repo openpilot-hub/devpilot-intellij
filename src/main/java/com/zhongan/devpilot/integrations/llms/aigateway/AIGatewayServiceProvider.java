@@ -1,15 +1,17 @@
-package com.zhongan.devpilot.integrations.llms.openai;
+package com.zhongan.devpilot.integrations.llms.aigateway;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
+import com.zhongan.devpilot.DevPilotVersion;
+import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
-import com.zhongan.devpilot.settings.state.OpenAISettingsState;
+import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
+import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
-import com.zhongan.devpilot.util.UserAgentUtils;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -24,7 +26,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 
 @Service(Service.Level.PROJECT)
-public final class OpenAIServiceProvider implements LlmProvider {
+public final class AIGatewayServiceProvider implements LlmProvider {
 
     private static final OkHttpClient client = new OkHttpClient.Builder()
         .connectTimeout(60, TimeUnit.SECONDS)
@@ -38,28 +40,24 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(DevPilotChatCompletionRequest chatCompletionRequest) {
-        var host = OpenAISettingsState.getInstance().getModelHost();
-        var apiKey = OpenAISettingsState.getInstance().getPrivateKey();
+        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
 
         if (StringUtils.isEmpty(host)) {
             return "Chat completion failed: host is empty";
         }
 
-        if (StringUtils.isEmpty(apiKey)) {
-            return "Chat completion failed: api key is empty";
-        }
-
-        chatCompletionRequest.setModel("gpt-3.5-turbo");
+        var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
+        chatCompletionRequest.setModel(modelTypeEnum.getCode());
 
         okhttp3.Response response;
 
         try {
             var request = new Request.Builder()
-                    .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getUserAgent())
-                    .header("Authorization", "Bearer " + apiKey)
-                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
-                    .build();
+                .url(host + "/devpilot/v1/chat/completions")
+                .header("User-Agent", parseUserAgent())
+                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                .build();
 
             call = client.newCall(request);
             response = call.execute();
@@ -81,6 +79,12 @@ public final class OpenAIServiceProvider implements LlmProvider {
         }
     }
 
+    private String parseUserAgent() {
+        // format: idea version|plugin version|uuid
+        return String.format("%s|%s|%s", DevPilotVersion.getIdeaVersion(),
+            DevPilotVersion.getDevPilotVersion(), DevPilotLlmSettingsState.getInstance().getUuid());
+    }
+
     private String parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
         if (response == null) {
             return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
@@ -90,9 +94,9 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
         if (response.isSuccessful()) {
             var message = objectMapper.readValue(result, DevPilotSuccessResponse.class)
-                    .getChoices()
-                    .get(0)
-                    .getMessage();
+                .getChoices()
+                .get(0)
+                .getMessage();
             // multi chat message
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setRole("assistant");
