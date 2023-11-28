@@ -17,28 +17,47 @@ import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindow;
 import com.zhongan.devpilot.gui.toolwindows.components.ContentComponent;
 import com.zhongan.devpilot.gui.toolwindows.components.UserChatPanel;
-import com.zhongan.devpilot.integrations.llms.openai.OpenAIServiceProvider;
+import com.zhongan.devpilot.integrations.llms.aigateway.AIGatewayServiceProvider;
+import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+
+import javax.swing.JTextPane;
+
 import org.apache.commons.lang3.RandomStringUtils;
 import org.mockito.MockitoAnnotations;
 
-import javax.swing.*;
-
-import static com.zhongan.devpilot.util.DevPilotTests.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
+import static com.zhongan.devpilot.util.DevPilotTests.emplacePrompt;
+import static com.zhongan.devpilot.util.DevPilotTests.getLast;
+import static com.zhongan.devpilot.util.DevPilotTests.getLastContentComponent;
+import static com.zhongan.devpilot.util.DevPilotTests.getUserChatPanel;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 public class EditorActionTest extends BasePlatformTestCase {
 
     AutoCloseable mockAutoCloseable;
+
     Project mockedProject;
-    OpenAIServiceProvider mockedLlmProvider;
+
+    AIGatewayServiceProvider mockedLlmProvider;
+
     ToolWindow mockedPrimaryToolWindow;
+
     DevPilotChatToolWindow mockedChatToolWindow;
 
     @Override
     protected void setUp() throws Exception {
         super.setUp();
+
+        DevPilotLlmSettingsState.getInstance().setSelectedModel("AIGateway");
 
         Project project = getProject();
         ToolWindowHeadlessManagerImpl toolWindowManager = new ToolWindowHeadlessManagerImpl(project);
@@ -49,8 +68,8 @@ public class EditorActionTest extends BasePlatformTestCase {
         mockAutoCloseable = MockitoAnnotations.openMocks(this);
         // mock... :-(
         mockedProject = spy(project);
-        mockedLlmProvider = mock(OpenAIServiceProvider.class);
-        when(mockedProject.getService(OpenAIServiceProvider.class)).thenReturn(mockedLlmProvider);
+        mockedLlmProvider = mock(AIGatewayServiceProvider.class);
+        when(mockedProject.getService(AIGatewayServiceProvider.class)).thenReturn(mockedLlmProvider);
         mockedChatToolWindow = spy(new DevPilotChatToolWindow(mockedProject, mockedPrimaryToolWindow));
     }
 
@@ -72,8 +91,8 @@ public class EditorActionTest extends BasePlatformTestCase {
 
     public void testFix() {
         String code = "try {\n" +
-                "    Thread.sleep(1);\n" +
-                "} catch (InterruptedException e) { }";
+            "    Thread.sleep(1);\n" +
+            "} catch (InterruptedException e) { }";
         doTestAction(EditorActionEnum.FIX_THIS, code, "Fix completed!");
     }
 
@@ -90,7 +109,7 @@ public class EditorActionTest extends BasePlatformTestCase {
         try (var mockedStaticFactory = mockStatic(DevPilotChatToolWindowFactory.class);
              var mockedStaticNotification = mockStatic(DevPilotNotification.class)) {
             mockedStaticFactory.when(() -> DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(any()))
-                    .thenReturn(mockedChatToolWindow);
+                .thenReturn(mockedChatToolWindow);
 
             AnAction reviewAction = ActionManager.getInstance().getAction(actionId);
             assertNotNull(reviewAction);
@@ -117,12 +136,14 @@ public class EditorActionTest extends BasePlatformTestCase {
             String exceptedPrompt = emplacePrompt(action, selectedText);
             verify(mockedChatToolWindow, times(1)).addClearSessionInfo();
             verify(mockedChatToolWindow, times(1))
-                    .syncSendAndDisplay(eq(SessionTypeEnum.MULTI_TURN.getCode()), eq(action), eq(exceptedPrompt), any(), any());
+                .syncSendAndDisplay(eq(SessionTypeEnum.MULTI_TURN.getCode()), eq(action), eq(exceptedPrompt), any(), any());
 
             UserChatPanel userChatPanel = getUserChatPanel(mockedChatToolWindow);
             // wait for sending to complete
             PlatformTestUtil.waitWithEventsDispatching("Wait sending timeout",
-                    () -> !userChatPanel.isSending(), 20);
+                () -> !userChatPanel.isSending(), 20);
+
+            System.out.println(userChatPanel.isSending());
 
             // verify sent message
             verify(mockedLlmProvider, times(1)).chatCompletion(argThat(argument -> {

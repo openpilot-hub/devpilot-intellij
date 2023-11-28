@@ -54,7 +54,7 @@ public class PopupMenuEditorActionGroupUtil {
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
-                        if (validateInput(selectedText, prompt)) {
+                        if (isInputExceedLimit(selectedText, prompt)) {
                             DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.input.tooLong"));
                             return;
                         }
@@ -126,7 +126,7 @@ public class PopupMenuEditorActionGroupUtil {
      * @param content
      * @return
      */
-    private static boolean validateInput(String content, String prompt) {
+    private static boolean isInputExceedLimit(String content, String prompt) {
         // text too long, openai server always timeout
         if (content.length() + prompt.length() > DefaultConst.TOKEN_MAX_LENGTH) {
             return true;

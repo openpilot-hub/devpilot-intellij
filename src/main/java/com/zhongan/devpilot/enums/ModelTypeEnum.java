@@ -2,7 +2,7 @@ package com.zhongan.devpilot.enums;
 
 public enum ModelTypeEnum {
     GPT3_5("GPT-3.5", "azure/gpt-3.5-turbo", "GPT-3.5"),
-    GPT3_5_16K("GPT-3.5-16k", "azure/gpt-3.5-turbo-16k", "GPT-3.5-16k"),
+    ERNIE("Ernie", "baidu/ernie-bot-4", "Ernie Bot"),
     TYQW("TYQW", "ali/qwen-plus", "Qwen"),
     SENSENOVA("sensenova", "sensenova/nova-ptc-xl-v1", "Sense Nova");
 

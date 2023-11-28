@@ -5,6 +5,7 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.zhongan.devpilot.enums.ModelServiceEnum;
 
 import java.util.UUID;
 
@@ -15,8 +16,18 @@ public class DevPilotLlmSettingsState implements PersistentStateComponent<DevPil
 
     private String uuid;
 
+    private String selectedModel = ModelServiceEnum.AIGATEWAY.getName();
+
     public static DevPilotLlmSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(DevPilotLlmSettingsState.class);
+    }
+
+    public String getSelectedModel() {
+        return selectedModel;
+    }
+
+    public void setSelectedModel(String selectedModel) {
+        this.selectedModel = selectedModel;
     }
 
     public String getUuid() {
