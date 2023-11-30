@@ -138,7 +138,7 @@ Codellama的使用,请参阅[将Codellama部署到您的本地环境](https://gi
 
 ## 贡献
 
-更多信息请查看 [CONTRIBUTING.md](CONTRIBUTING.md)。
+更多信息请查看 [CONTRIBUTING_ZH.md](CONTRIBUTING_ZH.md)。
 
 ## 联系我们
 
