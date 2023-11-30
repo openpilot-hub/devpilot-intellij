@@ -67,7 +67,7 @@ Select a block of code, then right-click on the "DevPilot" option on the context
 - Performance Check
 - Explain This
 
-![img.png](doc/images/screenshot/en/chat_menu.png)
+![menu](doc/images/screenshot/en/chat_menu.png)
 
 **For example**, select the code, right-click ❯ DevPilot ❯ Fix This.
 
