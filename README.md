@@ -136,8 +136,7 @@ The plugin supports performance checking of code. Users can right-click on the s
 
 Afterward, the window will automatically open and return the relevant performance test results. Additionally, the optimized code and the original code will be automatically compared using diff in the editor, allowing users to optimize their code based on the results.
 
-![performance check result](doc/images/screenshot/en/performance_check_result.
-png)
+![performance check result](doc/images/screenshot/en/performance_check_result.png)
 
 ### Clear context
 
