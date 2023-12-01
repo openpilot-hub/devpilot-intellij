@@ -26,13 +26,13 @@ public enum SessionTypeEnum {
 
     public static SessionTypeEnum getEnumByCode(Integer code) {
         if (Objects.isNull(code)) {
-            return null;
+            return MULTI_TURN;
         }
         for (SessionTypeEnum type : SessionTypeEnum.values()) {
             if (type.getCode().equals(code)) {
                 return type;
             }
         }
-        return null;
+        return MULTI_TURN;
     }
 }
