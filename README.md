@@ -24,9 +24,11 @@ This innovative AI-based plugin is set to supercharge your development process.
 
 ## Installation
 
+Currently, the plugin has version requirements for IntelliJ IDEA. The minimum required version is 2021.2, make sure you have the appropriate version installed before attempting to use the plugin.
+
 There are three ways for installing plugins:
 
-- idea official marketplace - currently in the beta testing phase and not yet available on the market. It will be available on the market after the release of the official version.
+- IDEA official marketplace - currently in the beta testing phase and not yet available on the market. It will be available on the market after the release of the official version.
 
 - Installation via compressed package - select "install from disk" in the plugin page settings, and then import the zip package. The download link for the compressed package is available in [Release page]().
   ![img.png](doc/images/screenshot/cn/install_from_disk.png)
