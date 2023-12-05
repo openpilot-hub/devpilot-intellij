@@ -19,8 +19,10 @@ import java.util.stream.Collectors;
 
 public class MarkdownUtil {
 
+    private static final String DEFAULT_CODE_FILE_EXTENSION = ".java";
+
     public static String getFileExtensionFromLanguage(String language) {
-        return languageFileExtMap.getOrDefault(language.toLowerCase(), ".txt");
+        return languageFileExtMap.getOrDefault(language.toLowerCase(), DEFAULT_CODE_FILE_EXTENSION);
     }
 
     /**
