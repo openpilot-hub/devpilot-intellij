@@ -148,7 +148,7 @@ public class EditorActionTest extends BasePlatformTestCase {
             // verify sent message
             verify(mockedLlmProvider, times(1)).chatCompletion(argThat(argument -> {
                 assertNotEmpty(argument.getMessages());
-                String content = argument.getMessages().get(0).getContent();
+                String content = argument.getMessages().get(1).getContent();
                 return content.equals(exceptedPrompt);
             }));
 

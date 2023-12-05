@@ -17,6 +17,7 @@ import com.intellij.ui.components.JBLabel;
 import com.intellij.util.ui.JBUI;
 import com.vladsch.flexmark.ast.FencedCodeBlock;
 import com.vladsch.flexmark.parser.Parser;
+import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.code.CodeHeaderComponent;
 import com.zhongan.devpilot.gui.toolwindows.components.code.GoToCode;
@@ -46,7 +47,7 @@ public class ContentComponent extends JPanel {
             return null;
         }
         String code = codeNode.getContentChars().unescape().replaceAll("\\n$", "");
-        String language = StringUtils.isEmpty(codeNode.getInfo().toString()) ? "text" : codeNode.getInfo().toString();
+        String language = StringUtils.isEmpty(codeNode.getInfo().toString()) ? DefaultConst.DEFAULT_CODE_LANGUAGE : codeNode.getInfo().toString();
 
         String fileExt = MarkdownUtil.getFileExtensionFromLanguage(language);
         LightVirtualFile lightVirtualFile = new LightVirtualFile(System.currentTimeMillis() + fileExt, code);
