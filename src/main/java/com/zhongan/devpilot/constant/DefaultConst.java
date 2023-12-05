@@ -12,4 +12,6 @@ public class DefaultConst {
 
     public final static int CHINESE_CONTENT_MAX_LENGTH = 1638;
 
+    public final static String DEFAULT_CODE_LANGUAGE = "java";
+
 }

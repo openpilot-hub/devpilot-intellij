@@ -12,6 +12,7 @@ import com.intellij.ui.JBColor;
 import com.intellij.ui.components.JBScrollPane;
 import com.intellij.util.ui.JBUI;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
+import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.ChatDisplayPanel;
@@ -26,6 +27,7 @@ import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.MarkdownUtil;
+import com.zhongan.devpilot.util.MessageUtil;
 
 import java.awt.Component;
 import java.awt.GridBagConstraints;
@@ -134,19 +136,21 @@ public class DevPilotChatToolWindow {
     }
 
     private String sendMessage(Integer sessionType, String message) {
-        var devPilotMessage = new DevPilotMessage();
-        devPilotMessage.setRole("user");
-        devPilotMessage.setContent(message);
+        DevPilotMessage userMessage = MessageUtil.createUserMessage(message);
         // check session type,default multi session
         DevPilotChatCompletionRequest devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         SessionTypeEnum sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
         if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
             // independent message can not update, just readonly
-            devPilotChatCompletionRequest.getMessages().add(devPilotMessage);
+            devPilotChatCompletionRequest.getMessages().add(userMessage);
+            devPilotChatCompletionRequest.getMessages().add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
         } else {
+            if (multiSessionRequest.getMessages().isEmpty()) {
+                multiSessionRequest.getMessages().add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
+            }
             devPilotChatCompletionRequest.setStream(multiSessionRequest.isStream());
             devPilotChatCompletionRequest.setModel(multiSessionRequest.getModel());
-            multiSessionRequest.getMessages().add(devPilotMessage);
+            multiSessionRequest.getMessages().add(userMessage);
             devPilotChatCompletionRequest.getMessages().addAll(multiSessionRequest.getMessages());
         }
         String chatCompletion = llmProvider.chatCompletion(devPilotChatCompletionRequest);

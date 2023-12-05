@@ -11,6 +11,7 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.constant.DefaultConst;
+import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
@@ -89,7 +90,7 @@ public class PopupMenuEditorActionGroupUtil {
                         devPilotChatToolWindow.addClearSessionInfo();
                         String newPrompt = prompt.replace("{{selectedCode}}", selectedText);
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
-                            newPrompt = newPrompt + "Please response in Chinese.";
+                            newPrompt = newPrompt + PromptConst.ANSWER_IN_CHINESE;
                         }
                         devPilotChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), newPrompt,
                                 callback, editorInfo);

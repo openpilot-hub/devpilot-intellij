@@ -2,6 +2,7 @@ package com.zhongan.devpilot.util;
 
 import com.intellij.openapi.roots.ui.componentsList.components.ScrollablePanel;
 import com.intellij.ui.components.JBScrollPane;
+import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindow;
 import com.zhongan.devpilot.gui.toolwindows.components.ChatDisplayPanel;
@@ -60,7 +61,7 @@ public final class DevPilotTests {
     public static String emplacePrompt(@NotNull EditorActionEnum actionEnum, @NotNull String selectedText) {
         String exceptedPrompt = actionEnum.getPrompt().replace("{{selectedCode}}", selectedText);
         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
-            exceptedPrompt += "Please response in Chinese.";
+            exceptedPrompt += PromptConst.ANSWER_IN_CHINESE;
         }
         return exceptedPrompt;
     }
