@@ -22,14 +22,14 @@ public enum ModelServiceEnum {
 
     public static ModelServiceEnum fromName(String name) {
         if (name == null) {
-            return null;
+            return OPENAI;
         }
         for (ModelServiceEnum type : ModelServiceEnum.values()) {
             if (type.getName().equals(name)) {
                 return type;
             }
         }
-        return null;
+        return OPENAI;
     }
 
     @Override

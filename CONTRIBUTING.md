@@ -2,7 +2,7 @@
 
 Welcome to DevPilot intellij plugin repository. We are glad you are here!
 
-Everyone is welcome to contribute to this repository. 
+Everyone is welcome to contribute to this repository.
 
 ### Requirements
 
