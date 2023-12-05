@@ -30,7 +30,7 @@ There are three ways for installing plugins:
 
 - IDEA official marketplace - currently in the beta testing phase and not yet available on the market. It will be available on the market after the release of the official version.
 
-- Installation via compressed package - select "install from disk" in the plugin page settings, and then import the zip package. The download link for the compressed package is available in [Release page](https://github.com/openpilot-hub/devpilot-intellij/releases).
+- Installation via compressed package - select "install from disk" in the plugin page settings, and then import the zip package. The download link for the compressed package is available in [Release page]().
   ![img.png](doc/images/screenshot/cn/install_from_disk.png)
 - Build from scratch
   1. Clone this repository to your local machine.
@@ -124,6 +124,7 @@ The plugin supports the ability to review code. Users can right-click on the sel
 ![menu code review.png](doc/images/screenshot/en/menu_code_review.png)
 
 Afterward, the window will automatically open and return the relevant review results. Users can edit their code logic based on the results.
+
 
 ![review code result](doc/images/screenshot/en/code_review_result.png)
 
