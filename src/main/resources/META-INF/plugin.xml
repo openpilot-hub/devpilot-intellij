@@ -29,6 +29,8 @@
         <applicationConfigurable id="settings.devpilot" parentId="tools" displayName="DevPilot"
                                  instance="com.zhongan.devpilot.settings.DevPilotSettingsConfigurable"/>
 
+        <httpRequestHandler implementation="com.zhongan.devpilot.rest.za.ZaSsoCallbackRestService"/>
+
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LanguageSettingsState"/>
