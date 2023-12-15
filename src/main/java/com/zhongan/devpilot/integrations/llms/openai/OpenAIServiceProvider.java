@@ -49,7 +49,13 @@ public final class OpenAIServiceProvider implements LlmProvider {
             return "Chat completion failed: api key is empty";
         }
 
-        chatCompletionRequest.setModel("gpt-3.5-turbo");
+        var modelName = OpenAISettingsState.getInstance().getModelName();
+
+        if (StringUtils.isEmpty(modelName)) {
+            return "Chat completion failed: openai model name is empty";
+        }
+
+        chatCompletionRequest.setModel(modelName);
 
         okhttp3.Response response;
 

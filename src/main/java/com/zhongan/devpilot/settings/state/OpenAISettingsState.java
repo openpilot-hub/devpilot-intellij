@@ -12,6 +12,8 @@ public class OpenAISettingsState implements PersistentStateComponent<OpenAISetti
 
     private String privateKey;
 
+    private String modelName = "gpt-3.5-turbo";
+
     public static OpenAISettingsState getInstance() {
         return ApplicationManager.getApplication().getService(OpenAISettingsState.class);
     }
@@ -30,6 +32,14 @@ public class OpenAISettingsState implements PersistentStateComponent<OpenAISetti
 
     public void setPrivateKey(String privateKey) {
         this.privateKey = privateKey;
+    }
+
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
     }
 
     @Override

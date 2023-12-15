@@ -44,6 +44,14 @@ public final class LlamaServiceProvider implements LlmProvider {
             return "Chat completion failed: host is empty";
         }
 
+        var modelName = CodeLlamaSettingsState.getInstance().getModelName();
+
+        if (StringUtils.isEmpty(modelName)) {
+            return "Chat completion failed: code llama model name is empty";
+        }
+
+        chatCompletionRequest.setModel(modelName);
+
         okhttp3.Response response;
 
         try {

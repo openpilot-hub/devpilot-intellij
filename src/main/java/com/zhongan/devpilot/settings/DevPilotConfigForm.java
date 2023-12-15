@@ -29,6 +29,8 @@ public class DevPilotConfigForm {
 
     private final JBTextField openAIKeyField;
 
+    private final JBTextField openAIModelNameField;
+
     private final JPanel aiGatewayServicePanel;
 
     private final JBTextField aiGatewayBaseHostField;
@@ -38,6 +40,8 @@ public class DevPilotConfigForm {
     private final JPanel codeLlamaServicePanel;
 
     private final JBTextField codeLlamaBaseHostField;
+
+    private final JBTextField codeLlamaModelNameField;
 
     private Integer index;
 
@@ -50,6 +54,7 @@ public class DevPilotConfigForm {
         var openAISettings = OpenAISettingsState.getInstance();
         openAIBaseHostField = new JBTextField(openAISettings.getModelHost(), 30);
         openAIKeyField = new JBTextField(openAISettings.getPrivateKey(), 30);
+        openAIModelNameField = new JBTextField(openAISettings.getModelName(), 30);
         openAIServicePanel = createOpenAIServicePanel();
 
         var aiGatewaySettings = AIGatewaySettingsState.getInstance();
@@ -68,6 +73,7 @@ public class DevPilotConfigForm {
 
         var codeLlamaSettings = CodeLlamaSettingsState.getInstance();
         codeLlamaBaseHostField = new JBTextField(codeLlamaSettings.getModelHost(), 30);
+        codeLlamaModelNameField = new JBTextField(codeLlamaSettings.getModelName(), 30);
         codeLlamaServicePanel = createCodeLlamaServicePanel();
 
         panelShow(selectedEnum);
@@ -136,6 +142,9 @@ public class DevPilotConfigForm {
                 .add(UI.PanelFactory.panel(openAIKeyField)
                         .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.apiKeyLabel"))
                         .resizeX(false))
+                .add(UI.PanelFactory.panel(openAIModelNameField)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
+                        .resizeX(false))
                 .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
         return panel;
@@ -158,6 +167,9 @@ public class DevPilotConfigForm {
         var panel = UI.PanelFactory.grid()
                 .add(UI.PanelFactory.panel(codeLlamaBaseHostField)
                         .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
+                        .resizeX(false))
+                .add(UI.PanelFactory.panel(codeLlamaModelNameField)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
                         .resizeX(false))
                 .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
@@ -217,4 +229,11 @@ public class DevPilotConfigForm {
         return (ModelTypeEnum) aiGatewayModelComboBox.getSelectedItem();
     }
 
+    public String getOpenAIModelName() {
+        return openAIModelNameField.getText();
+    }
+
+    public String getCodeLlamaModelName() {
+        return codeLlamaModelNameField.getText();
+    }
 }
