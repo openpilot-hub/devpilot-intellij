@@ -40,13 +40,13 @@ public class DocumentUtil {
             Document document = editor.getDocument();
             int caretOffset = editor.getSelectionModel().getSelectionStart();
             document.replaceString(editor.getSelectionModel().getSelectionStart(),
-                    editor.getSelectionModel().getSelectionEnd(),
-                    result);
+                editor.getSelectionModel().getSelectionEnd(),
+                result);
             // format code
             CodeStyleManager codeStyleManager = CodeStyleManager.getInstance(project);
             VirtualFile file = FileDocumentManager.getInstance().getFile(editor.getDocument());
             codeStyleManager.reformatText(PsiManager.getInstance(project).findFile(file),
-                    caretOffset, caretOffset + result.length());
+                caretOffset, caretOffset + result.length());
         }));
     }
 
@@ -58,6 +58,7 @@ public class DocumentUtil {
      * @param result
      */
     public static void diffCommentAndFormatWindow(Project project, Editor editor, String result) {
+        String finalResult = MarkdownUtil.extractContents(result);
         var selectionModel = editor.getSelectionModel();
         ApplicationManager.getApplication().invokeLater(() -> WriteCommandAction.runWriteCommandAction(project, () -> {
             VirtualFile createdFile = VirtualFileUtil.createVirtualReplaceFile(editor, project);
@@ -65,12 +66,12 @@ public class DocumentUtil {
 
             replaceDocument.setText(editor.getDocument().getText());
             replaceDocument.setReadOnly(false);
-            replaceDocument.replaceString(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), result);
+            replaceDocument.replaceString(selectionModel.getSelectionStart(), selectionModel.getSelectionEnd(), finalResult);
 
             // auto code format
             CodeStyleManager codeStyleManager = CodeStyleManager.getInstance(project);
             codeStyleManager.reformatText(PsiDocumentManager.getInstance(project).getPsiFile(replaceDocument),
-                    selectionModel.getSelectionStart(), selectionModel.getSelectionStart() + result.length());
+                selectionModel.getSelectionStart(), selectionModel.getSelectionStart() + finalResult.length());
             // show diff
             PerformanceCheckUtils.showDiff(project, editor, FileDocumentManager.getInstance().getFile(editor.getDocument()), replaceDocument);
         }));
