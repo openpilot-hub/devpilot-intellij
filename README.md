@@ -28,7 +28,7 @@ Currently, the plugin has version requirements for IntelliJ IDEA. The minimum re
 
 There are three ways for installing plugins:
 
-- IDEA official marketplace - currently in the beta testing phase and not yet available on the market. It will be available on the market after the release of the official version.
+- IDEA official marketplace - You can get the plugin from [here](https://plugins.jetbrains.com/plugin/23322-devpilot).
 
 - Installation via compressed package - select "install from disk" in the plugin page settings, and then import the zip package. The download link for the compressed package is available in [Release page](https://github.com/openpilot-hub/devpilot-intellij/releases).
   ![img.png](doc/images/screenshot/cn/install_from_disk.png)

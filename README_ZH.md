@@ -28,7 +28,8 @@
 
 安装插件有两个渠道：
 
-idea官方市场 - 目前内测阶段暂时未上架，后续release正式版本后会上架到市场
+Idea官方市场 - 你可以在Intellij IDEA官方[插件市场](https://plugins.jetbrains.com/plugin/23322-devpilot)下载。
+
 压缩包安装 - 在plugin页面选择设置中的从磁盘安装，之后将zip包导入即可，压缩包下载地址：下载
 ![install from disk](doc/images/screenshot/cn/install_from_disk.png)
 
