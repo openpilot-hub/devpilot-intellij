@@ -51,7 +51,7 @@ public class DevPilotChatToolWindow {
 
     private final Project project;
 
-    private final LlmProvider llmProvider;
+    private LlmProvider llmProvider;
 
     private final DevPilotChatCompletionRequest multiSessionRequest = new DevPilotChatCompletionRequest();
 
@@ -60,7 +60,6 @@ public class DevPilotChatToolWindow {
         this.devPilotChatToolWindowPanel = new JPanel(new GridBagLayout());
         this.chatContentPanel = new ScrollablePanel();
         this.userChatPanel = new UserChatPanel(this::syncSendAndDisplay, this::stopSending);
-        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
         var gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.BOTH;
@@ -153,6 +152,10 @@ public class DevPilotChatToolWindow {
             multiSessionRequest.getMessages().add(userMessage);
             devPilotChatCompletionRequest.getMessages().addAll(multiSessionRequest.getMessages());
         }
+
+        var llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        this.llmProvider = llmProvider;
+
         String chatCompletion = llmProvider.chatCompletion(devPilotChatCompletionRequest);
         if (SessionTypeEnum.MULTI_TURN.equals(sessionTypeEnum) &&
                 devPilotChatCompletionRequest.getMessages().size() > multiSessionRequest.getMessages().size()) {
@@ -207,6 +210,9 @@ public class DevPilotChatToolWindow {
     }
 
     private void stopSending() {
+        if (llmProvider == null) {
+            return;
+        }
         llmProvider.interruptSend();
         userChatPanel.setIconSend();
         userChatPanel.setSending(false);
