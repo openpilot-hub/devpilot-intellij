@@ -2,7 +2,6 @@ package com.zhongan.devpilot.integrations.llms.aigateway;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
-import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -10,8 +9,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
-import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.UserAgentUtils;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -55,7 +54,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                 .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", parseUserAgent())
+                .header("User-Agent", UserAgentUtils.getUserAgent())
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
@@ -77,12 +76,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         if (call != null && !call.isCanceled()) {
             call.cancel();
         }
-    }
-
-    private String parseUserAgent() {
-        // format: idea version|plugin version|uuid
-        return String.format("%s|%s|%s", DevPilotVersion.getIdeaVersion(),
-            DevPilotVersion.getDevPilotVersion(), DevPilotLlmSettingsState.getInstance().getUuid());
     }
 
     private String parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
