@@ -3,7 +3,8 @@ package com.zhongan.devpilot.enums;
 public enum ModelServiceEnum {
     OPENAI("OpenAI", "OpenAI Service"),
     LLAMA("LLaMA", "Code LLaMA (Locally)"),
-    AIGATEWAY("AIGateway", "AI Gateway");
+    AIGATEWAY("AIGateway", "AI Gateway"),
+    TRIAL("Trial", "Trial Service (Free)");
 
     // model name
     private final String name;

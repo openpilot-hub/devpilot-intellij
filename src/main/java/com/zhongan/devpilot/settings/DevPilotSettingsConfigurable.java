@@ -46,7 +46,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var serviceForm = settingsComponent.getDevPilotConfigForm();
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
-        var selectedSso = serviceForm.getSelectedSso();
+        var selectedSso = serviceForm.getSelectedZaSso();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !selectedModel.getName().equals(settings.getSelectedModel())
@@ -76,7 +76,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var serviceForm = settingsComponent.getDevPilotConfigForm();
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
-        var selectedSso = serviceForm.getSelectedSso();
+        var selectedSso = serviceForm.getSelectedZaSso();
 
         settings.setSelectedModel(selectedModel.getName());
         openAISettings.setModelHost(serviceForm.getOpenAIBaseHost());

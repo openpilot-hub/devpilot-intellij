@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.integrations.llms.openai;
+package com.zhongan.devpilot.integrations.llms.trial;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
@@ -7,15 +7,13 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionReque
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
-import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.GithubAuthUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
 
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-
-import org.apache.commons.lang3.StringUtils;
 
 import okhttp3.Call;
 import okhttp3.MediaType;
@@ -24,13 +22,16 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 
 @Service(Service.Level.PROJECT)
-public final class OpenAIServiceProvider implements LlmProvider {
+public final class TrialServiceProvider implements LlmProvider {
+    private static final String host = "https://devpilot.zhongan.com/aigc";
+
+    private static final String model = "aws/codellama";
 
     private static final OkHttpClient client = new OkHttpClient.Builder()
-        .connectTimeout(60, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
-        .readTimeout(60, TimeUnit.SECONDS)
-        .build();
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .readTimeout(60, TimeUnit.SECONDS)
+            .build();
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -38,26 +39,19 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(DevPilotChatCompletionRequest chatCompletionRequest) {
-        var host = OpenAISettingsState.getInstance().getModelHost();
-        var apiKey = OpenAISettingsState.getInstance().getPrivateKey();
-
-        if (StringUtils.isEmpty(host)) {
-            return "Chat completion failed: host is empty";
+        if (!GithubAuthUtils.isLogin()) {
+            return "Chat completion failed: please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>";
         }
 
-        if (StringUtils.isEmpty(apiKey)) {
-            return "Chat completion failed: api key is empty";
-        }
-
-        chatCompletionRequest.setModel("gpt-3.5-turbo");
+        chatCompletionRequest.setModel(model);
 
         okhttp3.Response response;
 
         try {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getUserAgent())
-                    .header("Authorization", "Bearer " + apiKey)
+                    .header("User-Agent", UserAgentUtils.getGithubUserAgent())
+                    .header("Auth-Type", "github")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
 
@@ -100,11 +94,13 @@ public final class OpenAIServiceProvider implements LlmProvider {
             chatCompletionRequest.getMessages().add(devPilotMessage);
             return message.getContent();
 
+        } else if (response.code() == 401) {
+            GithubAuthUtils.logout();
+            return "Chat completion failed: Unauthorized, please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>";
         } else {
             return objectMapper.readValue(result, DevPilotFailedResponse.class)
-                .getError()
-                .getMessage();
+                    .getError()
+                    .getMessage();
         }
     }
-
 }

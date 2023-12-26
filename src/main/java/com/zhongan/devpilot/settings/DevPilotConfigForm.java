@@ -15,7 +15,9 @@ import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
+import com.zhongan.devpilot.settings.state.TrialServiceSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.GithubAuthUtils;
 import com.zhongan.devpilot.util.ZaSsoUtils;
 
 import java.awt.FlowLayout;
@@ -28,7 +30,6 @@ import javax.swing.JComponent;
 import javax.swing.JPanel;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.ide.BuiltInServerManager;
 
 public class DevPilotConfigForm {
 
@@ -60,6 +61,14 @@ public class DevPilotConfigForm {
 
     private final JPanel loginPanel;
 
+    private final JPanel trialServicePanel;
+
+    private final JButton githubAuthButton;
+
+    private final JBLabel githubUserInfoLabel;
+
+    private final JPanel githubLoginPanel;
+
     private Integer index;
 
     public DevPilotConfigForm() {
@@ -86,10 +95,10 @@ public class DevPilotConfigForm {
         });
         aiGatewayModelComboBox = modelTypeEnumComboBox;
 
-        var zaSsoUsername = zaSsoUsername();
+        var zaSsoUsername = ZaSsoUtils.zaSsoUsername(getSelectedZaSso());
 
         zaSsoButton = createZaSsoButton();
-        if (isLogin() && StringUtils.isNotBlank(zaSsoUsername)) {
+        if (ZaSsoUtils.isLogin(getSelectedZaSso()) && StringUtils.isNotBlank(zaSsoUsername)) {
             userInfoLabel = new JBLabel(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + zaSsoUsername);
         } else {
             userInfoLabel = new JBLabel();
@@ -105,8 +114,8 @@ public class DevPilotConfigForm {
         var ssoComboBox = new ComboBox<>(ZaSsoEnum.values());
         ssoComboBox.setSelectedItem(ZaSsoEnum.fromName(aiGatewaySettings.getSelectedSso()));
         ssoComboBox.addItemListener(e -> {
-            if (isLogin()) {
-                userInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + zaSsoUsername());
+            if (ZaSsoUtils.isLogin(getSelectedZaSso())) {
+                userInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + ZaSsoUtils.zaSsoUsername(getSelectedZaSso()));
                 zaSsoButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
             } else {
                 userInfoLabel.setText(null);
@@ -122,6 +131,25 @@ public class DevPilotConfigForm {
         codeLlamaBaseHostField = new JBTextField(codeLlamaSettings.getModelHost(), 30);
         codeLlamaServicePanel = createCodeLlamaServicePanel();
 
+        var trialServiceSettings = TrialServiceSettingsState.getInstance();
+        var username = trialServiceSettings.getGithubUsername();
+
+        githubAuthButton = createGithubAuthButton();
+        if (GithubAuthUtils.isLogin()) {
+            githubUserInfoLabel = new JBLabel(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
+        } else {
+            githubUserInfoLabel = new JBLabel();
+        }
+
+        var githubLoginWrapper = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+        githubLoginWrapper.add(githubAuthButton);
+        githubLoginWrapper.add(Box.createHorizontalStrut(5));
+        githubLoginWrapper.add(githubUserInfoLabel);
+
+        githubLoginPanel = githubLoginWrapper;
+
+        trialServicePanel = createTrialServicePanel();
+
         panelShow(selectedEnum);
 
         var combo = new ComboBox<>(ModelServiceEnum.values());
@@ -133,7 +161,7 @@ public class DevPilotConfigForm {
 
         modelComboBox = combo;
         comboBoxPanel = createOpenAIServiceSectionPanel(
-                DevPilotMessageBundle.get("devpilot.settings.service.modelTypeLabel"), modelComboBox);
+                DevPilotMessageBundle.get("devpilot.settings.service.serviceTypeLabel"), modelComboBox);
 
         var instance = LanguageSettingsState.getInstance();
         index = instance.getLanguageIndex();
@@ -141,11 +169,12 @@ public class DevPilotConfigForm {
 
     public JComponent getForm() {
         var form = FormBuilder.createFormBuilder()
-            .addComponent(comboBoxPanel)
-            .addComponent(openAIServicePanel)
-            .addComponent(codeLlamaServicePanel)
-            .addComponent(aiGatewayServicePanel)
-            .getPanel();
+                .addComponent(comboBoxPanel)
+                .addComponent(openAIServicePanel)
+                .addComponent(codeLlamaServicePanel)
+                .addComponent(aiGatewayServicePanel)
+                .addComponent(trialServicePanel)
+                .getPanel();
         form.setBorder(JBUI.Borders.emptyLeft(16));
         return form;
     }
@@ -173,20 +202,20 @@ public class DevPilotConfigForm {
     private JButton createZaSsoButton() {
         String showText = DevPilotMessageBundle.get("devpilot.settings.service.zaSsoDesc");
 
-        if (isLogin()) {
+        if (ZaSsoUtils.isLogin(getSelectedZaSso())) {
             showText = DevPilotMessageBundle.get("devpilot.settings.service.logout");
         }
 
         JButton button = new JButton(showText);
         button.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
-                if (isLogin()) {
+                if (ZaSsoUtils.isLogin(getSelectedZaSso())) {
                     button.setText(DevPilotMessageBundle.get("devpilot.settings.service.zaSsoDesc"));
                     // logout clear user session info
-                    logout();
+                    ZaSsoUtils.logout(getSelectedZaSso());
                     userInfoLabel.setText("");
                 } else {
-                    String url = ZaSsoUtils.getZaSsoAuthUrl(getSelectedZaSso(), BuiltInServerManager.getInstance().getPort());
+                    String url = ZaSsoUtils.getZaSsoAuthUrl(getSelectedZaSso());
                     BrowserUtil.browse(url);
                 }
             }
@@ -246,32 +275,77 @@ public class DevPilotConfigForm {
         return panel;
     }
 
+    private JPanel createTrialServicePanel() {
+        var panel = UI.PanelFactory.grid()
+                .add(UI.PanelFactory.panel(githubLoginPanel)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.zaGithubLabel"))
+                        .resizeX(false))
+                .createPanel();
+        panel.setBorder(JBUI.Borders.emptyLeft(16));
+        return panel;
+    }
+
+    private JButton createGithubAuthButton() {
+        String showText = DevPilotMessageBundle.get("devpilot.settings.service.zaGithubDesc");
+
+        if (GithubAuthUtils.isLogin()) {
+            showText = DevPilotMessageBundle.get("devpilot.settings.service.logout");
+        }
+
+        JButton button = new JButton(showText);
+        button.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent evt) {
+                if (GithubAuthUtils.isLogin()) {
+                    button.setText(DevPilotMessageBundle.get("devpilot.settings.service.zaGithubDesc"));
+                    // logout clear user session info
+                    GithubAuthUtils.logout();
+                    githubUserInfoLabel.setText("");
+                } else {
+                    String url = GithubAuthUtils.getGithubAuthUrl();
+                    BrowserUtil.browse(url);
+                }
+            }
+        });
+
+        return button;
+    }
+
     private void panelShow(ModelServiceEnum serviceEnum) {
         switch (serviceEnum) {
             case OPENAI:
                 openAIServicePanel.setVisible(true);
                 codeLlamaServicePanel.setVisible(false);
                 aiGatewayServicePanel.setVisible(false);
+                trialServicePanel.setVisible(false);
                 break;
             case LLAMA:
                 openAIServicePanel.setVisible(false);
                 codeLlamaServicePanel.setVisible(true);
                 aiGatewayServicePanel.setVisible(false);
+                trialServicePanel.setVisible(false);
                 break;
             case AIGATEWAY:
                 openAIServicePanel.setVisible(false);
                 codeLlamaServicePanel.setVisible(false);
                 aiGatewayServicePanel.setVisible(true);
+                trialServicePanel.setVisible(false);
+                break;
+            case TRIAL:
+                openAIServicePanel.setVisible(false);
+                codeLlamaServicePanel.setVisible(false);
+                aiGatewayServicePanel.setVisible(false);
+                trialServicePanel.setVisible(true);
                 break;
             default:
                 openAIServicePanel.setVisible(false);
                 codeLlamaServicePanel.setVisible(false);
                 aiGatewayServicePanel.setVisible(false);
+                trialServicePanel.setVisible(false);
                 break;
         }
     }
 
-    private ZaSsoEnum getSelectedZaSso() {
+    public ZaSsoEnum getSelectedZaSso() {
         if (zaSsoComboBox == null) {
             var settings = AIGatewaySettingsState.getInstance();
             return ZaSsoEnum.fromName(settings.getSelectedSso());
@@ -282,46 +356,6 @@ public class DevPilotConfigForm {
             zaSsoEnum = ZaSsoEnum.ZA;
         }
         return zaSsoEnum;
-    }
-
-    private boolean isLogin() {
-        var settings = AIGatewaySettingsState.getInstance();
-        var zaSsoEnum = getSelectedZaSso();
-        switch (zaSsoEnum) {
-            case ZA_TI:
-                return StringUtils.isNotBlank(settings.getTiSsoToken()) && StringUtils.isNotBlank(settings.getTiSsoUsername());
-            case ZA:
-            default:
-                return StringUtils.isNotBlank(settings.getSsoToken()) && StringUtils.isNotBlank(settings.getSsoUsername());
-        }
-    }
-
-    private String zaSsoUsername() {
-        var settings = AIGatewaySettingsState.getInstance();
-        var zaSsoEnum = getSelectedZaSso();
-        switch (zaSsoEnum) {
-            case ZA_TI:
-                return settings.getTiSsoUsername();
-            case ZA:
-            default:
-                return settings.getSsoUsername();
-        }
-    }
-
-    private void logout() {
-        var settings = AIGatewaySettingsState.getInstance();
-        var zaSsoEnum = getSelectedZaSso();
-        switch (zaSsoEnum) {
-            case ZA_TI:
-                settings.setTiSsoUsername(null);
-                settings.setTiSsoToken(null);
-                break;
-            case ZA:
-            default:
-                settings.setSsoUsername(null);
-                settings.setSsoToken(null);
-                break;
-        }
     }
 
     public String getOpenAIBaseHost() {
@@ -354,23 +388,14 @@ public class DevPilotConfigForm {
 
     public void zaSsoLogin(String token, String username) {
         var zaSsoEnum = getSelectedZaSso();
-        switch (zaSsoEnum) {
-            case ZA:
-                AIGatewaySettingsState.getInstance().setSsoToken(token);
-                AIGatewaySettingsState.getInstance().setSsoUsername(username);
-                break;
-            case ZA_TI:
-                AIGatewaySettingsState.getInstance().setTiSsoToken(token);
-                AIGatewaySettingsState.getInstance().setTiSsoUsername(username);
-                break;
-            default:
-                break;
-        }
+        ZaSsoUtils.login(zaSsoEnum, token, username);
         zaSsoButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
         userInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
     }
 
-    public ZaSsoEnum getSelectedSso() {
-        return (ZaSsoEnum) zaSsoComboBox.getSelectedItem();
+    public void githubLogin(String username, String token, Long userid) {
+        GithubAuthUtils.login(username, token, userid);
+        githubAuthButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
+        githubUserInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
     }
 }

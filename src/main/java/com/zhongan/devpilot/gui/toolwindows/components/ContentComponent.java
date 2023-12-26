@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.gui.toolwindows.components;
 
 import com.intellij.codeInsight.daemon.DaemonCodeAnalyzer;
+import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorFactory;
@@ -31,6 +32,7 @@ import java.awt.FlowLayout;
 import javax.swing.BoxLayout;
 import javax.swing.JPanel;
 import javax.swing.JTextPane;
+import javax.swing.event.HyperlinkEvent;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -84,6 +86,11 @@ public class ContentComponent extends JPanel {
         textPane.putClientProperty(JTextPane.HONOR_DISPLAY_PROPERTIES, true);
         textPane.setBorder(JBUI.Borders.emptyLeft(5));
         textPane.setText(MarkdownUtil.textContent2Html(textBlock));
+        textPane.addHyperlinkListener(e -> {
+            if (HyperlinkEvent.EventType.ACTIVATED == e.getEventType()) {
+                BrowserUtil.browse(e.getURL());
+            }
+        });
         return textPane;
     }
 
