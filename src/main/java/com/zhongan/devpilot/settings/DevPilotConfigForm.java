@@ -7,6 +7,7 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UI;
 import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
+import com.zhongan.devpilot.enums.OpenAIModelNameEnum;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
@@ -29,7 +30,9 @@ public class DevPilotConfigForm {
 
     private final JBTextField openAIKeyField;
 
-    private final JBTextField openAIModelNameField;
+    private final ComboBox<OpenAIModelNameEnum> openAIModelNameComboBox;
+
+    private final JBTextField openAICustomModelNameField;
 
     private final JPanel aiGatewayServicePanel;
 
@@ -54,7 +57,16 @@ public class DevPilotConfigForm {
         var openAISettings = OpenAISettingsState.getInstance();
         openAIBaseHostField = new JBTextField(openAISettings.getModelHost(), 30);
         openAIKeyField = new JBTextField(openAISettings.getPrivateKey(), 30);
-        openAIModelNameField = new JBTextField(openAISettings.getModelName(), 30);
+        openAICustomModelNameField = new JBTextField(openAISettings.getCustomModelName(), 15);
+        var modelNameEnum = OpenAIModelNameEnum.fromName(openAISettings.getModelName());
+        openAICustomModelNameField.setEnabled(modelNameEnum == OpenAIModelNameEnum.CUSTOM);
+        openAIModelNameComboBox = new ComboBox<>(OpenAIModelNameEnum.values());
+        openAIModelNameComboBox.setSelectedItem(modelNameEnum);
+        openAIModelNameComboBox.addItemListener(e -> {
+            var selected = (OpenAIModelNameEnum) e.getItem();
+            openAICustomModelNameField.setEnabled(selected == OpenAIModelNameEnum.CUSTOM);
+        });
+
         openAIServicePanel = createOpenAIServicePanel();
 
         var aiGatewaySettings = AIGatewaySettingsState.getInstance();
@@ -142,8 +154,11 @@ public class DevPilotConfigForm {
                 .add(UI.PanelFactory.panel(openAIKeyField)
                         .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.apiKeyLabel"))
                         .resizeX(false))
-                .add(UI.PanelFactory.panel(openAIModelNameField)
+                .add(UI.PanelFactory.panel(openAIModelNameComboBox)
                         .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
+                        .resizeX(false))
+                .add(UI.PanelFactory.panel(openAICustomModelNameField)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.customModelNameLabel"))
                         .resizeX(false))
                 .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
@@ -229,8 +244,12 @@ public class DevPilotConfigForm {
         return (ModelTypeEnum) aiGatewayModelComboBox.getSelectedItem();
     }
 
-    public String getOpenAIModelName() {
-        return openAIModelNameField.getText();
+    public OpenAIModelNameEnum getOpenAIModelName() {
+        return (OpenAIModelNameEnum) openAIModelNameComboBox.getSelectedItem();
+    }
+
+    public String getOpenAICustomModelName() {
+        return openAICustomModelNameField.getText();
     }
 
     public String getCodeLlamaModelName() {
