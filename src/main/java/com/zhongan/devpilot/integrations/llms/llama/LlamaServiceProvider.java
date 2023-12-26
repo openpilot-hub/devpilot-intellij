@@ -61,7 +61,7 @@ public final class LlamaServiceProvider implements LlmProvider {
 
         try {
             return parseResult(chatCompletionRequest, response);
-        } catch (IOException e) {
+        } catch (Exception e) {
             return "Chat completion failed: " + e.getMessage();
         }
     }

@@ -2,9 +2,14 @@ package com.zhongan.devpilot.util;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.zhongan.devpilot.enums.ZaSsoEnum;
+import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.ide.BuiltInServerManager;
 
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -28,7 +33,9 @@ public class ZaSsoUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
-    public static String getZaSsoAuthUrl(ZaSsoEnum ssoEnum, int port) {
+    public static String getZaSsoAuthUrl(ZaSsoEnum ssoEnum) {
+        var port = BuiltInServerManager.getInstance().getPort();
+
         switch (ssoEnum) {
             case ZA_TI:
                 return String.format(ZA_TI_SSO_AUTH_URL, port);
@@ -75,6 +82,68 @@ public class ZaSsoUtils {
             default:
                 return zaUserInfoUrl;
         }
+    }
+
+    public static boolean isLogin(ZaSsoEnum zaSsoEnum) {
+        var settings = AIGatewaySettingsState.getInstance();
+        switch (zaSsoEnum) {
+            case ZA_TI:
+                return StringUtils.isNotBlank(settings.getTiSsoToken()) && StringUtils.isNotBlank(settings.getTiSsoUsername());
+            case ZA:
+            default:
+                return StringUtils.isNotBlank(settings.getSsoToken()) && StringUtils.isNotBlank(settings.getSsoUsername());
+        }
+    }
+
+    public static void login(ZaSsoEnum zaSsoEnum, String token, String username) {
+        var settings = AIGatewaySettingsState.getInstance();
+        switch (zaSsoEnum) {
+            case ZA_TI:
+                settings.setTiSsoToken(token);
+                settings.setTiSsoUsername(username);
+                break;
+            case ZA:
+            default:
+                settings.setSsoToken(token);
+                settings.setSsoUsername(username);
+                break;
+        }
+    }
+
+    public static String zaSsoUsername(ZaSsoEnum zaSsoEnum) {
+        var settings = AIGatewaySettingsState.getInstance();
+        switch (zaSsoEnum) {
+            case ZA_TI:
+                return settings.getTiSsoUsername();
+            case ZA:
+            default:
+                return settings.getSsoUsername();
+        }
+    }
+
+    public static void logout(ZaSsoEnum zaSsoEnum) {
+        var settings = AIGatewaySettingsState.getInstance();
+        switch (zaSsoEnum) {
+            case ZA_TI:
+                settings.setTiSsoUsername(null);
+                settings.setTiSsoToken(null);
+                break;
+            case ZA:
+            default:
+                settings.setSsoUsername(null);
+                settings.setSsoToken(null);
+                break;
+        }
+    }
+
+    public static String getSsoType() {
+        var settings = AIGatewaySettingsState.getInstance();
+        return settings.getSelectedSso().toLowerCase(Locale.ROOT);
+    }
+
+    public static ZaSsoEnum getSsoEnum() {
+        var settings = AIGatewaySettingsState.getInstance();
+        return ZaSsoEnum.fromName(settings.getSelectedSso());
     }
 
     public static class ZaUser {

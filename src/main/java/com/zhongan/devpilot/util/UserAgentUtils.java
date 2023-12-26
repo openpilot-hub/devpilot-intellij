@@ -3,6 +3,7 @@ package com.zhongan.devpilot.util;
 import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.enums.ZaSsoEnum;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
+import com.zhongan.devpilot.settings.state.TrialServiceSettingsState;
 
 public class UserAgentUtils {
     public static String getUserAgent() {
@@ -27,5 +28,13 @@ public class UserAgentUtils {
         // format: idea version|plugin version|user token|username
         return String.format("%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
                 DevPilotVersion.getDevPilotVersion(), token, username);
+    }
+
+    public static String getGithubUserAgent() {
+        var settings = TrialServiceSettingsState.getInstance();
+
+        // format: idea version|plugin version|token|userid
+        return String.format("%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
+                DevPilotVersion.getDevPilotVersion(), settings.getGithubToken(), settings.getGithubUserId());
     }
 }

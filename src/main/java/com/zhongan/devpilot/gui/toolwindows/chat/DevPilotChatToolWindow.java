@@ -15,6 +15,7 @@ import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
+import com.zhongan.devpilot.enums.ZaSsoEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.ChatDisplayPanel;
 import com.zhongan.devpilot.gui.toolwindows.components.ContentComponent;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
@@ -239,6 +240,23 @@ public class DevPilotChatToolWindow {
         JTextPane clearSessionTip = new JTextPane();
         clearSessionTip.setText(DevPilotMessageBundle.get("devpilot.clear.session.tip"));
         chatContentPanel.add(new ChatDisplayPanel().setText(clearSessionTip).setSystemLabel());
+    }
+
+    public void githubLoginSuccess(String username) {
+        String message = String.format("Github Login Success, welcome %s", username);
+
+        SwingUtilities.invokeLater(() -> {
+            showChatContent(message, 1, null, null);
+        });
+    }
+
+    public void zaLoginSuccess(ZaSsoEnum zaSsoEnum, String username) {
+        String tmp = String.format(" Login Success, welcome %s", username);
+        var message = zaSsoEnum.getDisplayName() + tmp;
+
+        SwingUtilities.invokeLater(() -> {
+            showChatContent(message, 1, null, null);
+        });
     }
 
     private ChatDisplayPanel createWelcomePanel() {

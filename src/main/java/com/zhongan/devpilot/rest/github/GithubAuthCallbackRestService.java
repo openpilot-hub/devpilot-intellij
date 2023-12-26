@@ -1,10 +1,9 @@
-package com.zhongan.devpilot.rest.za;
+package com.zhongan.devpilot.rest.github;
 
-import com.zhongan.devpilot.enums.ZaSsoEnum;
 import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
 import com.zhongan.devpilot.util.CallbackUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
-import com.zhongan.devpilot.util.ZaSsoUtils;
+import com.zhongan.devpilot.util.GithubAuthUtils;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -17,39 +16,30 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.ide.RestService;
 
-public class ZaSsoCallbackRestService extends RestService {
+public class GithubAuthCallbackRestService extends RestService {
     @Nullable
     @Override
     public String execute(@NotNull QueryStringDecoder queryStringDecoder, @NotNull FullHttpRequest fullHttpRequest, @NotNull ChannelHandlerContext channelHandlerContext) throws IOException {
-        var ticketList = queryStringDecoder.parameters().get("ticket");
+        var codeList = queryStringDecoder.parameters().get("code");
 
-        if (ticketList == null || ticketList.isEmpty()) {
+        if (codeList == null || codeList.isEmpty()) {
             sendResponse(fullHttpRequest, channelHandlerContext, CallbackUtils.buildFailResponse());
             return null;
         }
 
-        ZaSsoEnum selectedZaSso;
-        var configurableCache = ConfigurableUtils.getConfigurableCache();
-
-        if (configurableCache != null) {
-            selectedZaSso = configurableCache.getDevPilotConfigForm().getSelectedZaSso();
-        } else {
-            selectedZaSso = ZaSsoEnum.ZA;
-        }
-
-        var ticket = ticketList.get(0);
-
-        var user = ZaSsoUtils.zaSsoAuth(selectedZaSso, ticket);
+        var code = codeList.get(0);
+        var user = GithubAuthUtils.githubAuth(code);
 
         if (user == null) {
             sendResponse(fullHttpRequest, channelHandlerContext, CallbackUtils.buildFailResponse());
             return null;
         }
 
+        var configurableCache = ConfigurableUtils.getConfigurableCache();
         if (configurableCache != null) {
-            configurableCache.getDevPilotConfigForm().zaSsoLogin(user.getToken(), user.getUsername());
+            configurableCache.getDevPilotConfigForm().githubLogin(user.getUsername(), user.getToken(), user.getId());
         } else {
-            ZaSsoUtils.login(selectedZaSso, user.getToken(), user.getUsername());
+            GithubAuthUtils.login(user);
         }
 
         var project = getLastFocusedOrOpenedProject();
@@ -57,7 +47,7 @@ public class ZaSsoCallbackRestService extends RestService {
         if (project != null) {
             var toolWindow = DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(project);
             if (toolWindow != null) {
-                toolWindow.zaLoginSuccess(selectedZaSso, user.getUsername());
+                toolWindow.githubLoginSuccess(user.getUsername());
             }
         }
 
@@ -79,6 +69,6 @@ public class ZaSsoCallbackRestService extends RestService {
     @NotNull
     @Override
     protected String getServiceName() {
-        return "za/sso/callback";
+        return "github/callback";
     }
 }
