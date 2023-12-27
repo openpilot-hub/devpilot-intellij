@@ -2,6 +2,7 @@ package com.zhongan.devpilot.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.vladsch.flexmark.ast.FencedCodeBlock;
 import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.ast.Document;
@@ -16,6 +17,9 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 public class MarkdownUtil {
 
@@ -51,6 +55,25 @@ public class MarkdownUtil {
                 .nodeRendererFactory(new TextContentRenderer.Factory())
                 .build()
                 .render(document);
+    }
+
+    public static String extractContents(String codeBlock) {
+        List<String> blocks = divideMarkdown(codeBlock);
+        List<String> contents = new ArrayList<>();
+        for (String block : blocks) {
+            if (block.startsWith("```")) {
+                com.vladsch.flexmark.util.ast.Document parse = Parser.builder().build().parse(codeBlock);
+                FencedCodeBlock codeNode = (FencedCodeBlock) parse.getChildOfType(FencedCodeBlock.class);
+                if (codeNode == null) {
+                    return null;
+                }
+                contents.add(codeNode.getContentChars().unescape().replaceAll("\\n$", ""));
+            }
+        }
+        if (CollectionUtils.isEmpty(contents)) {
+            return codeBlock;
+        }
+        return StringUtils.join(contents, "\n\n");
     }
 
     private static final Map<String, String> languageFileExtMap = buildLanguageFileExtMap();
