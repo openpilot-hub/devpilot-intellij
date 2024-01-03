@@ -2,7 +2,7 @@ package com.zhongan.devpilot.completions.prediction;
 
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementWeigher;
-import com.zhongan.devpilot.common.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 
 public class DevPilotWeigher extends LookupElementWeigher {
   public DevPilotWeigher() {

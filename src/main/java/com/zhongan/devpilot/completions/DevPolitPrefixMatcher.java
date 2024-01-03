@@ -3,7 +3,7 @@ package com.zhongan.devpilot.completions;
 import com.intellij.codeInsight.completion.PrefixMatcher;
 import com.intellij.codeInsight.lookup.LookupElement;
 import com.intellij.codeInsight.lookup.LookupElementDecorator;
-import com.zhongan.devpilot.common.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import org.jetbrains.annotations.NotNull;
 
 public class DevPolitPrefixMatcher extends PrefixMatcher {

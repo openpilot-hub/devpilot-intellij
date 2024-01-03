@@ -5,21 +5,20 @@ import com.intellij.codeInsight.lookup.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.messages.MessageBus;
-//import com.tabnine.statusBar.StatusBarUpdater;
-import com.zhongan.devpilot.common.completions.Completion;
-//import com.zhongan.devpilot.common.binary.BinaryRequestFacade;
-import com.zhongan.devpilot.common.binary.requests.autocomplete.AutocompleteResponse;
-import com.zhongan.devpilot.common.binary.requests.autocomplete.ResultEntry;
-import com.zhongan.devpilot.common.capabilities.SuggestionsMode;
-import com.zhongan.devpilot.common.capabilities.SuggestionsModeService;
-import com.zhongan.devpilot.common.general.DependencyContainer;
-import com.zhongan.devpilot.common.general.EditorUtils;
-import com.zhongan.devpilot.common.general.StaticConfig;
-import com.zhongan.devpilot.common.inline.DevPolitInlineLookupListener;
-import com.zhongan.devpilot.common.inline.render.GraphicsUtilsKt;
-import com.zhongan.devpilot.common.intellij.completions.CompletionUtils;
-import com.zhongan.devpilot.common.prediction.CompletionFacade;
-import com.zhongan.devpilot.common.prediction.DevPilotCompletion;
+//import com.devpilot.statusBar.StatusBarUpdater;
+import com.zhongan.devpilot.completions.common.completions.Completion;
+import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
+import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry;
+import com.zhongan.devpilot.completions.common.capabilities.SuggestionsMode;
+import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
+import com.zhongan.devpilot.completions.common.general.DependencyContainer;
+import com.zhongan.devpilot.completions.common.general.EditorUtils;
+import com.zhongan.devpilot.completions.common.general.StaticConfig;
+import com.zhongan.devpilot.completions.common.inline.DevPolitInlineLookupListener;
+import com.zhongan.devpilot.completions.common.inline.render.GraphicsUtilsKt;
+import com.zhongan.devpilot.completions.common.completions.CompletionUtils;
+import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
+import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.completions.config.Config;
 import com.zhongan.devpilot.completions.prediction.DevPilotWeigher;
 import com.zhongan.devpilot.completions.selections.DevPilotLookupListener;
@@ -29,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-import static com.zhongan.devpilot.common.general.StaticConfig.*;
+import static com.zhongan.devpilot.completions.common.general.StaticConfig.*;
 
 public class DevPolitCompletionContributor extends CompletionContributor {
   private final CompletionFacade completionFacade =
@@ -43,8 +42,6 @@ public class DevPolitCompletionContributor extends CompletionContributor {
   private boolean isLocked;
 
   public static synchronized DevPilotLookupListener instanceOfDevPolitLookupListener() {
-//    final BinaryRequestFacade binaryRequestFacade =
-//        DependencyContainer.instanceOfBinaryRequestFacade();
     return new DevPilotLookupListener(
 //        binaryRequestFacade, new StatusBarUpdater(binaryRequestFacade));
         );
@@ -198,7 +195,7 @@ public class DevPolitCompletionContributor extends CompletionContributor {
                   //                  if (AppSettingsState.getInstance().getAutoImportEnabled()) {
                   //                    Logger.getInstance(getClass()).info("Registering auto
                   // importer");
-                  //                    AutoImporter.registerTabNineAutoImporter(
+                  //                    AutoImporter.registerDevpilotAutoImporter(
                   //                        context.getEditor(),
                   //                        context.getProject(),
                   //                        context.getStartOffset(),

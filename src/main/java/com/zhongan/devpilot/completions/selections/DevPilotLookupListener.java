@@ -3,12 +3,12 @@ package com.zhongan.devpilot.completions.selections;
 import com.intellij.codeInsight.lookup.LookupEvent;
 import com.intellij.codeInsight.lookup.LookupListener;
 import com.intellij.codeInsight.lookup.impl.LookupImpl;
-//import com.tabnine.statusBar.StatusBarUpdater;
+//import com.zhongan.devpilot.statusBar.StatusBarUpdater;
 //import com.zhongan.devpilot.common.binary.BinaryRequestFacade;
-import com.zhongan.devpilot.common.binary.requests.selection.SelectionRequest;
-import com.zhongan.devpilot.common.capabilities.RenderingMode;
-import com.zhongan.devpilot.common.prediction.DevPilotCompletion;
-import com.zhongan.devpilot.common.selections.SelectionUtil;
+import com.zhongan.devpilot.completions.common.binary.requests.selection.SelectionRequest;
+import com.zhongan.devpilot.completions.common.capabilities.RenderingMode;
+import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.common.selections.SelectionUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
