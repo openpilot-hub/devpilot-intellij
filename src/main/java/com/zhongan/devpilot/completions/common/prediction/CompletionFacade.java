@@ -101,7 +101,7 @@ public class CompletionFacade {
     }
 
     AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
-    //修改为调用openai或者返回值
+    //TODO 修改为调用openai或者返回值
         //binaryRequestFacade.executeRequest(req, determineTimeoutBy(req.before));
 
     if (completionAdjustment != null) {
