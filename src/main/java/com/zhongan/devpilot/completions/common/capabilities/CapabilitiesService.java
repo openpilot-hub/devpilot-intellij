@@ -3,21 +3,13 @@ package com.zhongan.devpilot.completions.common.capabilities;
 import com.google.gson.Gson;
 import com.google.gson.JsonElement;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.components.Service;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.messages.MessageBus;
-//import com.zhongan.devpilot.common.binary.BinaryRequestFacade;
-//import com.zhongan.devpilot.common.binary.requests.capabilities.CapabilitiesRequest;
-//import com.zhongan.devpilot.common.binary.requests.capabilities.CapabilitiesResponse;
-//import com.zhongan.devpilot.common.binary.requests.capabilities.RefreshRemotePropertiesRequest;
 import com.zhongan.devpilot.completions.config.Config;
-//import com.zhongan.devpilot.common.general.DependencyContainer;
 //import com.zhongan.devpilot.common.lifecycle.CapabilitiesStateSingleton;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.Set;
 
 public class CapabilitiesService {
 
@@ -45,7 +37,7 @@ public class CapabilitiesService {
     if (Config.IS_SELF_HOSTED) {
       return true;
     }
-    return false;
+    return true;
 
 //    return CapabilitiesStateSingleton.getInstance()
 //        .getOptional()
