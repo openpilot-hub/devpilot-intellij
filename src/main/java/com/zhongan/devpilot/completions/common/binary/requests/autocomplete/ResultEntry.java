@@ -2,7 +2,6 @@ package com.zhongan.devpilot.completions.common.binary.requests.autocomplete;
 
 import com.zhongan.devpilot.completions.common.general.CompletionKind;
 import com.zhongan.devpilot.completions.common.completions.Completion;
-import com.zhongan.devpilot.completions.common.completions.Completion;
 
 public class ResultEntry implements Completion {
   public String new_prefix;

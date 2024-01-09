@@ -15,7 +15,7 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
 import com.zhongan.devpilot.completions.common.capabilities.RenderingMode;
-import com.zhongan.devpilot.completions.common.general.CompletionsEventSender;
+//import com.zhongan.devpilot.completions.common.general.CompletionsEventSender;
 import com.zhongan.devpilot.completions.common.general.DependencyContainer;
 import com.zhongan.devpilot.completions.common.inline.listeners.InlineCaretListener;
 import com.zhongan.devpilot.completions.common.inline.listeners.InlineFocusListener;
@@ -33,8 +33,8 @@ public class CompletionPreview implements Disposable {
 
   private final CompletionPreviewListener previewListener =
       DependencyContainer.instanceOfCompletionPreviewListener();
-  private final CompletionsEventSender completionsEventSender =
-      DependencyContainer.instanceOfCompletionsEventSender();
+/*  private final CompletionsEventSender completionsEventSender =
+      DependencyContainer.instanceOfCompletionsEventSender();*/
 
   public final Editor editor;
   private DevPilotInlay devPilotInlay;
@@ -100,7 +100,7 @@ public class CompletionPreview implements Disposable {
     devPilotInlay = DevPilotInlay.create(this);
 
     createPreview();
-    completionsEventSender.sendToggleInlineSuggestionEvent(order, currentIndex);
+//    completionsEventSender.sendToggleInlineSuggestionEvent(order, currentIndex);
   }
 
   public DevPilotCompletion getCurrentCompletion() {

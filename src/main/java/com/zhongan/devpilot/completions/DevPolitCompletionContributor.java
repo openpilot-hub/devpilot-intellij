@@ -5,7 +5,7 @@ import com.intellij.codeInsight.lookup.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.messages.MessageBus;
-//import com.devpilot.statusBar.StatusBarUpdater;
+import com.zhongan.devpilot.completions.common.capabilities.RenderingMode;
 import com.zhongan.devpilot.completions.common.completions.Completion;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry;
@@ -21,6 +21,7 @@ import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.completions.config.Config;
 import com.zhongan.devpilot.completions.prediction.DevPilotWeigher;
+//import com.zhongan.devpilot.completions.selections.DevPilotLookupListener;
 import com.zhongan.devpilot.completions.selections.DevPilotLookupListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -33,6 +34,7 @@ import static com.zhongan.devpilot.completions.common.general.StaticConfig.*;
 public class DevPolitCompletionContributor extends CompletionContributor {
   private final CompletionFacade completionFacade =
       DependencyContainer.instanceOfCompletionFacade();
+
   private final DevPilotLookupListener devPolitLookupListener = instanceOfDevPolitLookupListener();
   private final DevPolitInlineLookupListener devpolitInlineLookupListener =
       DependencyContainer.instanceOfDevPolitInlineLookupListener();
@@ -42,9 +44,7 @@ public class DevPolitCompletionContributor extends CompletionContributor {
   private boolean isLocked;
 
   public static synchronized DevPilotLookupListener instanceOfDevPolitLookupListener() {
-    return new DevPilotLookupListener(
-//        binaryRequestFacade, new StatusBarUpdater(binaryRequestFacade));
-        );
+    return new DevPilotLookupListener();
   }
 
   @Override
@@ -100,7 +100,6 @@ public class DevPolitCompletionContributor extends CompletionContributor {
                 CompletionSorter.defaultSorter(parameters, originalMatcher)
                     .weigh(new DevPilotWeigher()));
     resultSet.restartCompletionOnAnyPrefixChange();
-
     addAdvertisement(resultSet, completions);
 
     resultSet.addAllElements(createCompletions(completions, parameters, resultSet));
@@ -192,15 +191,6 @@ public class DevPolitCompletionContributor extends CompletionContributor {
                       .insertString(
                           end + lookupElement.oldSuffix.length(), lookupElement.newSuffix);
                   context.getDocument().deleteString(end, end + lookupElement.oldSuffix.length());
-                  //                  if (AppSettingsState.getInstance().getAutoImportEnabled()) {
-                  //                    Logger.getInstance(getClass()).info("Registering auto
-                  // importer");
-                  //                    AutoImporter.registerDevpilotAutoImporter(
-                  //                        context.getEditor(),
-                  //                        context.getProject(),
-                  //                        context.getStartOffset(),
-                  //                        context.getTailOffset());
-                  //                  }
                 } catch (RuntimeException re) {
                   Logger.getInstance(getClass())
                       .warn(
@@ -228,6 +218,7 @@ public class DevPolitCompletionContributor extends CompletionContributor {
     }
   }
 
+
   private void registerLookupListener(
       CompletionParameters parameters, LookupListener lookupListener) {
     final LookupEx lookupEx = LookupManager.getActiveLookup(parameters.getEditor());
@@ -237,4 +228,5 @@ public class DevPolitCompletionContributor extends CompletionContributor {
     lookupEx.removeLookupListener(lookupListener);
     lookupEx.addLookupListener(lookupListener);
   }
+
 }

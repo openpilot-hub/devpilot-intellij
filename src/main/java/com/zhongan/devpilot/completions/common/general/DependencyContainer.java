@@ -86,7 +86,6 @@ public class DependencyContainer {
     if (suggestionsModeServiceMock != null) {
       return suggestionsModeServiceMock;
     }
-
     return new SuggestionsModeService();
   }
 

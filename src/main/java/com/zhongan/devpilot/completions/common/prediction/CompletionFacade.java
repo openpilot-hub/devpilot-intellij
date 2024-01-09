@@ -2,12 +2,14 @@ package com.zhongan.devpilot.completions.common.prediction;
 
 import static com.zhongan.devpilot.completions.common.general.StaticConfig.*;
 
+import com.google.gson.Gson;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.application.ex.ApplicationUtil;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.TextRange;
@@ -15,15 +17,27 @@ import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteRequest;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
+import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.common.inline.CompletionAdjustment;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.common.inline.CompletionAdjustment;
+import com.zhongan.devpilot.enums.EditorActionEnum;
+import com.zhongan.devpilot.enums.SessionTypeEnum;
+import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
+import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindow;
+import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.integrations.llms.entity.PerformanceCheckResponse;
+import org.apache.commons.httpclient.util.DateUtil;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -100,9 +114,21 @@ public class CompletionFacade {
       completionAdjustment.adjustRequest(req);
     }
 
-    AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
     //TODO 修改为调用openai或者返回值
-        //binaryRequestFacade.executeRequest(req, determineTimeoutBy(req.before));
+    DevPilotMessage devPilotMessage = new DevPilotMessage();
+    devPilotMessage.setRole("user");
+    String content = EditorActionEnum.CODE_COMPLETIONS.getPrompt().replace("{{offsetCode}}",document.getText(new TextRange(req.before.lastIndexOf("\n"), offset))).replace("{{selectedCode}}",getFileExtension(editor) + " " + req.before);
+    devPilotMessage.setContent(content);
+    DevPilotChatCompletionRequest request = new DevPilotChatCompletionRequest();
+    // list content support update
+    request.setMessages(new ArrayList<>() {{ add(devPilotMessage); }});
+    final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
+
+    //todo 模拟请求返回值 代码待删除
+    String test = "{\"old_prefix\":\"\",\"results\":[{\"new_prefix\":\""+response+"\",\"old_suffix\":\"\",\"new_suffix\":\"\",\"completion_metadata\":{\"origin\":\"LOCAL\",\"detail\":\" 13%\"}}],\"user_message\":[],\"docs\":[]}";
+
+    Gson GSON = new Gson();
+    AutocompleteResponse autocompleteResponse = GSON.fromJson(test, AutocompleteResponse.class);
 
     if (completionAdjustment != null) {
       completionAdjustment.adjustResponse(autocompleteResponse);
@@ -165,4 +191,18 @@ public class CompletionFacade {
     boolean endsWithWhitespacesOnly = lastLine.trim().isEmpty();
     return endsWithWhitespacesOnly ? NEWLINE_COMPLETION_TIME_THRESHOLD : COMPLETION_TIME_THRESHOLD;
   }
+
+  private String getFileExtension(Editor editor) {
+    if (editor == null) {
+      return null;
+    }
+
+    VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
+    if (virtualFile == null || virtualFile.getExtension() == null) {
+      return null;
+    }
+
+    return virtualFile.getExtension();
+  }
+
 }

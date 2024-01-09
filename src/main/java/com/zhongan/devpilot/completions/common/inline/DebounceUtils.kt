@@ -15,7 +15,8 @@ object DebounceUtils {
 
     @JvmStatic
     fun getDebounceInterval(): Long {
-        return getDebounceMsFromCapabilities() ?: AppSettingsState.instance.debounceTime
+//        return getDebounceMsFromCapabilities() ?: AppSettingsState.instance.debounceTime
+        return getDebounceMsFromCapabilities() ?: 0
     }
 
     @JvmStatic

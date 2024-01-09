@@ -1,27 +1,33 @@
 package com.zhongan.devpilot.completions.common.inline
 
+import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupEvent
 import com.intellij.codeInsight.lookup.LookupListener
 import com.zhongan.devpilot.completions.common.binary.requests.notifications.shown.SuggestionDroppedReason
 import com.zhongan.devpilot.completions.common.general.DependencyContainer
+import java.util.concurrent.atomic.AtomicBoolean
 
 class DevPolitInlineLookupListener : LookupListener {
     private val handler = DependencyContainer.singletonOfInlineCompletionHandler()
     private val completionsEventSender = DependencyContainer.instanceOfCompletionsEventSender()
 
     override fun currentItemChanged(event: LookupEvent) {
-        val eventItem = event.item
-        if (!event.lookup.isFocused || eventItem == null) {
+        var eventItem = event.item;
+        System.out.println("-----" + eventItem);
+        //TODO 从设置页面获取
+        val isCompletionsEnabled = AtomicBoolean(true)
+//        if (isCompletionsEnabled.get() || !event.lookup.isFocused || eventItem == null) {
+        if (!isCompletionsEnabled.get()) {
             return
         }
-
+        System.out.println("用户输入内容：" + eventItem?.let { event.lookup.itemPattern(it) })
         val editor = event.lookup.editor
         val lastShownSuggestion = CompletionPreview.getCurrentCompletion(editor)
         CompletionPreview.clear(editor)
         InlineCompletionCache.instance.clear(editor)
 
-        val userPrefix = event.lookup.itemPattern(eventItem)
-        val completionInFocus = eventItem.lookupString
+        val userPrefix = eventItem?.let { event.lookup.itemPattern(it) }
+        val completionInFocus = eventItem?.lookupString
 
         // a weird case when the user presses ctrl+enter but the popup isn't rendered
         // (DocumentChanged event is triggered in this case)
@@ -32,20 +38,22 @@ class DevPolitInlineLookupListener : LookupListener {
             return
         }
 
-        if (!completionInFocus.startsWith(userPrefix)) {
+        if (userPrefix != null && !completionInFocus!!.startsWith(userPrefix)) {
             completionsEventSender.sendSuggestionDropped(
                 editor, lastShownSuggestion, SuggestionDroppedReason.ScrollLookAhead
             )
             return
         }
 
-        handler.retrieveAndShowCompletion(
-            editor,
-            editor.caretModel.offset,
-            lastShownSuggestion,
-            "",
-            LookAheadCompletionAdjustment(userPrefix, completionInFocus)
+        userPrefix?.let { completionInFocus?.let { it1 -> LookAheadCompletionAdjustment(it, it1) } }?.let {
+            handler.retrieveAndShowCompletion(
+                    editor,
+                    editor.caretModel.offset,
+                    lastShownSuggestion,
+                    "",
+                    it
         )
+        }
     }
 
     override fun lookupCanceled(event: LookupEvent) {

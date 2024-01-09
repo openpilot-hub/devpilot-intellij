@@ -13,7 +13,7 @@ import java.util.Optional;
 
 public class CapabilitiesService {
 
-  public static final int LOOP_INTERVAL_MS = 1000;
+    public static final int LOOP_INTERVAL_MS = 1000;
 
   public static final int REFRESH_EVERY_MS = 10 * 1000; // 10 secs
 

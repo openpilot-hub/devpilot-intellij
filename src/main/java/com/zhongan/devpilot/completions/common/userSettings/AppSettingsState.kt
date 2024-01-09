@@ -11,7 +11,6 @@ import com.zhongan.devpilot.completions.common.inline.render.GraphicsUtils
 
 val settingsDefaultColor = GraphicsUtils.niceContrastColor.rgb
 
-const val PROPERTIES_COMPONENT_NAME = "com.devpilot.enterprise-url"
 
 /**
  * This package (`userSettings`) is heavily influenced by the docs from here:
@@ -22,8 +21,9 @@ const val PROPERTIES_COMPONENT_NAME = "com.devpilot.enterprise-url"
  * The [State] and [Storage] annotations define the name of the data and the file name where
  * these persistent application settings are stored.
  */
-@State(name = "com.devpilot.userSettings.AppSettingsState", storages = [Storage("DevpilotSettings.xml")])
-class AppSettingsState : PersistentStateComponent<AppSettingsState?> {
+//@State(name = "com.devpilot.userSettings.AppSettingsState", storages = [Storage("DevpilotSettings.xml")])
+//class AppSettingsState : PersistentStateComponent<AppSettingsState?> {
+class AppSettingsState {
     var useDefaultColor: Boolean = false
     var debounceTime: Long = 0
     private var colorState = settingsDefaultColor
@@ -38,15 +38,15 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState?> {
             colorState = value
         }
 
-    override fun getState(): AppSettingsState {
+/*    override fun getState(): AppSettingsState {
         return this
     }
 
     override fun loadState(state: AppSettingsState) {
         XmlSerializerUtil.copyBean(state, this)
-    }
+    }*/
 
-    companion object {
+/*    companion object {
         @JvmStatic
         private fun getInitialCloudUrlFromProperties(): String {
             val current = PropertiesComponent.getInstance().getValue(PROPERTIES_COMPONENT_NAME)
@@ -56,5 +56,5 @@ class AppSettingsState : PersistentStateComponent<AppSettingsState?> {
         @JvmStatic
         val instance: AppSettingsState
             get() = ApplicationManager.getApplication().getService(AppSettingsState::class.java)
-    }
+    }*/
 }

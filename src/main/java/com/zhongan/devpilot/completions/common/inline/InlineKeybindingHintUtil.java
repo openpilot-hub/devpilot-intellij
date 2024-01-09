@@ -1,7 +1,5 @@
 package com.zhongan.devpilot.completions.common.inline;
 
-//import static com.zhongan.devpilot.common.general.SubscriptionTypeKt.getSubscriptionType;
-
 import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.hint.HintManagerImpl;
 import com.intellij.codeInsight.hint.HintUtil;
@@ -14,13 +12,13 @@ import com.intellij.ui.LightweightHint;
 import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleColoredText;
 import com.intellij.ui.SimpleTextAttributes;
-//import com.zhongan.devpilot.common.binary.requests.config.CloudConnectionHealthStatus;
-//import com.zhongan.devpilot.common.state.UserState;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 import javax.swing.*;
 
 import org.jetbrains.annotations.NotNull;
+
+import static com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON;
 
 public class InlineKeybindingHintUtil {
   public static void createAndShowHint(@NotNull Editor editor, @NotNull Point pos) {
@@ -43,10 +41,7 @@ public class InlineKeybindingHintUtil {
     SimpleColoredComponent component = HintUtil.createInformationComponent();
 
     component.setIconOnTheRight(true);
-//    component.setIcon(
-////        getSubscriptionType(UserState.getInstance().getServiceLevel())
-//        getSubscriptionType(ServiceLevel.FREE)
-//            .getDevPilotLogo(CloudConnectionHealthStatus.Ok));
+    component.setIcon(SYSTEM_ICON);
 
     SimpleColoredText coloredText =
         new SimpleColoredText(hintText(), SimpleTextAttributes.REGULAR_ATTRIBUTES);

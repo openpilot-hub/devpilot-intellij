@@ -61,5 +61,24 @@
             </action>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
+
+        <!--TODO 修改action group模式-->
+        <action class="com.zhongan.devpilot.completions.common.inline.ShowNextDevPilotInlineCompletionAction"
+                id="ShowNextDevPilotInlineCompletionAction" text="Show Next Inline Completion">
+            <keyboard-shortcut first-keystroke="alt CLOSE_BRACKET" keymap="$default"/>
+        </action>
+        <action class="com.zhongan.devpilot.completions.common.inline.ShowPreviousDevPilotInlineCompletionAction"
+                id="ShowPreviousDevPilotInlineCompletionAction" text="Show Previous Inline Completion">
+            <keyboard-shortcut first-keystroke="alt OPEN_BRACKET" keymap="$default"/>
+        </action>
+        <action class="com.zhongan.devpilot.completions.common.inline.AcceptDevPilotInlineCompletionAction"
+                id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
+            <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
+        </action>
+        <!--no default shortcut for this action, users should configure manually-->
+        <action class="com.zhongan.devpilot.completions.common.inline.ManualTriggerDevPilotInlineCompletionAction"
+                id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
+        </action>
+
     </actions>
 </idea-plugin>
