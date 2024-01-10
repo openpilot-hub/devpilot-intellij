@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.settings;
 
 import com.intellij.ui.TitledSeparator;
+import com.intellij.ui.components.JBCheckBox;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.UI;
@@ -18,6 +19,8 @@ public class DevPilotSettingsComponent {
 
     private final DevPilotConfigForm devPilotConfigForm;
 
+    private final JBCheckBox autoCompletionCheckbox = new JBCheckBox("enable auto completion", true);
+
     public DevPilotSettingsComponent(DevPilotSettingsConfigurable devPilotSettingsConfigurable, DevPilotLlmSettingsState settings) {
         devPilotConfigForm = new DevPilotConfigForm();
 
@@ -31,6 +34,7 @@ public class DevPilotSettingsComponent {
                 .resizeX(false)
                 .createPanel())
             .addComponent(devPilotConfigForm.createLanguageSectionPanel(languageIndex))
+            .addComponent(autoCompletionCheckbox, 1)
             .addComponent(new TitledSeparator(DevPilotMessageBundle.get("devpilot.settings.service.title")))
             .addComponent(devPilotConfigForm.getForm())
             .addVerticalGap(8)

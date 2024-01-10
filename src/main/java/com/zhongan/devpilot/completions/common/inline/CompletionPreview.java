@@ -14,15 +14,10 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
-import com.zhongan.devpilot.completions.common.capabilities.RenderingMode;
-//import com.zhongan.devpilot.completions.common.general.CompletionsEventSender;
-import com.zhongan.devpilot.completions.common.general.DependencyContainer;
 import com.zhongan.devpilot.completions.common.inline.listeners.InlineCaretListener;
 import com.zhongan.devpilot.completions.common.inline.listeners.InlineFocusListener;
 import com.zhongan.devpilot.completions.common.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
-import com.zhongan.devpilot.completions.common.selections.CompletionPreviewListener;
-import com.zhongan.devpilot.completions.common.selections.SelectionUtil;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -30,11 +25,6 @@ import org.jetbrains.annotations.Nullable;
 public class CompletionPreview implements Disposable {
   private static final Key<CompletionPreview> INLINE_COMPLETION_PREVIEW =
       Key.create("INLINE_COMPLETION_PREVIEW");
-
-  private final CompletionPreviewListener previewListener =
-      DependencyContainer.instanceOfCompletionPreviewListener();
-/*  private final CompletionsEventSender completionsEventSender =
-      DependencyContainer.instanceOfCompletionsEventSender();*/
 
   public final Editor editor;
   private DevPilotInlay devPilotInlay;
@@ -100,7 +90,6 @@ public class CompletionPreview implements Disposable {
     devPilotInlay = DevPilotInlay.create(this);
 
     createPreview();
-//    completionsEventSender.sendToggleInlineSuggestionEvent(order, currentIndex);
   }
 
   public DevPilotCompletion getCurrentCompletion() {
@@ -168,18 +157,6 @@ public class CompletionPreview implements Disposable {
 
     editor.getDocument().insertString(cursorOffset, suffix);
     editor.getCaretModel().moveToOffset(startOffset + completion.newPrefix.length());
-    //    if (AppSettingsState.getInstance().getAutoImportEnabled()) {
-    //      Logger.getInstance(getClass()).info("Registering auto importer");
-    //      AutoImporter.registerDevPilotAutoImporter(editor, project, startOffset, endOffset);
-    //    }
-    previewListener.executeSelection(
-        this.editor,
-        completion,
-        file.getName(),
-        RenderingMode.INLINE,
-        (selection -> {
-          selection.index = currentIndex;
-          SelectionUtil.addSuggestionsCount(selection, completions);
-        }));
+    //TODO 接受率异步上报
   }
 }

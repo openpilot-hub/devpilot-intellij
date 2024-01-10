@@ -52,14 +52,15 @@ public class InlineKeybindingHintUtil {
   }
 
   private static String hintText() {
-    String nextShortcut = getShortcutText(ShowNextDevPilotInlineCompletionAction.ACTION_ID);
-    String prevShortcut = getShortcutText(ShowPreviousDevPilotInlineCompletionAction.ACTION_ID);
+/*    String nextShortcut = getShortcutText(ShowNextDevPilotInlineCompletionAction.ACTION_ID);
+    String prevShortcut = getShortcutText(ShowPreviousDevPilotInlineCompletionAction.ACTION_ID);*/
     String acceptShortcut = getShortcutText(AcceptDevPilotInlineCompletionAction.ACTION_ID);
     String cancelShortcut = KeymapUtil.getKeyText(KeyEvent.VK_ESCAPE);
 
     return String.format(
-        "Next (%s) Prev (%s) Accept (%s) Cancel (%s)",
-        nextShortcut, prevShortcut, acceptShortcut, cancelShortcut);
+//        "Next (%s) Prev (%s) Accept (%s) Cancel (%s)",
+//            nextShortcut, prevShortcut, acceptShortcut, cancelShortcut);
+        "Accept (%s) Cancel (%s)",acceptShortcut, cancelShortcut);
   }
 
   private static String getShortcutText(String actionId) {

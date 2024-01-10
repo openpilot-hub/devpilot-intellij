@@ -66,14 +66,6 @@
         </group>
 
         <!--TODO 修改action group模式-->
-        <action class="com.zhongan.devpilot.completions.common.inline.ShowNextDevPilotInlineCompletionAction"
-                id="ShowNextDevPilotInlineCompletionAction" text="Show Next Inline Completion">
-            <keyboard-shortcut first-keystroke="alt CLOSE_BRACKET" keymap="$default"/>
-        </action>
-        <action class="com.zhongan.devpilot.completions.common.inline.ShowPreviousDevPilotInlineCompletionAction"
-                id="ShowPreviousDevPilotInlineCompletionAction" text="Show Previous Inline Completion">
-            <keyboard-shortcut first-keystroke="alt OPEN_BRACKET" keymap="$default"/>
-        </action>
         <action class="com.zhongan.devpilot.completions.common.inline.AcceptDevPilotInlineCompletionAction"
                 id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
             <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
