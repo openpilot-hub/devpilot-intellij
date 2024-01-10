@@ -16,74 +16,74 @@ import org.jetbrains.annotations.Nullable;
 
 public class CompletionUtils {
 
-  @Nullable
-  private static String getCursorPrefix(@NotNull Document document, int cursorPosition) {
-    try {
-      int lineNumber = document.getLineNumber(cursorPosition);
-      int lineStart = document.getLineStartOffset(lineNumber);
+    @Nullable
+    private static String getCursorPrefix(@NotNull Document document, int cursorPosition) {
+        try {
+            int lineNumber = document.getLineNumber(cursorPosition);
+            int lineStart = document.getLineStartOffset(lineNumber);
 
-      return document.getText(TextRange.create(lineStart, cursorPosition)).trim();
-    } catch (Throwable e) {
-      Logger.getInstance(CompletionUtils.class).warn("Failed to get cursor prefix: ", e);
-      return null;
-    }
-  }
-
-  @Nullable
-  private static String getCursorSuffix(@NotNull Document document, int cursorPosition) {
-    try {
-      int lineNumber = document.getLineNumber(cursorPosition);
-      int lineEnd = document.getLineEndOffset(lineNumber);
-
-      return document.getText(TextRange.create(cursorPosition, lineEnd)).trim();
-    } catch (Throwable e) {
-      Logger.getInstance(CompletionUtils.class).warn("Failed to get cursor suffix: ", e);
-      return null;
-    }
-  }
-
-  @Nullable
-  public static DevPilotCompletion createDevpilotCompletion(
-      @NotNull Document document,
-      int offset,
-      String oldPrefix,
-      ResultEntry result,
-      int index,
-      SuggestionTrigger suggestionTrigger) {
-    String cursorPrefix = CompletionUtils.getCursorPrefix(document, offset);
-    String cursorSuffix = CompletionUtils.getCursorSuffix(document, offset);
-    if (cursorPrefix == null || cursorSuffix == null) {
-      return null;
+            return document.getText(TextRange.create(lineStart, cursorPosition)).trim();
+        } catch (Throwable e) {
+            Logger.getInstance(CompletionUtils.class).warn("Failed to get cursor prefix: ", e);
+            return null;
+        }
     }
 
-    return new DevPilotCompletion(
-        oldPrefix,
-        result.new_prefix,
-        result.old_suffix,
-        result.new_suffix,
-        index,
-        cursorPrefix,
-        cursorSuffix,
-        result.completion_metadata,
-        suggestionTrigger);
-  }
+    @Nullable
+    private static String getCursorSuffix(@NotNull Document document, int cursorPosition) {
+        try {
+            int lineNumber = document.getLineNumber(cursorPosition);
+            int lineEnd = document.getLineEndOffset(lineNumber);
 
-  public static int completionLimit(
-      CompletionParameters parameters, CompletionResultSet result, boolean isLocked) {
-    return completionLimit(
-        parameters.getEditor().getDocument(),
-        result.getPrefixMatcher().getPrefix(),
-        parameters.getOffset(),
-        isLocked);
-  }
-
-  public static int completionLimit(
-      @NotNull Document document, @NotNull String prefix, int offset, boolean isLocked) {
-    if (isLocked) {
-      return 1;
+            return document.getText(TextRange.create(cursorPosition, lineEnd)).trim();
+        } catch (Throwable e) {
+            Logger.getInstance(CompletionUtils.class).warn("Failed to get cursor suffix: ", e);
+            return null;
+        }
     }
-    boolean preferDevPilot = !endsWithADot(document, offset - prefix.length());
 
-    return preferDevPilot ? MAX_COMPLETIONS : 1;
-  }
+    @Nullable
+    public static DevPilotCompletion createDevpilotCompletion(
+            @NotNull Document document,
+            int offset,
+            String oldPrefix,
+            ResultEntry result,
+            int index,
+            SuggestionTrigger suggestionTrigger) {
+        String cursorPrefix = CompletionUtils.getCursorPrefix(document, offset);
+        String cursorSuffix = CompletionUtils.getCursorSuffix(document, offset);
+        if (cursorPrefix == null || cursorSuffix == null) {
+            return null;
+        }
+
+        return new DevPilotCompletion(
+                oldPrefix,
+                result.new_prefix,
+                result.old_suffix,
+                result.new_suffix,
+                index,
+                cursorPrefix,
+                cursorSuffix,
+                result.completion_metadata,
+                suggestionTrigger);
+    }
+
+    public static int completionLimit(
+            CompletionParameters parameters, CompletionResultSet result, boolean isLocked) {
+        return completionLimit(
+                parameters.getEditor().getDocument(),
+                result.getPrefixMatcher().getPrefix(),
+                parameters.getOffset(),
+                isLocked);
+    }
+
+    public static int completionLimit(
+            @NotNull Document document, @NotNull String prefix, int offset, boolean isLocked) {
+        if (isLocked) {
+            return 1;
+        }
+        boolean preferDevPilot = !endsWithADot(document, offset - prefix.length());
+
+        return preferDevPilot ? MAX_COMPLETIONS : 1;
+    }
 }

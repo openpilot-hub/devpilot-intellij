@@ -10,11 +10,11 @@ import java.awt.Graphics
 import java.awt.Rectangle
 
 class InlineElementRenderer(private val editor: Editor, private val suffix: String, private val deprecated: Boolean) :
-    EditorCustomElementRenderer {
+        EditorCustomElementRenderer {
     private var color: Color? = null
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         return editor.contentComponent
-            .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(suffix)
+                .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(suffix)
     }
 
     @TestOnly
@@ -23,10 +23,10 @@ class InlineElementRenderer(private val editor: Editor, private val suffix: Stri
     }
 
     override fun paint(
-        inlay: Inlay<*>,
-        g: Graphics,
-        targetRegion: Rectangle,
-        textAttributes: TextAttributes
+            inlay: Inlay<*>,
+            g: Graphics,
+            targetRegion: Rectangle,
+            textAttributes: TextAttributes
     ) {
         color = color ?: GraphicsUtils.color
         g.color = color

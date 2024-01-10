@@ -9,8 +9,8 @@ import com.intellij.psi.PsiFile
 import com.zhongan.devpilot.completions.common.general.DependencyContainer
 
 class ManualTriggerDevPilotInlineCompletionAction :
-    BaseCodeInsightAction(false),
-    DumbAware,
+        BaseCodeInsightAction(false),
+        DumbAware,
         InlineCompletionAction {
     companion object {
         const val ACTION_ID = "ManualTriggerDevPilotInlineCompletionAction"
@@ -23,8 +23,8 @@ class ManualTriggerDevPilotInlineCompletionAction :
             val lastShownCompletion = CompletionPreview.getCurrentCompletion(editor)
 
             handler.retrieveAndShowCompletion(
-                editor, editor.caretModel.offset, lastShownCompletion, "",
-                DefaultCompletionAdjustment()
+                    editor, editor.caretModel.offset, lastShownCompletion, "",
+                    DefaultCompletionAdjustment()
             )
         }
     }

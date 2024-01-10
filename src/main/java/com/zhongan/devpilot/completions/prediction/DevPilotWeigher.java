@@ -5,16 +5,16 @@ import com.intellij.codeInsight.lookup.LookupElementWeigher;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 
 public class DevPilotWeigher extends LookupElementWeigher {
-  public DevPilotWeigher() {
-    super("DevPilotLookupElementWeigher", false, true);
-  }
-
-  @Override
-  public Integer weigh(LookupElement element) {
-    if (element.getObject() instanceof DevPilotCompletion) {
-      return ((DevPilotCompletion) element.getObject()).index;
+    public DevPilotWeigher() {
+        super("DevPilotLookupElementWeigher", false, true);
     }
 
-    return Integer.MAX_VALUE;
-  }
+    @Override
+    public Integer weigh(LookupElement element) {
+        if (element.getObject() instanceof DevPilotCompletion) {
+            return ((DevPilotCompletion) element.getObject()).index;
+        }
+
+        return Integer.MAX_VALUE;
+    }
 }

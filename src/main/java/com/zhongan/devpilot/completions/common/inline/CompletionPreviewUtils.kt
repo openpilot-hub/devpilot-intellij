@@ -9,6 +9,7 @@ fun hadSuffix(currentCompletion: DevPilotCompletion): Boolean {
 fun isSingleLine(currentCompletion: DevPilotCompletion): Boolean {
     return !currentCompletion.suffix.trim().contains("\n")
 }
+
 fun shouldRemoveSuffix(currentCompletion: DevPilotCompletion): Boolean {
     return hadSuffix(currentCompletion) && isSingleLine(currentCompletion)
 }

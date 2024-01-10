@@ -64,13 +64,16 @@ class DefaultDevPilotInlay(parent: Disposable) : DevPilotInlay {
             FirstLineRendering.NoSuffix -> {
                 renderNoSuffix(editor, firstLine, completion, offset)
             }
+
             FirstLineRendering.SuffixOnly -> {
                 renderAfterSuffix(endIndex, completion, firstLine, editor, offset)
             }
+
             FirstLineRendering.BeforeAndAfterSuffix -> {
                 renderBeforeSuffix(firstLine, endIndex, editor, completion, offset)
                 renderAfterSuffix(endIndex, completion, firstLine, editor, offset)
             }
+
             FirstLineRendering.None -> {}
         }
 
@@ -90,16 +93,17 @@ class DefaultDevPilotInlay(parent: Disposable) : DevPilotInlay {
             completion: DevPilotCompletion,
             offset: Int
     ) {
-        val blockElementRenderer = BlockElementRenderer(editor, lines, completion.completionMetadata?.deprecated ?: false)
+        val blockElementRenderer = BlockElementRenderer(editor, lines, completion.completionMetadata?.deprecated
+                ?: false)
         val element = editor
-            .inlayModel
-            .addBlockElement(
-                offset,
-                true,
-                false,
-                1,
-                blockElementRenderer
-            )
+                .inlayModel
+                .addBlockElement(
+                        offset,
+                        true,
+                        false,
+                        1,
+                        blockElementRenderer
+                )
 
         element?.let { Disposer.register(this, it) }
 
@@ -116,10 +120,10 @@ class DefaultDevPilotInlay(parent: Disposable) : DevPilotInlay {
         val afterSuffixIndex = endIndex + completion.oldSuffix.length
         if (afterSuffixIndex < firstLine.length) {
             afterSuffixInlay = renderInline(
-                editor,
-                firstLine.substring(afterSuffixIndex),
-                completion,
-                offset + completion.oldSuffix.length
+                    editor,
+                    firstLine.substring(afterSuffixIndex),
+                    completion,
+                    offset + completion.oldSuffix.length
             )
         }
     }
@@ -151,8 +155,9 @@ class DefaultDevPilotInlay(parent: Disposable) : DevPilotInlay {
             offset: Int
     ): Inlay<InlineElementRenderer>? {
         val element = editor
-            .inlayModel
-            .addInlineElement(offset, true, InlineElementRenderer(editor, before, completion.completionMetadata?.deprecated ?: false))
+                .inlayModel
+                .addInlineElement(offset, true, InlineElementRenderer(editor, before, completion.completionMetadata?.deprecated
+                        ?: false))
 
         element?.let { Disposer.register(this, it) }
 

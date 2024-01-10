@@ -10,16 +10,16 @@ import java.awt.Graphics
 import java.awt.Rectangle
 
 class BlockElementRenderer(
-    private val editor: Editor,
-    private val blockText: List<String>,
-    private val deprecated: Boolean
+        private val editor: Editor,
+        private val blockText: List<String>,
+        private val deprecated: Boolean
 ) : EditorCustomElementRenderer {
     private var color: Color? = null
 
     override fun calcWidthInPixels(inlay: Inlay<*>): Int {
         val firstLine = blockText[0]
         return editor.contentComponent
-            .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(firstLine)
+                .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(firstLine)
     }
 
     override fun calcHeightInPixels(inlay: Inlay<*>): Int {
@@ -27,10 +27,10 @@ class BlockElementRenderer(
     }
 
     override fun paint(
-        inlay: Inlay<*>,
-        g: Graphics,
-        targetRegion: Rectangle,
-        textAttributes: TextAttributes
+            inlay: Inlay<*>,
+            g: Graphics,
+            targetRegion: Rectangle,
+            textAttributes: TextAttributes
     ) {
         color = color ?: GraphicsUtils.color
         g.color = color
@@ -38,9 +38,9 @@ class BlockElementRenderer(
 
         blockText.withIndex().forEach { (i, line) ->
             g.drawString(
-                line,
-                0,
-                targetRegion.y + i * editor.lineHeight + editor.ascent
+                    line,
+                    0,
+                    targetRegion.y + i * editor.lineHeight + editor.ascent
             )
         }
     }

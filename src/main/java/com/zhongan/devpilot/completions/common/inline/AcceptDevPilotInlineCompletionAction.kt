@@ -8,8 +8,8 @@ import com.intellij.openapi.editor.actionSystem.EditorAction
 import com.intellij.openapi.editor.actionSystem.EditorWriteActionHandler
 
 object AcceptDevPilotInlineCompletionAction :
-    EditorAction(AcceptInlineCompletionHandler()),
-    ActionToIgnore,
+        EditorAction(AcceptInlineCompletionHandler()),
+        ActionToIgnore,
         InlineCompletionAction {
     const val ACTION_ID = "AcceptDevPilotInlineCompletionAction"
 
@@ -19,9 +19,9 @@ object AcceptDevPilotInlineCompletionAction :
         }
 
         override fun isEnabledForCaret(
-            editor: Editor,
-            caret: Caret,
-            dataContext: DataContext
+                editor: Editor,
+                caret: Caret,
+                dataContext: DataContext
         ): Boolean {
             return CompletionPreview.getInstance(editor) != null
         }

@@ -13,10 +13,10 @@ object CompletionUtils {
 
         val addedText = document.getText(TextRange(previousOffset, newOffset))
         return (
-            isValidMidlinePosition(document, newOffset) &&
-                isValidNonEmptyChange(addedText.length, addedText) &&
-                isSingleCharNonWhitespaceChange(addedText)
-            )
+                isValidMidlinePosition(document, newOffset) &&
+                        isValidNonEmptyChange(addedText.length, addedText) &&
+                        isSingleCharNonWhitespaceChange(addedText)
+                )
     }
 
     @JvmStatic

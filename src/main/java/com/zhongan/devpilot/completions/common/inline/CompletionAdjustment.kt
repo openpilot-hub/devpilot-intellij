@@ -13,11 +13,11 @@ abstract class CompletionAdjustment {
         return this
     }
 
-    fun adjustRequest(request: AutocompleteRequest):AutocompleteRequest {
+    fun adjustRequest(request: AutocompleteRequest): AutocompleteRequest {
         request.cached_only = cachedOnly
         return adjustRequestInner(request)
     }
 
     protected open fun adjustRequestInner(autocompleteRequest: AutocompleteRequest): AutocompleteRequest = autocompleteRequest
-    open fun adjustResponse(autocompleteResponse: AutocompleteResponse):AutocompleteResponse = autocompleteResponse
+    open fun adjustResponse(autocompleteResponse: AutocompleteResponse): AutocompleteResponse = autocompleteResponse
 }

@@ -13,11 +13,11 @@ import java.awt.Point
 import javax.swing.SwingUtilities
 
 class CompletionPreviewInsertionHint(
-    private val editor: Editor,
-    private val inlay: DevPilotInlay,
-    private var suffix: String = ""
+        private val editor: Editor,
+        private val inlay: DevPilotInlay,
+        private var suffix: String = ""
 ) : Disposable,
-    EditorMouseMotionListener {
+        EditorMouseMotionListener {
     init {
         editor.addEditorMouseMotionListener(this)
         Disposer.register(inlay, this)
@@ -36,12 +36,12 @@ class CompletionPreviewInsertionHint(
         }
 
         InlineKeybindingHintUtil.createAndShowHint(
-            editor,
-            SwingUtilities.convertPoint(
-                mouseEvent.source as Component,
-                point,
-                editor.component.rootPane.layeredPane
-            )
+                editor,
+                SwingUtilities.convertPoint(
+                        mouseEvent.source as Component,
+                        point,
+                        editor.component.rootPane.layeredPane
+                )
         )
     }
 

@@ -5,11 +5,11 @@ import com.zhongan.devpilot.completions.common.capabilities.Capability
 
 object DebounceUtils {
     private val DEBOUNCE_CAPABILITIES = arrayListOf(
-        Capability.DEBOUNCE_VALUE_300,
-        Capability.DEBOUNCE_VALUE_600,
-        Capability.DEBOUNCE_VALUE_900,
-        Capability.DEBOUNCE_VALUE_1200,
-        Capability.DEBOUNCE_VALUE_1500,
+            Capability.DEBOUNCE_VALUE_300,
+            Capability.DEBOUNCE_VALUE_600,
+            Capability.DEBOUNCE_VALUE_900,
+            Capability.DEBOUNCE_VALUE_1200,
+            Capability.DEBOUNCE_VALUE_1500,
     )
 
     @JvmStatic

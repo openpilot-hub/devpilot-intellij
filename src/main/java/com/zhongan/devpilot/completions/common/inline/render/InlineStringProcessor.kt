@@ -20,8 +20,8 @@ fun determineRendering(textLines: List<String>, oldSuffix: String): RenderingIns
 
             if (endIndex == 0) return RenderingInstructions(FirstLineRendering.SuffixOnly, shouldRenderBlock)
             else if (endIndex > 0) return RenderingInstructions(
-                FirstLineRendering.BeforeAndAfterSuffix,
-                shouldRenderBlock
+                    FirstLineRendering.BeforeAndAfterSuffix,
+                    shouldRenderBlock
             )
         }
 

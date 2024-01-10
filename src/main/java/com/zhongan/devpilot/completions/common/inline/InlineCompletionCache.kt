@@ -20,16 +20,16 @@ class InlineCompletionCache {
 
     fun retrieveAdjustedCompletions(editor: Editor, userInput: String): List<DevPilotCompletion> {
         val completions = editor.getUserData(INLINE_COMPLETIONS_LAST_RESULT)
-            ?: return emptyList()
+                ?: return emptyList()
         return completions.stream()
-            .filter { completion: DevPilotCompletion -> completion.suffix.startsWith(userInput) }
-            .map { completion: DevPilotCompletion ->
-                completion.createAdjustedCompletion(
-                    completion.oldPrefix + userInput,
-                    completion.cursorPrefix + userInput
-                )
-            }
-            .collect(Collectors.toList())
+                .filter { completion: DevPilotCompletion -> completion.suffix.startsWith(userInput) }
+                .map { completion: DevPilotCompletion ->
+                    completion.createAdjustedCompletion(
+                            completion.oldPrefix + userInput,
+                            completion.cursorPrefix + userInput
+                    )
+                }
+                .collect(Collectors.toList())
     }
 
     fun clear(editor: Editor) {

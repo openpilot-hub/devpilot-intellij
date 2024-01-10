@@ -7,88 +7,89 @@ import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.Comp
 import com.zhongan.devpilot.completions.common.general.CompletionKind;
 import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.common.completions.Completion;
+
 import java.util.ArrayList;
 import java.util.List;
 
 import org.jetbrains.annotations.Nullable;
 
 public class DevPilotCompletion implements Completion {
-  public final String oldPrefix;
-  public final String newPrefix;
-  public final String oldSuffix;
-  public final String newSuffix;
-  public final int index;
-  public String cursorPrefix;
-  public String cursorSuffix;
-  public SuggestionTrigger suggestionTrigger;
-  @Nullable // if new plugin with old binary
-  public CompletionMetadata completionMetadata;
-  private String fullSuffix = null;
+    public final String oldPrefix;
+    public final String newPrefix;
+    public final String oldSuffix;
+    public final String newSuffix;
+    public final int index;
+    public String cursorPrefix;
+    public String cursorSuffix;
+    public SuggestionTrigger suggestionTrigger;
+    @Nullable // if new plugin with old binary
+    public CompletionMetadata completionMetadata;
+    private String fullSuffix = null;
 
-  public DevPilotCompletion(
-      String oldPrefix,
-      String newPrefix,
-      String oldSuffix,
-      String newSuffix,
-      int index,
-      String cursorPrefix,
-      String cursorSuffix,
-      @Nullable CompletionMetadata completionMetadata,
-      SuggestionTrigger suggestionTrigger) {
-    this.oldPrefix = oldPrefix;
-    this.newPrefix = newPrefix;
-    this.oldSuffix = oldSuffix;
-    this.newSuffix = newSuffix;
-    this.index = index;
-    this.cursorPrefix = cursorPrefix;
-    this.cursorSuffix = cursorSuffix;
-    this.completionMetadata = completionMetadata;
-    this.suggestionTrigger = suggestionTrigger;
-  }
-
-  public DevPilotCompletion createAdjustedCompletion(String oldPrefix, String cursorPrefix) {
-    return new DevPilotCompletion(
-        oldPrefix,
-        this.newPrefix,
-        this.oldSuffix,
-        this.newSuffix,
-        this.index,
-        cursorPrefix,
-        this.cursorSuffix,
-        this.completionMetadata,
-        this.suggestionTrigger);
-  }
-
-  public String getSuffix() {
-    if (fullSuffix != null) {
-      return fullSuffix;
+    public DevPilotCompletion(
+            String oldPrefix,
+            String newPrefix,
+            String oldSuffix,
+            String newSuffix,
+            int index,
+            String cursorPrefix,
+            String cursorSuffix,
+            @Nullable CompletionMetadata completionMetadata,
+            SuggestionTrigger suggestionTrigger) {
+        this.oldPrefix = oldPrefix;
+        this.newPrefix = newPrefix;
+        this.oldSuffix = oldSuffix;
+        this.newSuffix = newSuffix;
+        this.index = index;
+        this.cursorPrefix = cursorPrefix;
+        this.cursorSuffix = cursorSuffix;
+        this.completionMetadata = completionMetadata;
+        this.suggestionTrigger = suggestionTrigger;
     }
 
-    String itemText = this.newPrefix + this.newSuffix;
-    String prefix = this.oldPrefix;
-    if (prefix.isEmpty()) {
-      return fullSuffix = itemText;
+    public DevPilotCompletion createAdjustedCompletion(String oldPrefix, String cursorPrefix) {
+        return new DevPilotCompletion(
+                oldPrefix,
+                this.newPrefix,
+                this.oldSuffix,
+                this.newSuffix,
+                this.index,
+                cursorPrefix,
+                this.cursorSuffix,
+                this.completionMetadata,
+                this.suggestionTrigger);
     }
 
-    FList<TextRange> fragments = LookupCellRenderer.getMatchingFragments(prefix, itemText);
-    if (fragments != null && !fragments.isEmpty()) {
-      List<TextRange> list = new ArrayList<>(fragments);
-      return fullSuffix = itemText.substring(list.get(list.size() - 1).getEndOffset());
+    public String getSuffix() {
+        if (fullSuffix != null) {
+            return fullSuffix;
+        }
+
+        String itemText = this.newPrefix + this.newSuffix;
+        String prefix = this.oldPrefix;
+        if (prefix.isEmpty()) {
+            return fullSuffix = itemText;
+        }
+
+        FList<TextRange> fragments = LookupCellRenderer.getMatchingFragments(prefix, itemText);
+        if (fragments != null && !fragments.isEmpty()) {
+            List<TextRange> list = new ArrayList<>(fragments);
+            return fullSuffix = itemText.substring(list.get(list.size() - 1).getEndOffset());
+        }
+
+        return fullSuffix = "";
     }
 
-    return fullSuffix = "";
-  }
-
-  public int getNetLength() {
-    return getSuffix().length();
-  }
-
-  @Override
-  public boolean isSnippet() {
-    if (this.completionMetadata == null || this.completionMetadata.getCompletion_kind() == null) {
-      return false;
+    public int getNetLength() {
+        return getSuffix().length();
     }
 
-    return this.completionMetadata.getCompletion_kind() == CompletionKind.Snippet;
-  }
+    @Override
+    public boolean isSnippet() {
+        if (this.completionMetadata == null || this.completionMetadata.getCompletion_kind() == null) {
+            return false;
+        }
+
+        return this.completionMetadata.getCompletion_kind() == CompletionKind.Snippet;
+    }
 }

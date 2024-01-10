@@ -30,16 +30,16 @@ class DevPolitInlineLookupListener : LookupListener {
         // a weird case when the user presses ctrl+enter but the popup isn't rendered
         // (DocumentChanged event is triggered in this case)
         if (userPrefix == completionInFocus) {
-/*            completionsEventSender.sendSuggestionDropped(
-                editor, lastShownSuggestion, SuggestionDroppedReason.ScrollLookAhead
-            )*/
+            /*            completionsEventSender.sendSuggestionDropped(
+                            editor, lastShownSuggestion, SuggestionDroppedReason.ScrollLookAhead
+                        )*/
             return
         }
 
         if (userPrefix != null && !completionInFocus!!.startsWith(userPrefix)) {
-/*            completionsEventSender.sendSuggestionDropped(
-                editor, lastShownSuggestion, SuggestionDroppedReason.ScrollLookAhead
-            )*/
+            /*            completionsEventSender.sendSuggestionDropped(
+                            editor, lastShownSuggestion, SuggestionDroppedReason.ScrollLookAhead
+                        )*/
             return
         }
 
@@ -50,7 +50,7 @@ class DevPolitInlineLookupListener : LookupListener {
                     lastShownSuggestion,
                     "",
                     it
-        )
+            )
         }
     }
 

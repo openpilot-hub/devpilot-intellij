@@ -53,9 +53,9 @@ object GraphicsUtils {
 
     private fun getBrightness(color: Color): Double {
         return sqrt(
-            (color.red * color.red * 0.241) +
-                (color.green * color.green * 0.691) +
-                (color.blue * color.blue * 0.068)
+                (color.red * color.red * 0.241) +
+                        (color.green * color.green * 0.691) +
+                        (color.blue * color.blue * 0.068)
         )
     }
 }
@@ -67,20 +67,20 @@ fun getTabSize(editor: Editor): Int? {
         return null
     }
     val commonCodeStyleSettings = editor.project
-        ?.let { PsiDocumentManager.getInstance(it).getPsiFile(editor.document) }
-        ?.let { CommonCodeStyleSettings(it.language) }
+            ?.let { PsiDocumentManager.getInstance(it).getPsiFile(editor.document) }
+            ?.let { CommonCodeStyleSettings(it.language) }
 
     return commonCodeStyleSettings?.indentOptions?.TAB_SIZE ?: editor.settings.getTabSize(editor.project)
 }
 
 private fun failIfAlpha() {
     val isAlpha = CapabilitiesService.getInstance().isCapabilityEnabled(
-        Capability.ALPHA
+            Capability.ALPHA
     )
     val isTest = ApplicationManager.getApplication().isUnitTestMode
     if (isAlpha && !isTest) {
         Logger.getInstance("GraphicsUtils")
-            .error("!!!Alpha user please notice!!! You called `getTabSize` from a thread without read access. Because you're alpha, a `RuntimeException` will be thrown - This is being done in order to cause chaos for alpha devs, so that they'll fix it.")
+                .error("!!!Alpha user please notice!!! You called `getTabSize` from a thread without read access. Because you're alpha, a `RuntimeException` will be thrown - This is being done in order to cause chaos for alpha devs, so that they'll fix it.")
         throw RuntimeException("You called `getTabSize` from a thread without read access!")
     }
 }

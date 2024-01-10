@@ -17,93 +17,94 @@ import com.intellij.openapi.wm.IdeFocusManager;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.common.general.EditorUtils;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
+
 import java.awt.*;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DevPolitDocumentListener implements BulkAwareDocumentListener {
-  private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
-  private final SuggestionsModeService suggestionsModeService = instanceOfSuggestionsModeService();
+    private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
+    private final SuggestionsModeService suggestionsModeService = instanceOfSuggestionsModeService();
 
-  @Override
-  public void documentChangedNonBulk(@NotNull DocumentEvent event) {
+    @Override
+    public void documentChangedNonBulk(@NotNull DocumentEvent event) {
 /*    if (!CompletionsState.INSTANCE.isCompletionsEnabled()) {
       return;
     }*/
 
-    Document document = event.getDocument();
-    Editor editor = getActiveEditor(document);
+        Document document = event.getDocument();
+        Editor editor = getActiveEditor(document);
 
-    if (editor == null || !EditorUtils.isMainEditor(editor)) {
-      return;
+        if (editor == null || !EditorUtils.isMainEditor(editor)) {
+            return;
+        }
+
+        DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
+
+        CompletionPreview.clear(editor);
+
+        int offset = event.getOffset() + event.getNewLength();
+
+        if (shouldIgnoreChange(event, editor, offset, lastShownCompletion)) {
+            InlineCompletionCache.getInstance().clear(editor);
+            return;
+        }
+
+        handler.retrieveAndShowCompletion(
+                editor,
+                offset,
+                lastShownCompletion,
+                event.getNewFragment().toString(),
+                new DefaultCompletionAdjustment());
     }
 
-    DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
+    private boolean shouldIgnoreChange(
+            DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
+        Document document = event.getDocument();
 
-    CompletionPreview.clear(editor);
+        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
+            return true;
+        }
 
-    int offset = event.getOffset() + event.getNewLength();
-
-    if (shouldIgnoreChange(event, editor, offset, lastShownCompletion)) {
-      InlineCompletionCache.getInstance().clear(editor);
-      return;
-    }
-
-    handler.retrieveAndShowCompletion(
-        editor,
-        offset,
-        lastShownCompletion,
-        event.getNewFragment().toString(),
-        new DefaultCompletionAdjustment());
-  }
-
-  private boolean shouldIgnoreChange(
-      DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
-    Document document = event.getDocument();
-
-    if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
-      return true;
-    }
-
-    if (event.getNewLength() < 1) {
+        if (event.getNewLength() < 1) {
 /*      completionsEventSender.sendSuggestionDropped(
           editor, lastShownCompletion, SuggestionDroppedReason.TextDeletion);*/
-      return true;
+            return true;
+        }
+
+        if (!editor.getEditorKind().equals(EditorKind.MAIN_EDITOR)
+                && !ApplicationManager.getApplication().isUnitTestMode()) {
+            return true;
+        }
+
+        if (!checkModificationAllowed(editor) || document.getRangeGuard(offset, offset) != null) {
+            document.fireReadOnlyModificationAttempt();
+
+            return true;
+        }
+
+        return !CompletionUtils.isValidDocumentChange(document, offset, event.getOffset());
     }
 
-    if (!editor.getEditorKind().equals(EditorKind.MAIN_EDITOR)
-        && !ApplicationManager.getApplication().isUnitTestMode()) {
-      return true;
+    @Nullable
+    private static Editor getActiveEditor(@NotNull Document document) {
+        if (!ApplicationManager.getApplication().isDispatchThread()) {
+            return null;
+        }
+
+        Component focusOwner = IdeFocusManager.getGlobalInstance().getFocusOwner();
+        DataContext dataContext = DataManager.getInstance().getDataContext(focusOwner);
+        // ignore caret placing when exiting
+        Editor activeEditor =
+                ApplicationManager.getApplication().isDisposed()
+                        ? null
+                        : CommonDataKeys.EDITOR.getData(dataContext);
+
+        if (activeEditor != null && activeEditor.getDocument() != document) {
+            activeEditor = null;
+        }
+
+        return activeEditor;
     }
-
-    if (!checkModificationAllowed(editor) || document.getRangeGuard(offset, offset) != null) {
-      document.fireReadOnlyModificationAttempt();
-
-      return true;
-    }
-
-    return !CompletionUtils.isValidDocumentChange(document, offset, event.getOffset());
-  }
-
-  @Nullable
-  private static Editor getActiveEditor(@NotNull Document document) {
-    if (!ApplicationManager.getApplication().isDispatchThread()) {
-      return null;
-    }
-
-    Component focusOwner = IdeFocusManager.getGlobalInstance().getFocusOwner();
-    DataContext dataContext = DataManager.getInstance().getDataContext(focusOwner);
-    // ignore caret placing when exiting
-    Editor activeEditor =
-        ApplicationManager.getApplication().isDisposed()
-            ? null
-            : CommonDataKeys.EDITOR.getData(dataContext);
-
-    if (activeEditor != null && activeEditor.getDocument() != document) {
-      activeEditor = null;
-    }
-
-    return activeEditor;
-  }
 }
