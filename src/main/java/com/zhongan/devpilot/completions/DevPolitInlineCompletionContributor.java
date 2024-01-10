@@ -4,7 +4,7 @@ import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
 import com.zhongan.devpilot.completions.general.DependencyContainer;
 import com.zhongan.devpilot.completions.general.EditorUtils;
-import com.zhongan.devpilot.completions.common.inline.DevPolitInlineLookupListener;
+import com.zhongan.devpilot.completions.inline.DevPolitInlineLookupListener;
 import org.jetbrains.annotations.NotNull;
 
 public class DevPolitInlineCompletionContributor extends CompletionContributor {

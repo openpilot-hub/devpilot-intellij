@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.inline.render
+package com.zhongan.devpilot.completions.inline.render
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor

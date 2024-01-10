@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.inline;
+package com.zhongan.devpilot.completions.inline;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
@@ -6,12 +6,10 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.util.ObjectUtils;
-import com.zhongan.devpilot.completions.capabilities.SuggestionsMode;
-import com.zhongan.devpilot.completions.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.general.CompletionKind;
 import com.zhongan.devpilot.completions.general.SuggestionTrigger;
-import com.zhongan.devpilot.completions.common.inline.render.GraphicsUtilsKt;
+import com.zhongan.devpilot.completions.inline.render.GraphicsUtilsKt;
 import com.zhongan.devpilot.completions.completions.CompletionUtils;
 import com.zhongan.devpilot.completions.prediction.CompletionFacade;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
@@ -30,18 +28,18 @@ import org.jetbrains.annotations.Nullable;
 
 public class InlineCompletionHandler {
     private final CompletionFacade completionFacade;
-    private final SuggestionsModeService suggestionsModeService;
+//    private final SuggestionsModeService suggestionsModeService;
     private Future<?> lastDebounceRenderTask = null;
     private Future<?> lastFetchAndRenderTask = null;
     private Future<?> lastFetchInBackgroundTask = null;
 
     public InlineCompletionHandler(
             CompletionFacade completionFacade
-            ,
-            SuggestionsModeService suggestionsModeService
+//            ,
+//            SuggestionsModeService suggestionsModeService
     ) {
         this.completionFacade = completionFacade;
-        this.suggestionsModeService = suggestionsModeService;
+//        this.suggestionsModeService = suggestionsModeService;
     }
 
     public void retrieveAndShowCompletion(
@@ -165,9 +163,9 @@ public class InlineCompletionHandler {
                             if (shouldCancelRendering(editor, modificationStamp, offset)) {
                                 return;
                             }
-                            if (shouldRemovePopupCompletions(completionAdjustment)) {
+/*                            if (shouldRemovePopupCompletions(completionAdjustment)) {
                                 completions.removeIf(completion -> !completion.isSnippet());
-                            }
+                            }*/
                             showInlineCompletion(
                                     editor,
                                     completions,
@@ -191,10 +189,11 @@ public class InlineCompletionHandler {
      * remove popup completions when 1. the suggestion mode is HYBRID and 2. the completion adjustment
      * type is not LookAhead
      */
-    private boolean shouldRemovePopupCompletions(@NotNull CompletionAdjustment completionAdjustment) {
-        return suggestionsModeService.getSuggestionMode() != SuggestionsMode.INLINE
+/*    private boolean shouldRemovePopupCompletions(@NotNull CompletionAdjustment completionAdjustment) {
+        return SuggestionsMode.INLINE != SuggestionsMode.INLINE
+//        return suggestionsModeService.getSuggestionMode() != SuggestionsMode.INLINE
                 && completionAdjustment.getSuggestionTrigger() != SuggestionTrigger.LookAhead;
-    }
+    }*/
 
     private List<DevPilotCompletion> retrieveInlineCompletion(
             @NotNull Editor editor,

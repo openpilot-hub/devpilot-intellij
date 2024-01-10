@@ -1,6 +1,6 @@
-package com.zhongan.devpilot.completions.common.inline;
+package com.zhongan.devpilot.completions.inline;
 
-import static com.zhongan.devpilot.completions.common.inline.CompletionPreviewUtilsKt.*;
+import static com.zhongan.devpilot.completions.inline.CompletionPreviewUtilsKt.*;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
@@ -14,7 +14,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
-import com.zhongan.devpilot.completions.common.inline.render.DevPilotInlay;
+import com.zhongan.devpilot.completions.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
 import java.util.List;

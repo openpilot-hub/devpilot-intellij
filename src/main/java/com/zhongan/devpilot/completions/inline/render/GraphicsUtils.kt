@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.inline.render
+package com.zhongan.devpilot.completions.inline.render
 
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.diagnostic.Logger

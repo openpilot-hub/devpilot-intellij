@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.inline;
+package com.zhongan.devpilot.completions.inline;
 
 /**
  * Marker for Inline Completion actions.

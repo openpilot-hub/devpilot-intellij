@@ -1,7 +1,6 @@
-package com.zhongan.devpilot.completions.common.inline;
+package com.zhongan.devpilot.completions.inline;
 
 import static com.intellij.openapi.editor.EditorModificationUtil.checkModificationAllowed;
-import static com.zhongan.devpilot.completions.general.DependencyContainer.instanceOfSuggestionsModeService;
 import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
 
 import com.intellij.ide.DataManager;
@@ -14,7 +13,6 @@ import com.intellij.openapi.editor.EditorKind;
 import com.intellij.openapi.editor.event.BulkAwareDocumentListener;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.wm.IdeFocusManager;
-import com.zhongan.devpilot.completions.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.general.EditorUtils;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
@@ -25,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 public class DevPolitDocumentListener implements BulkAwareDocumentListener {
     private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
-    private final SuggestionsModeService suggestionsModeService = instanceOfSuggestionsModeService();
 
     @Override
     public void documentChangedNonBulk(@NotNull DocumentEvent event) {
@@ -63,9 +60,9 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
             DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
         Document document = event.getDocument();
 
-        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
-            return true;
-        }
+//        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
+//            return true;
+//        }
 
         if (event.getNewLength() < 1) {
             return true;

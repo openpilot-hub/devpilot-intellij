@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.inline;
+package com.zhongan.devpilot.completions.inline;
 
 import com.intellij.codeInsight.hint.HintManager;
 import com.intellij.codeInsight.hint.HintManagerImpl;

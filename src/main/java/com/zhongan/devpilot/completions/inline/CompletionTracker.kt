@@ -1,9 +1,9 @@
-package com.zhongan.devpilot.completions.common.inline
+package com.zhongan.devpilot.completions.inline
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.Key
 import com.zhongan.devpilot.completions.general.SuggestionTrigger
-import com.zhongan.devpilot.completions.common.inline.DebounceUtils.getDebounceInterval
+import com.zhongan.devpilot.completions.inline.DebounceUtils.getDebounceInterval
 
 object CompletionTracker {
     private val LAST_COMPLETION_REQUEST_TIME = Key.create<Long>("LAST_COMPLETION_REQUEST_TIME")

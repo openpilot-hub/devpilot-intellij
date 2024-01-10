@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.inline
+package com.zhongan.devpilot.completions.inline
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
@@ -7,7 +7,7 @@ import com.intellij.openapi.editor.event.EditorMouseEvent
 import com.intellij.openapi.editor.event.EditorMouseEventArea
 import com.intellij.openapi.editor.event.EditorMouseMotionListener
 import com.intellij.openapi.util.Disposer
-import com.zhongan.devpilot.completions.common.inline.render.DevPilotInlay
+import com.zhongan.devpilot.completions.inline.render.DevPilotInlay
 import java.awt.Component
 import java.awt.Point
 import javax.swing.SwingUtilities

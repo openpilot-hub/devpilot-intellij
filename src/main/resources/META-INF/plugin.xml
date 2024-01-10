@@ -46,7 +46,7 @@
 
         <notificationGroup id="DevPilot Notification Group" displayType="BALLOON" key="notification.group.devpilot"/>
 
-        <editorFactoryDocumentListener implementation="com.zhongan.devpilot.completions.common.inline.DevPolitDocumentListener"/>
+        <editorFactoryDocumentListener implementation="com.zhongan.devpilot.completions.inline.DevPolitDocumentListener"/>
 
         <completion.contributor language="any"
                                 implementationClass="com.zhongan.devpilot.completions.DevPolitInlineCompletionContributor"

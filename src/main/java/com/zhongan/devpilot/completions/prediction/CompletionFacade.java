@@ -2,22 +2,18 @@ package com.zhongan.devpilot.completions.prediction;
 
 import static com.zhongan.devpilot.completions.general.StaticConfig.*;
 
-import com.intellij.codeInsight.completion.CompletionParameters;
-import com.intellij.openapi.application.ex.ApplicationUtil;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
-import com.zhongan.devpilot.completions.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.requests.AutocompleteRequest;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.requests.ResultEntry;
-import com.zhongan.devpilot.completions.common.inline.CompletionAdjustment;
+import com.zhongan.devpilot.completions.inline.CompletionAdjustment;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -25,32 +21,15 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import com.zhongan.devpilot.enums.EditorActionEnum;
+import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class CompletionFacade {
-    private final SuggestionsModeService suggestionsModeService;
 
-//    public CompletionFacade() {
-    public CompletionFacade(SuggestionsModeService suggestionsModeService) {
-        this.suggestionsModeService = suggestionsModeService;
-    }
-
-    @Nullable
-    public AutocompleteResponse retrieveCompletions(
-            CompletionParameters parameters, @Nullable Integer tabSize) {
-        try {
-            String filename = getFilename(parameters.getOriginalFile().getVirtualFile());
-            return ApplicationUtil.runWithCheckCanceled(
-                    () ->
-                            retrieveCompletions(
-                                    parameters.getEditor(), parameters.getOffset(), filename, tabSize, null),
-                    ProgressManager.getInstance().getProgressIndicator());
-        } catch (Exception e) {
-            return null;
-        }
+    public CompletionFacade() {
     }
 
     @Nullable
