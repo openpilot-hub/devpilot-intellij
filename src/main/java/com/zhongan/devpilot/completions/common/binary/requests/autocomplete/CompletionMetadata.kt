@@ -1,10 +1,9 @@
 package com.zhongan.devpilot.completions.common.binary.requests.autocomplete
 
 import com.zhongan.devpilot.completions.common.general.CompletionKind
-import com.zhongan.devpilot.completions.common.general.CompletionOrigin
 
 data class CompletionMetadata(
-        val origin: CompletionOrigin? = null,
+//        val origin: CompletionOrigin? = null,
         val detail: String? = null,
         val completion_kind: CompletionKind? = null,
         val snippet_context: Map<String, Any>? = null,
