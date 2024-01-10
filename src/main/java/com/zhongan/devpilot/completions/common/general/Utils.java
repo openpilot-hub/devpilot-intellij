@@ -1,24 +1,11 @@
 package com.zhongan.devpilot.completions.common.general;
 
-import static com.zhongan.devpilot.completions.common.general.StaticConfig.DEVPILOT_PLUGIN_ID;
-
-import com.intellij.ide.plugins.IdeaPluginDescriptor;
-import com.intellij.ide.plugins.PluginManager;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.updateSettings.impl.UpdateSettings;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.concurrency.AppExecutorUtil;
-import com.intellij.util.containers.ContainerUtil;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;

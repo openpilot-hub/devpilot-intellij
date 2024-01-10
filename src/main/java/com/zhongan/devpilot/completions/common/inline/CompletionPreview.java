@@ -75,7 +75,7 @@ public class CompletionPreview implements Disposable {
     }
   }
 
-  public void togglePreview(CompletionOrder order) {
+/*  public void togglePreview(CompletionOrder order) {
     int nextIndex = currentIndex + order.diff();
     currentIndex = (completions.size() + nextIndex) % completions.size();
 
@@ -83,7 +83,7 @@ public class CompletionPreview implements Disposable {
     devPilotInlay = DevPilotInlay.create(this);
 
     createPreview();
-  }
+  }*/
 
   public DevPilotCompletion getCurrentCompletion() {
     return completions.get(currentIndex);

@@ -2,9 +2,7 @@ package com.zhongan.devpilot.completions;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.util.messages.MessageBus;
 import com.zhongan.devpilot.completions.common.completions.Completion;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry;
@@ -35,8 +33,6 @@ public class DevPolitCompletionContributor extends CompletionContributor {
       DependencyContainer.instanceOfDevPolitInlineLookupListener();
   private final SuggestionsModeService suggestionsModeService =
       DependencyContainer.instanceOfSuggestionsModeService();
-  private final MessageBus messageBus = ApplicationManager.getApplication().getMessageBus();
-  private boolean isLocked;
 
   @Override
   public void fillCompletionVariants(
@@ -75,13 +71,6 @@ public class DevPolitCompletionContributor extends CompletionContributor {
     if (suggestionsModeService.getSuggestionMode() == SuggestionsMode.HYBRID
         && Arrays.stream(completions.results).anyMatch(Completion::isSnippet)) {
       return;
-    }
-
-    if (this.isLocked != completions.is_locked) {
-      this.isLocked = completions.is_locked;
-      this.messageBus
-          .syncPublisher(LimitedSecletionsChangedNotifier.LIMITED_SELECTIONS_CHANGED_TOPIC)
-          .limitedChanged(completions.is_locked);
     }
 
     resultSet =

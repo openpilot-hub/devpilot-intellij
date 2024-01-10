@@ -28,7 +28,6 @@ object GraphicsUtils {
 
     val color: Color
         get() {
-//            return Color(AppSettingsState.instance.inlineHintColor)
             return Color(GraphicsUtils.niceContrastColor.rgb)
         }
 
