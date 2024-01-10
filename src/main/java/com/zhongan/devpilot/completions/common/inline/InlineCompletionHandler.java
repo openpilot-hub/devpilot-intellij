@@ -6,15 +6,15 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.util.ObjectUtils;
-import com.zhongan.devpilot.completions.common.requests.AutocompleteResponse;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsMode;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
-import com.zhongan.devpilot.completions.common.general.CompletionKind;
-import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
+import com.zhongan.devpilot.completions.capabilities.SuggestionsMode;
+import com.zhongan.devpilot.completions.capabilities.SuggestionsModeService;
+import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
+import com.zhongan.devpilot.completions.general.CompletionKind;
+import com.zhongan.devpilot.completions.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.common.inline.render.GraphicsUtilsKt;
-import com.zhongan.devpilot.completions.common.completions.CompletionUtils;
-import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.completions.CompletionUtils;
+import com.zhongan.devpilot.completions.prediction.CompletionFacade;
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
 import java.util.Collections;
 import java.util.List;
@@ -24,7 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.zhongan.devpilot.completions.common.general.*;
+import com.zhongan.devpilot.completions.general.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -36,8 +36,10 @@ public class InlineCompletionHandler {
     private Future<?> lastFetchInBackgroundTask = null;
 
     public InlineCompletionHandler(
-            CompletionFacade completionFacade,
-            SuggestionsModeService suggestionsModeService) {
+            CompletionFacade completionFacade
+            ,
+            SuggestionsModeService suggestionsModeService
+    ) {
         this.completionFacade = completionFacade;
         this.suggestionsModeService = suggestionsModeService;
     }

@@ -40,7 +40,7 @@
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
-        <applicationService serviceImplementation="com.zhongan.devpilot.completions.common.capabilities.CapabilitiesService"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.completions.capabilities.CapabilitiesService"/>
 
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
 
@@ -49,7 +49,7 @@
         <editorFactoryDocumentListener implementation="com.zhongan.devpilot.completions.common.inline.DevPolitDocumentListener"/>
 
         <completion.contributor language="any"
-                                implementationClass="com.zhongan.devpilot.completions.DevPolitCompletionContributor"
+                                implementationClass="com.zhongan.devpilot.completions.DevPolitInlineCompletionContributor"
                                 order="first"/>
     </extensions>
 

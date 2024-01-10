@@ -1,7 +1,7 @@
-package com.zhongan.devpilot.completions.common.requests;
+package com.zhongan.devpilot.completions.requests;
 
-import com.zhongan.devpilot.completions.common.general.CompletionKind;
-import com.zhongan.devpilot.completions.common.completions.Completion;
+import com.zhongan.devpilot.completions.general.CompletionKind;
+import com.zhongan.devpilot.completions.completions.Completion;
 
 public class ResultEntry implements Completion {
     public String new_prefix;

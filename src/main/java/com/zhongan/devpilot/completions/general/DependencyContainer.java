@@ -1,13 +1,13 @@
-package com.zhongan.devpilot.completions.common.general;
+package com.zhongan.devpilot.completions.general;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
+import com.zhongan.devpilot.completions.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.common.inline.InlineCompletionHandler;
 import com.zhongan.devpilot.completions.common.inline.DevPolitInlineLookupListener;
-import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
+import com.zhongan.devpilot.completions.prediction.CompletionFacade;
 import org.jetbrains.annotations.NotNull;
 
 public class DependencyContainer {
@@ -32,8 +32,10 @@ public class DependencyContainer {
         if (INLINE_COMPLETION_HANDLER_INSTANCE == null) {
             INLINE_COMPLETION_HANDLER_INSTANCE =
                     new InlineCompletionHandler(
-                            instanceOfCompletionFacade(),
-                            instanceOfSuggestionsModeService());
+                            instanceOfCompletionFacade()
+                            ,
+                            instanceOfSuggestionsModeService()
+                    );
         }
 
         return INLINE_COMPLETION_HANDLER_INSTANCE;
@@ -42,6 +44,7 @@ public class DependencyContainer {
     @NotNull
     public static CompletionFacade instanceOfCompletionFacade() {
         return new CompletionFacade(instanceOfSuggestionsModeService());
+//        return new CompletionFacade();
     }
 
     public static SuggestionsModeService instanceOfSuggestionsModeService() {

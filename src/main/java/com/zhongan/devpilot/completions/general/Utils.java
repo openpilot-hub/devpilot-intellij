@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.general;
+package com.zhongan.devpilot.completions.general;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;

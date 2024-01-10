@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.general;
+package com.zhongan.devpilot.completions.general;
 
 import com.intellij.openapi.util.IconLoader;
 import com.zhongan.devpilot.DevPilotIcons;

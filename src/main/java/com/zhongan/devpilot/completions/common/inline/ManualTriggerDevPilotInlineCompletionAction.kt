@@ -6,7 +6,7 @@ import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.project.Project
 import com.intellij.psi.PsiFile
-import com.zhongan.devpilot.completions.common.general.DependencyContainer
+import com.zhongan.devpilot.completions.general.DependencyContainer
 
 class ManualTriggerDevPilotInlineCompletionAction :
         BaseCodeInsightAction(false),

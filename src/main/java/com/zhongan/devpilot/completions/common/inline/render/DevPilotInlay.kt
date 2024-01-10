@@ -2,7 +2,7 @@ package com.zhongan.devpilot.completions.common.inline.render
 
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion
 import java.awt.Rectangle
 
 interface DevPilotInlay : Disposable {

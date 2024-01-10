@@ -2,17 +2,14 @@ package com.zhongan.devpilot.completions;
 
 import com.intellij.codeInsight.completion.*;
 import com.intellij.codeInsight.lookup.*;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
-import com.zhongan.devpilot.completions.common.general.DependencyContainer;
-import com.zhongan.devpilot.completions.common.general.EditorUtils;
+import com.zhongan.devpilot.completions.general.DependencyContainer;
+import com.zhongan.devpilot.completions.general.EditorUtils;
 import com.zhongan.devpilot.completions.common.inline.DevPolitInlineLookupListener;
 import org.jetbrains.annotations.NotNull;
 
-public class DevPolitCompletionContributor extends CompletionContributor {
+public class DevPolitInlineCompletionContributor extends CompletionContributor {
     private final DevPolitInlineLookupListener devpolitInlineLookupListener =
             DependencyContainer.instanceOfDevPolitInlineLookupListener();
-    private final SuggestionsModeService suggestionsModeService =
-            DependencyContainer.instanceOfSuggestionsModeService();
 
     @Override
     public void fillCompletionVariants(
@@ -20,9 +17,7 @@ public class DevPolitCompletionContributor extends CompletionContributor {
         if (!EditorUtils.isMainEditor(parameters.getEditor())) {
             return;
         }
-        if (suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
-            registerLookupListener(parameters, devpolitInlineLookupListener);
-        }
+        registerLookupListener(parameters, devpolitInlineLookupListener);
         //select do not register
     }
 

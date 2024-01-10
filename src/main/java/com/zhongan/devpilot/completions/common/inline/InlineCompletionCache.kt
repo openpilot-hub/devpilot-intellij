@@ -2,7 +2,7 @@ package com.zhongan.devpilot.completions.common.inline
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.Key
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion
 import java.util.stream.Collectors
 
 class InlineCompletionCache {

@@ -1,7 +1,7 @@
 package com.zhongan.devpilot.completions.common.inline
 
-import com.zhongan.devpilot.completions.common.capabilities.CapabilitiesService
-import com.zhongan.devpilot.completions.common.capabilities.Capability
+import com.zhongan.devpilot.completions.capabilities.CapabilitiesService
+import com.zhongan.devpilot.completions.capabilities.Capability
 
 object DebounceUtils {
     private val DEBOUNCE_CAPABILITIES = arrayListOf(

@@ -1,6 +1,6 @@
-package com.zhongan.devpilot.completions.common.prediction;
+package com.zhongan.devpilot.completions.prediction;
 
-import static com.zhongan.devpilot.completions.common.general.StaticConfig.*;
+import static com.zhongan.devpilot.completions.general.StaticConfig.*;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.application.ex.ApplicationUtil;
@@ -13,10 +13,10 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
-import com.zhongan.devpilot.completions.common.requests.AutocompleteRequest;
-import com.zhongan.devpilot.completions.common.requests.AutocompleteResponse;
-import com.zhongan.devpilot.completions.common.requests.ResultEntry;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
+import com.zhongan.devpilot.completions.capabilities.SuggestionsModeService;
+import com.zhongan.devpilot.completions.requests.AutocompleteRequest;
+import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
+import com.zhongan.devpilot.completions.requests.ResultEntry;
 import com.zhongan.devpilot.completions.common.inline.CompletionAdjustment;
 
 import java.nio.file.Files;
@@ -25,7 +25,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 
 import com.zhongan.devpilot.enums.EditorActionEnum;
-import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import org.jetbrains.annotations.NotNull;
@@ -34,6 +33,7 @@ import org.jetbrains.annotations.Nullable;
 public class CompletionFacade {
     private final SuggestionsModeService suggestionsModeService;
 
+//    public CompletionFacade() {
     public CompletionFacade(SuggestionsModeService suggestionsModeService) {
         this.suggestionsModeService = suggestionsModeService;
     }
@@ -111,7 +111,9 @@ public class CompletionFacade {
         request.setMessages(new ArrayList<>() {{
             add(devPilotMessage);
         }});
-        final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
+//        final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
+        //TODO 本地模拟，缺钱
+        final String response = "public static void quickSort(int[] arr, int low, int high) {\n    if (low < high) {\n        int pivotIndex = partition(arr, low, high);\n        quickSort(arr, low, pivotIndex - 1);\n        quickSort(arr, pivotIndex + 1, high);\n    }\n}\n\nprivate static int partition(int[] arr, int low, int high) {\n    int pivot = arr[high];\n    int i = low - 1;\n    for (int j = low; j < high; j++) {\n        if (arr[j] < pivot) {\n            i++;\n            swap(arr, i, j);\n        }\n    }\n    swap(arr, i + 1, high);\n    return i + 1;\n}\n\nprivate static void swap(int[] arr, int i, int j) {\n    int temp = arr[i];\n    arr[i] = arr[j];\n    arr[j] = temp;\n}\n";
         AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
         autocompleteResponse.old_prefix = "";
         autocompleteResponse.user_message = new String[]{};
@@ -172,7 +174,7 @@ public class CompletionFacade {
         return Files.exists(path);
     }
 
-    private int determineTimeoutBy(@NotNull String before) {
+/*    private int determineTimeoutBy(@NotNull String before) {
         if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
             return COMPLETION_TIME_THRESHOLD;
         }
@@ -181,7 +183,7 @@ public class CompletionFacade {
         String lastLine = lastNewline >= 0 ? before.substring(lastNewline) : "";
         boolean endsWithWhitespacesOnly = lastLine.trim().isEmpty();
         return endsWithWhitespacesOnly ? NEWLINE_COMPLETION_TIME_THRESHOLD : COMPLETION_TIME_THRESHOLD;
-    }
+    }*/
 
     private String getFileExtension(Editor editor) {
         if (editor == null) {

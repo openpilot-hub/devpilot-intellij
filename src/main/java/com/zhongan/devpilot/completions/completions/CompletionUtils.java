@@ -1,16 +1,16 @@
-package com.zhongan.devpilot.completions.common.completions;
+package com.zhongan.devpilot.completions.completions;
 
-import static com.zhongan.devpilot.completions.common.general.StaticConfig.MAX_COMPLETIONS;
-import static com.zhongan.devpilot.completions.common.general.Utils.endsWithADot;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
+import static com.zhongan.devpilot.completions.general.Utils.endsWithADot;
 
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
-import com.zhongan.devpilot.completions.common.requests.ResultEntry;
-import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.requests.ResultEntry;
+import com.zhongan.devpilot.completions.general.SuggestionTrigger;
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

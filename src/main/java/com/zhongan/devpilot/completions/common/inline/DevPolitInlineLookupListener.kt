@@ -3,7 +3,7 @@ package com.zhongan.devpilot.completions.common.inline
 import com.intellij.codeInsight.lookup.LookupEvent
 import com.intellij.codeInsight.lookup.LookupListener
 //import com.zhongan.devpilot.completions.common.binary.requests.notifications.shown.SuggestionDroppedReason
-import com.zhongan.devpilot.completions.common.general.DependencyContainer
+import com.zhongan.devpilot.completions.general.DependencyContainer
 import java.util.concurrent.atomic.AtomicBoolean
 
 class DevPolitInlineLookupListener : LookupListener {

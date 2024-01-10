@@ -15,7 +15,7 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
 import com.zhongan.devpilot.completions.common.inline.render.DevPilotInlay;
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
 import java.util.List;
 

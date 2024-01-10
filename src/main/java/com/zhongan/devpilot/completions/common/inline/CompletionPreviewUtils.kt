@@ -1,6 +1,6 @@
 package com.zhongan.devpilot.completions.common.inline
 
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion
 
 fun hadSuffix(currentCompletion: DevPilotCompletion): Boolean {
     return currentCompletion.oldSuffix?.trim()?.isNotEmpty() ?: false

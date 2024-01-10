@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.capabilities;
+package com.zhongan.devpilot.completions.capabilities;
 
 import com.intellij.openapi.components.ServiceManager;
 
@@ -11,10 +11,6 @@ public class CapabilitiesService {
     public boolean isCapabilityEnabled(Capability capability) {
         //TODO 从配置中读取
         return true;
-//    return CapabilitiesStateSingleton.getInstance()
-//        .getOptional()
-//        .map(c -> c.isEnabled(capability))
-//        .orElse(false);
     }
 
 }

@@ -1,9 +1,9 @@
 package com.zhongan.devpilot.completions.common.inline
 
-import com.zhongan.devpilot.completions.common.requests.AutocompleteRequest
-import com.zhongan.devpilot.completions.common.requests.AutocompleteResponse
-import com.zhongan.devpilot.completions.common.requests.ResultEntry
-import com.zhongan.devpilot.completions.common.general.SuggestionTrigger
+import com.zhongan.devpilot.completions.requests.AutocompleteRequest
+import com.zhongan.devpilot.completions.requests.AutocompleteResponse
+import com.zhongan.devpilot.completions.requests.ResultEntry
+import com.zhongan.devpilot.completions.general.SuggestionTrigger
 import java.util.Arrays
 
 class LookAheadCompletionAdjustment(private val userPrefix: String, private val focusedCompletion: String) :

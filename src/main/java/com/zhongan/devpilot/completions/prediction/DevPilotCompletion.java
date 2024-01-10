@@ -1,12 +1,12 @@
-package com.zhongan.devpilot.completions.common.prediction;
+package com.zhongan.devpilot.completions.prediction;
 
 import com.intellij.codeInsight.lookup.impl.LookupCellRenderer;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.containers.FList;
-import com.zhongan.devpilot.completions.common.requests.CompletionMetadata;
-import com.zhongan.devpilot.completions.common.general.CompletionKind;
-import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
-import com.zhongan.devpilot.completions.common.completions.Completion;
+import com.zhongan.devpilot.completions.requests.CompletionMetadata;
+import com.zhongan.devpilot.completions.general.CompletionKind;
+import com.zhongan.devpilot.completions.general.SuggestionTrigger;
+import com.zhongan.devpilot.completions.completions.Completion;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,8 +1,8 @@
 package com.zhongan.devpilot.completions.common.inline
 
-import com.zhongan.devpilot.completions.common.requests.AutocompleteRequest
-import com.zhongan.devpilot.completions.common.requests.AutocompleteResponse
-import com.zhongan.devpilot.completions.common.general.SuggestionTrigger
+import com.zhongan.devpilot.completions.requests.AutocompleteRequest
+import com.zhongan.devpilot.completions.requests.AutocompleteResponse
+import com.zhongan.devpilot.completions.general.SuggestionTrigger
 
 abstract class CompletionAdjustment {
     abstract val suggestionTrigger: SuggestionTrigger

@@ -4,9 +4,9 @@ import com.intellij.openapi.Disposable
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.Inlay
 import com.intellij.openapi.util.Disposer
-import com.zhongan.devpilot.completions.common.general.Utils
+import com.zhongan.devpilot.completions.general.Utils
 import com.zhongan.devpilot.completions.common.inline.CompletionPreviewInsertionHint
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion
 import java.awt.Rectangle
 import java.util.stream.Collectors
 

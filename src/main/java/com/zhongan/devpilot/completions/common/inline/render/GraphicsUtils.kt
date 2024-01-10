@@ -7,8 +7,8 @@ import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings
 import com.intellij.ui.JBColor
-import com.zhongan.devpilot.completions.common.capabilities.CapabilitiesService
-import com.zhongan.devpilot.completions.common.capabilities.Capability
+import com.zhongan.devpilot.completions.capabilities.CapabilitiesService
+import com.zhongan.devpilot.completions.capabilities.Capability
 import java.awt.Color
 import java.awt.Font
 import java.awt.font.TextAttribute

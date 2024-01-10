@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.requests;
+package com.zhongan.devpilot.completions.requests;
 
 import com.google.gson.annotations.SerializedName;
 import org.jetbrains.annotations.Nullable;

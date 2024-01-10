@@ -2,7 +2,7 @@ package com.zhongan.devpilot.completions.common.inline
 
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.util.Key
-import com.zhongan.devpilot.completions.common.general.SuggestionTrigger
+import com.zhongan.devpilot.completions.general.SuggestionTrigger
 import com.zhongan.devpilot.completions.common.inline.DebounceUtils.getDebounceInterval
 
 object CompletionTracker {

@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.capabilities;
+package com.zhongan.devpilot.completions.capabilities;
 
 public enum SuggestionsMode {
     INLINE {

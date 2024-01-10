@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.general;
+package com.zhongan.devpilot.completions.general;
 
 public enum CompletionKind {
     Classic,

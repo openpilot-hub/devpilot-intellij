@@ -1,6 +1,6 @@
-package com.zhongan.devpilot.completions.common.requests
+package com.zhongan.devpilot.completions.requests
 
-import com.zhongan.devpilot.completions.common.general.CompletionKind
+import com.zhongan.devpilot.completions.general.CompletionKind
 
 data class CompletionMetadata(
 //        val origin: CompletionOrigin? = null,

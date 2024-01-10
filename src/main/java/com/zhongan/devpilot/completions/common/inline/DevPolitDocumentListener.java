@@ -1,8 +1,8 @@
 package com.zhongan.devpilot.completions.common.inline;
 
 import static com.intellij.openapi.editor.EditorModificationUtil.checkModificationAllowed;
-import static com.zhongan.devpilot.completions.common.general.DependencyContainer.instanceOfSuggestionsModeService;
-import static com.zhongan.devpilot.completions.common.general.DependencyContainer.singletonOfInlineCompletionHandler;
+import static com.zhongan.devpilot.completions.general.DependencyContainer.instanceOfSuggestionsModeService;
+import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
 
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
@@ -14,9 +14,9 @@ import com.intellij.openapi.editor.EditorKind;
 import com.intellij.openapi.editor.event.BulkAwareDocumentListener;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.wm.IdeFocusManager;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
-import com.zhongan.devpilot.completions.common.general.EditorUtils;
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.capabilities.SuggestionsModeService;
+import com.zhongan.devpilot.completions.general.EditorUtils;
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
 import java.awt.*;
 
