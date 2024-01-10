@@ -1,22 +1,15 @@
 package com.zhongan.devpilot.completions.common.inline;
 
-import static com.zhongan.devpilot.completions.common.general.Utils.*;
-import static com.zhongan.devpilot.completions.common.prediction.CompletionFacade.getFilename;
-
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.util.ObjectUtils;
-//import com.zhongan.devpilot.common.binary.BinaryRequestFacade;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
-import com.zhongan.devpilot.completions.common.binary.requests.notifications.shown.SuggestionDroppedReason;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsMode;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.common.general.CompletionKind;
-import com.zhongan.devpilot.completions.common.general.CompletionsEventSender;
-import com.zhongan.devpilot.completions.common.general.DependencyContainer;
 import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.common.inline.render.GraphicsUtilsKt;
 import com.zhongan.devpilot.completions.common.completions.CompletionUtils;
@@ -30,33 +23,21 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
-import com.zhongan.devpilot.completions.common.binary.requests.notifications.shown.SuggestionDroppedReason;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsMode;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
-import com.zhongan.devpilot.completions.common.completions.CompletionUtils;
 import com.zhongan.devpilot.completions.common.general.*;
-import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
-import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class InlineCompletionHandler {
   private final CompletionFacade completionFacade;
-//  private final BinaryRequestFacade binaryRequestFacade;
   private final SuggestionsModeService suggestionsModeService;
-  private final CompletionsEventSender completionsEventSender =
-      DependencyContainer.instanceOfCompletionsEventSender();
   private Future<?> lastDebounceRenderTask = null;
   private Future<?> lastFetchAndRenderTask = null;
   private Future<?> lastFetchInBackgroundTask = null;
 
   public InlineCompletionHandler(
       CompletionFacade completionFacade,
-//      BinaryRequestFacade binaryRequestFacade,
       SuggestionsModeService suggestionsModeService) {
     this.completionFacade = completionFacade;
-//    this.binaryRequestFacade = binaryRequestFacade;
     this.suggestionsModeService = suggestionsModeService;
   }
 
@@ -77,17 +58,6 @@ public class InlineCompletionHandler {
     if (!cachedCompletions.isEmpty()) {
       renderCachedCompletions(editor, offset, tabSize, cachedCompletions, completionAdjustment);
       return;
-    }
-
-    if (lastShownSuggestion != null) {
-      SuggestionDroppedReason reason =
-          completionAdjustment instanceof LookAheadCompletionAdjustment
-              ? SuggestionDroppedReason.ScrollLookAhead
-              : SuggestionDroppedReason.UserNotTypedAsSuggested;
-      // if the last rendered suggestion is not null, this means that the user has typed something
-      // that doesn't match the previous suggestion - hence the reason is `UserNotTypedAsSuggested`
-      // (or `ScrollLookAhead` if the suggestion's source is from look-ahead).
-      completionsEventSender.sendSuggestionDropped(editor, lastShownSuggestion, reason);
     }
 
     ApplicationManager.getApplication()

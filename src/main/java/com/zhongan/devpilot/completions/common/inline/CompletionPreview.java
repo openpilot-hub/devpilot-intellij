@@ -14,8 +14,6 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
-import com.zhongan.devpilot.completions.common.inline.listeners.InlineCaretListener;
-import com.zhongan.devpilot.completions.common.inline.listeners.InlineFocusListener;
 import com.zhongan.devpilot.completions.common.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import java.util.List;
@@ -32,9 +30,6 @@ public class CompletionPreview implements Disposable {
   private final int offset;
   private int currentIndex = 0;
 
-  private final InlineCaretListener caretListener;
-  private final InlineFocusListener focusListener;
-
   private CompletionPreview(
           @NotNull Editor editor, List<DevPilotCompletion> completions, int offset) {
     this.editor = editor;
@@ -43,8 +38,6 @@ public class CompletionPreview implements Disposable {
     EditorUtil.disposeWithEditor(editor, this);
 
     devPilotInlay = DevPilotInlay.create(this);
-    caretListener = new InlineCaretListener(this);
-    focusListener = new InlineFocusListener(this);
   }
 
   public static DevPilotCompletion createInstance(

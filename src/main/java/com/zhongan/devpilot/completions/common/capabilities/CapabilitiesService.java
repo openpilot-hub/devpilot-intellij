@@ -1,14 +1,10 @@
 package com.zhongan.devpilot.completions.common.capabilities;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.components.Service;
 import com.intellij.openapi.components.ServiceManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.messages.MessageBus;
-import com.zhongan.devpilot.completions.config.Config;
-//import com.zhongan.devpilot.common.lifecycle.CapabilitiesStateSingleton;
 import java.util.Optional;
 
 public class CapabilitiesService {
@@ -22,9 +18,6 @@ public class CapabilitiesService {
   private Thread refreshLoop = null;
   private final MessageBus messageBus = ApplicationManager.getApplication().getMessageBus();
 
-//  private final BinaryRequestFacade binaryRequestFacade =
-//      DependencyContainer.instanceOfBinaryRequestFacade();
-
   public static CapabilitiesService getInstance() {
     return ServiceManager.getService(CapabilitiesService.class);
   }
@@ -34,28 +27,13 @@ public class CapabilitiesService {
   }
 
   public boolean isCapabilityEnabled(Capability capability) {
-    if (Config.IS_SELF_HOSTED) {
-      return true;
-    }
+    //TODO 从配置中读取
     return true;
-
 //    return CapabilitiesStateSingleton.getInstance()
 //        .getOptional()
 //        .map(c -> c.isEnabled(capability))
 //        .orElse(false);
   }
-
-/*  public boolean isReady() {
-    return CapabilitiesStateSingleton.getInstance()
-        .getOptional()
-        .map(Capabilities::isReady)
-        .orElse(false);
-  }*/
-
-//  public void forceRefreshCapabilities() {
-//    binaryRequestFacade.executeRequest(new RefreshRemotePropertiesRequest());
-//    fetchCapabilities();
-//  }
 
   private synchronized void scheduleFetchCapabilitiesTask() {
     if (refreshLoop == null) {
@@ -97,30 +75,4 @@ public class CapabilitiesService {
     }
   }
 
-/*  private void fetchCapabilities() {
-    final JsonElement jsonResponse = binaryRequestFacade.executeRequest(new CapabilitiesRequest());
-    if (jsonResponse == null) {
-      return;
-    }
-    final CapabilitiesResponse capabilitiesResponse =
-        GSON.fromJson(jsonResponse, CapabilitiesResponse.class);
-
-    if (capabilitiesResponse.getEnabledFeatures() != null) {
-      setCapabilities(capabilitiesResponse);
-    }
-  }*/
-
-/*  private void setCapabilities(CapabilitiesResponse capabilitiesResponse) {
-    Set<Capability> newCapabilities = new HashSet<>();
-    List<Capability> capabilities = capabilitiesResponse.getEnabledFeatures();
-
-    if (capabilities != null) {
-      capabilities.stream().filter(Objects::nonNull).forEach(newCapabilities::add);
-    }
-
-    Capabilities newCapabilitiesState =
-        new Capabilities(newCapabilities, capabilitiesResponse.getExperimentSource());
-
-    CapabilitiesStateSingleton.getInstance().set(newCapabilitiesState);
-  }*/
 }

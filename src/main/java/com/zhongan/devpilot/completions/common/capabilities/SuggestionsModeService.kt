@@ -1,11 +1,8 @@
 package com.zhongan.devpilot.completions.common.capabilities
 
-import com.intellij.openapi.util.registry.Registry
-import com.zhongan.devpilot.completions.config.Config
-
 class SuggestionsModeService {
     fun getSuggestionMode(): SuggestionsMode {
-        if (Config.IS_SELF_HOSTED) {
+        if (CapabilitiesService.getInstance().isCapabilityEnabled(Capability.INLINE_SUGGESTIONS)) {
             return SuggestionsMode.INLINE
         }
 
@@ -23,14 +20,6 @@ class SuggestionsModeService {
 //        ) {
 //            return SuggestionsMode.HYBRID
 //        }
-
-        if (CapabilitiesService.getInstance().isCapabilityEnabled(
-                Capability.INLINE_SUGGESTIONS
-            )
-        ) {
-            return SuggestionsMode.INLINE
-        }
-
         return SuggestionsMode.AUTOCOMPLETE
     }
 }

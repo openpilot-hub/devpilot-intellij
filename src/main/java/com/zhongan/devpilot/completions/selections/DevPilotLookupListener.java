@@ -81,7 +81,6 @@ public class DevPilotLookupListener implements LookupListener {
       selection.suggestionRenderingMode = RenderingMode.AUTOCOMPLETE;
       SelectionUtil.addSuggestionsCount(selection, suggestions);
 
-//      binaryRequestFacade.executeRequest(new SetStateBinaryRequest(selection));
       //TODO 调用openAI
 //      this.statusBarUpdater.updateStatusBar();
     }

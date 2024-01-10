@@ -9,7 +9,6 @@ import com.intellij.psi.codeStyle.CommonCodeStyleSettings
 import com.intellij.ui.JBColor
 import com.zhongan.devpilot.completions.common.capabilities.CapabilitiesService
 import com.zhongan.devpilot.completions.common.capabilities.Capability
-import com.zhongan.devpilot.completions.common.userSettings.AppSettingsState
 import java.awt.Color
 import java.awt.Font
 import java.awt.font.TextAttribute

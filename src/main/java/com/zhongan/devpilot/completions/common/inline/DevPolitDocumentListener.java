@@ -14,23 +14,17 @@ import com.intellij.openapi.editor.EditorKind;
 import com.intellij.openapi.editor.event.BulkAwareDocumentListener;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.wm.IdeFocusManager;
-import com.zhongan.devpilot.completions.common.binary.requests.notifications.shown.SuggestionDroppedReason;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
-import com.zhongan.devpilot.completions.common.general.CompletionsEventSender;
-import com.zhongan.devpilot.completions.common.general.DependencyContainer;
 import com.zhongan.devpilot.completions.common.general.EditorUtils;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import java.awt.*;
 
-import com.zhongan.devpilot.completions.common.inline.*;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class DevPolitDocumentListener implements BulkAwareDocumentListener {
   private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
   private final SuggestionsModeService suggestionsModeService = instanceOfSuggestionsModeService();
-  private final CompletionsEventSender completionsEventSender =
-      DependencyContainer.instanceOfCompletionsEventSender();
 
   @Override
   public void documentChangedNonBulk(@NotNull DocumentEvent event) {
@@ -73,8 +67,8 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
     }
 
     if (event.getNewLength() < 1) {
-      completionsEventSender.sendSuggestionDropped(
-          editor, lastShownCompletion, SuggestionDroppedReason.TextDeletion);
+/*      completionsEventSender.sendSuggestionDropped(
+          editor, lastShownCompletion, SuggestionDroppedReason.TextDeletion);*/
       return true;
     }
 

@@ -1,15 +1,13 @@
 package com.zhongan.devpilot.completions.common.inline
 
-import com.intellij.codeInsight.lookup.LookupElement
 import com.intellij.codeInsight.lookup.LookupEvent
 import com.intellij.codeInsight.lookup.LookupListener
-import com.zhongan.devpilot.completions.common.binary.requests.notifications.shown.SuggestionDroppedReason
+//import com.zhongan.devpilot.completions.common.binary.requests.notifications.shown.SuggestionDroppedReason
 import com.zhongan.devpilot.completions.common.general.DependencyContainer
 import java.util.concurrent.atomic.AtomicBoolean
 
 class DevPolitInlineLookupListener : LookupListener {
     private val handler = DependencyContainer.singletonOfInlineCompletionHandler()
-    private val completionsEventSender = DependencyContainer.instanceOfCompletionsEventSender()
 
     override fun currentItemChanged(event: LookupEvent) {
         var eventItem = event.item;
@@ -32,16 +30,16 @@ class DevPolitInlineLookupListener : LookupListener {
         // a weird case when the user presses ctrl+enter but the popup isn't rendered
         // (DocumentChanged event is triggered in this case)
         if (userPrefix == completionInFocus) {
-            completionsEventSender.sendSuggestionDropped(
+/*            completionsEventSender.sendSuggestionDropped(
                 editor, lastShownSuggestion, SuggestionDroppedReason.ScrollLookAhead
-            )
+            )*/
             return
         }
 
         if (userPrefix != null && !completionInFocus!!.startsWith(userPrefix)) {
-            completionsEventSender.sendSuggestionDropped(
+/*            completionsEventSender.sendSuggestionDropped(
                 editor, lastShownSuggestion, SuggestionDroppedReason.ScrollLookAhead
-            )
+            )*/
             return
         }
 

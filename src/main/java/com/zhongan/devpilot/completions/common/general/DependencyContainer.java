@@ -8,14 +8,12 @@ import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeServi
 import com.zhongan.devpilot.completions.common.inline.InlineCompletionHandler;
 import com.zhongan.devpilot.completions.common.inline.DevPolitInlineLookupListener;
 import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
-import com.zhongan.devpilot.completions.common.inline.DevPolitInlineLookupListener;
 import org.jetbrains.annotations.NotNull;
 
 public class DependencyContainer {
   private static InlineCompletionHandler INLINE_COMPLETION_HANDLER_INSTANCE = null;
 
   private static SuggestionsModeService suggestionsModeServiceMock = null;
-  private static CompletionsEventSender completionsEventSender = null;
   private static Gson gson = instanceOfGson();
 
   public static synchronized Gson instanceOfGson() {
@@ -51,13 +49,6 @@ public class DependencyContainer {
       return suggestionsModeServiceMock;
     }
     return new SuggestionsModeService();
-  }
-
-  public static CompletionsEventSender instanceOfCompletionsEventSender() {
-    if (completionsEventSender != null) {
-      return completionsEventSender;
-    }
-    return new CompletionsEventSender();
   }
 
   @NotNull

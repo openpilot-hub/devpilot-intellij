@@ -2,7 +2,6 @@ package com.zhongan.devpilot.completions.common.inline
 
 import com.zhongan.devpilot.completions.common.capabilities.CapabilitiesService
 import com.zhongan.devpilot.completions.common.capabilities.Capability
-import com.zhongan.devpilot.completions.common.userSettings.AppSettingsState
 
 object DebounceUtils {
     private val DEBOUNCE_CAPABILITIES = arrayListOf(
