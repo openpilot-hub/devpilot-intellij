@@ -125,10 +125,18 @@ public class CompletionFacade {
     final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
 
     //todo 模拟请求返回值 代码待删除
-    String test = "{\"old_prefix\":\"\",\"results\":[{\"new_prefix\":\""+response+"\",\"old_suffix\":\"\",\"new_suffix\":\"\",\"completion_metadata\":{\"origin\":\"LOCAL\",\"detail\":\" 13%\"}}],\"user_message\":[],\"docs\":[]}";
+    String test = "{\"old_prefix\":\"\",\"results\":[{\"new_prefix\":\""+response+"\",\"old_suffix\":\"\",\"new_suffix\":\"\"}],\"user_message\":[],\"docs\":[]}";
+//    AutocompleteResponse autocompleteResponse = new Gson().fromJson(test, AutocompleteResponse.class);
 
-    Gson GSON = new Gson();
-    AutocompleteResponse autocompleteResponse = GSON.fromJson(test, AutocompleteResponse.class);
+    AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
+    autocompleteResponse.old_prefix = "";
+    autocompleteResponse.user_message = new String[]{};
+    ResultEntry resultEntry = new ResultEntry();
+    resultEntry.new_prefix = response;
+    resultEntry.old_suffix = "";
+    resultEntry.new_suffix = "";
+    ResultEntry[] resultEntries = new ResultEntry[]{resultEntry};
+    autocompleteResponse.results = resultEntries;
 
     if (completionAdjustment != null) {
       completionAdjustment.adjustResponse(autocompleteResponse);

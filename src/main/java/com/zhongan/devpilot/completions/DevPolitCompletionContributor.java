@@ -19,9 +19,7 @@ import com.zhongan.devpilot.completions.common.inline.render.GraphicsUtilsKt;
 import com.zhongan.devpilot.completions.common.completions.CompletionUtils;
 import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
-import com.zhongan.devpilot.completions.config.Config;
 import com.zhongan.devpilot.completions.prediction.DevPilotWeigher;
-//import com.zhongan.devpilot.completions.selections.DevPilotLookupListener;
 import com.zhongan.devpilot.completions.selections.DevPilotLookupListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -161,16 +159,7 @@ public class DevPolitCompletionContributor extends CompletionContributor {
                   public void renderElement(
                       LookupElement element, LookupElementPresentation presentation) {
                     DevPilotCompletion lookupElement = (DevPilotCompletion) element.getObject();
-                    String typeText = (locked ? LIMITATION_SYMBOL : "");
-                    if (Config.DISPLAY_ORIGIN
-                        && lookupElement.completionMetadata != null
-                        && lookupElement.completionMetadata.getOrigin() != null) {
-                      typeText += lookupElement.completionMetadata.getOrigin().toString();
-                    } else {
-                      typeText += StaticConfig.BRAND_NAME;
-                    }
-
-                    presentation.setTypeText(typeText);
+                    presentation.setTypeText(StaticConfig.BRAND_NAME);
                     presentation.setItemTextBold(false);
                     presentation.setStrikeout(
                         lookupElement.completionMetadata != null

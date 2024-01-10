@@ -10,7 +10,7 @@ public enum SuggestionsMode {
 
     @Override
     public boolean isPopupEnabled() {
-      return true;
+      return false;
     }
   },
   AUTOCOMPLETE {
