@@ -152,6 +152,6 @@ public class CompletionPreview implements Disposable {
 
         editor.getDocument().insertString(cursorOffset, suffix);
         editor.getCaretModel().moveToOffset(startOffset + completion.newPrefix.length());
-        //TODO 接受率异步上报
+        //TODO accept completion upload
     }
 }

@@ -68,8 +68,6 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
         }
 
         if (event.getNewLength() < 1) {
-/*      completionsEventSender.sendSuggestionDropped(
-          editor, lastShownCompletion, SuggestionDroppedReason.TextDeletion);*/
             return true;
         }
 

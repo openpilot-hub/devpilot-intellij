@@ -112,7 +112,7 @@ public class CompletionFacade {
             completionAdjustment.adjustRequest(req);
         }
 
-        //TODO 修改为调用openai或者返回值
+        //TODO Simulating request response. Calling OpenAI or returning a value.
         DevPilotMessage devPilotMessage = new DevPilotMessage();
         devPilotMessage.setRole("user");
         String content = EditorActionEnum.CODE_COMPLETIONS.getPrompt().replace("{{offsetCode}}", document.getText(new TextRange(req.before.lastIndexOf("\n"), offset))).replace("{{selectedCode}}", getFileExtension(editor) + " " + req.before);
@@ -123,11 +123,6 @@ public class CompletionFacade {
             add(devPilotMessage);
         }});
         final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
-
-        //todo 模拟请求返回值 代码待删除
-        String test = "{\"old_prefix\":\"\",\"results\":[{\"new_prefix\":\"" + response + "\",\"old_suffix\":\"\",\"new_suffix\":\"\"}],\"user_message\":[],\"docs\":[]}";
-//    AutocompleteResponse autocompleteResponse = new Gson().fromJson(test, AutocompleteResponse.class);
-
         AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
         autocompleteResponse.old_prefix = "";
         autocompleteResponse.user_message = new String[]{};
@@ -141,7 +136,6 @@ public class CompletionFacade {
         if (completionAdjustment != null) {
             completionAdjustment.adjustResponse(autocompleteResponse);
         }
-
         return autocompleteResponse;
     }
 

@@ -1,8 +1,5 @@
 package com.zhongan.devpilot.completions.common.capabilities;
 
-/**
- * This is being crated according to the Capabilities from the binary
- */
 public enum SuggestionsMode {
     INLINE {
         @Override
@@ -13,28 +10,6 @@ public enum SuggestionsMode {
         @Override
         public boolean isPopupEnabled() {
             return false;
-        }
-    },
-    AUTOCOMPLETE {
-        @Override
-        public boolean isInlineEnabled() {
-            return false;
-        }
-
-        @Override
-        public boolean isPopupEnabled() {
-            return true;
-        }
-    },
-    HYBRID {
-        @Override
-        public boolean isInlineEnabled() {
-            return true;
-        }
-
-        @Override
-        public boolean isPopupEnabled() {
-            return true;
         }
     };
 

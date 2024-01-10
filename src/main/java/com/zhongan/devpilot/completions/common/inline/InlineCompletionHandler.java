@@ -190,7 +190,7 @@ public class InlineCompletionHandler {
      * type is not LookAhead
      */
     private boolean shouldRemovePopupCompletions(@NotNull CompletionAdjustment completionAdjustment) {
-        return suggestionsModeService.getSuggestionMode() == SuggestionsMode.HYBRID
+        return suggestionsModeService.getSuggestionMode() != SuggestionsMode.INLINE
                 && completionAdjustment.getSuggestionTrigger() != SuggestionTrigger.LookAhead;
     }
 
