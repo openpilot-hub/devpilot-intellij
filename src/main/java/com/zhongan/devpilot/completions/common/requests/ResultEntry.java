@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.binary.requests.autocomplete;
+package com.zhongan.devpilot.completions.common.requests;
 
 import com.zhongan.devpilot.completions.common.general.CompletionKind;
 import com.zhongan.devpilot.completions.common.completions.Completion;

@@ -1,8 +1,8 @@
 package com.zhongan.devpilot.completions.common.inline
 
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteRequest
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry
+import com.zhongan.devpilot.completions.common.requests.AutocompleteRequest
+import com.zhongan.devpilot.completions.common.requests.AutocompleteResponse
+import com.zhongan.devpilot.completions.common.requests.ResultEntry
 import com.zhongan.devpilot.completions.common.general.SuggestionTrigger
 import java.util.Arrays
 

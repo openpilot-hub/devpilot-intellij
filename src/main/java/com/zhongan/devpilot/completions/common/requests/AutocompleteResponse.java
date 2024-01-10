@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.common.binary.requests.autocomplete;
+package com.zhongan.devpilot.completions.common.requests;
 
 public class AutocompleteResponse {
     public String old_prefix;

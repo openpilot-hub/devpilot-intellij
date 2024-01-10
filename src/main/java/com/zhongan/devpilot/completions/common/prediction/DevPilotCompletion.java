@@ -3,7 +3,7 @@ package com.zhongan.devpilot.completions.common.prediction;
 import com.intellij.codeInsight.lookup.impl.LookupCellRenderer;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.containers.FList;
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.CompletionMetadata;
+import com.zhongan.devpilot.completions.common.requests.CompletionMetadata;
 import com.zhongan.devpilot.completions.common.general.CompletionKind;
 import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.common.completions.Completion;

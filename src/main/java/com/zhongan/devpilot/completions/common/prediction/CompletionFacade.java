@@ -2,22 +2,20 @@ package com.zhongan.devpilot.completions.common.prediction;
 
 import static com.zhongan.devpilot.completions.common.general.StaticConfig.*;
 
-import com.google.gson.Gson;
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.openapi.application.ex.ApplicationUtil;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.progress.ProgressManager;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteRequest;
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry;
+import com.zhongan.devpilot.completions.common.requests.AutocompleteRequest;
+import com.zhongan.devpilot.completions.common.requests.AutocompleteResponse;
+import com.zhongan.devpilot.completions.common.requests.ResultEntry;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.common.inline.CompletionAdjustment;
 
@@ -26,19 +24,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
-import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
-import com.zhongan.devpilot.completions.common.inline.CompletionAdjustment;
 import com.zhongan.devpilot.enums.EditorActionEnum;
-import com.zhongan.devpilot.enums.SessionTypeEnum;
-import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
-import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindow;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
-import com.zhongan.devpilot.integrations.llms.entity.PerformanceCheckResponse;
-import org.apache.commons.httpclient.util.DateUtil;
-import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 

@@ -6,7 +6,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.util.ObjectUtils;
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
+import com.zhongan.devpilot.completions.common.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsMode;
 import com.zhongan.devpilot.completions.common.capabilities.SuggestionsModeService;
 import com.zhongan.devpilot.completions.common.general.CompletionKind;

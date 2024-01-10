@@ -1,12 +1,9 @@
-package com.zhongan.devpilot.completions.common.binary.requests.autocomplete;
-
-import static java.util.Collections.singletonMap;
+package com.zhongan.devpilot.completions.common.requests;
 
 import com.google.gson.annotations.SerializedName;
-import com.zhongan.devpilot.completions.common.binary.BinaryRequest;
 import org.jetbrains.annotations.Nullable;
 
-public class AutocompleteRequest implements BinaryRequest<AutocompleteResponse> {
+public class AutocompleteRequest {
     public String before;
     public String after;
     public String filename;
@@ -32,9 +29,5 @@ public class AutocompleteRequest implements BinaryRequest<AutocompleteResponse> 
 
     @SerializedName(value = "sdk_path")
     public String sdkPath;
-
-    public Class<AutocompleteResponse> response() {
-        return AutocompleteResponse.class;
-    }
 
 }

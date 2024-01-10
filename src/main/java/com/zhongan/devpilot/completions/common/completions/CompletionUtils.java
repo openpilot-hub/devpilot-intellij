@@ -8,7 +8,7 @@ import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry;
+import com.zhongan.devpilot.completions.common.requests.ResultEntry;
 import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import org.jetbrains.annotations.NotNull;
