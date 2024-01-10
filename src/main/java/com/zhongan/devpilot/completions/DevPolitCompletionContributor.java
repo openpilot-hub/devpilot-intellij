@@ -5,7 +5,6 @@ import com.intellij.codeInsight.lookup.*;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.util.messages.MessageBus;
-import com.zhongan.devpilot.completions.common.capabilities.RenderingMode;
 import com.zhongan.devpilot.completions.common.completions.Completion;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.AutocompleteResponse;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.ResultEntry;
@@ -20,7 +19,6 @@ import com.zhongan.devpilot.completions.common.completions.CompletionUtils;
 import com.zhongan.devpilot.completions.common.prediction.CompletionFacade;
 import com.zhongan.devpilot.completions.common.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.completions.prediction.DevPilotWeigher;
-import com.zhongan.devpilot.completions.selections.DevPilotLookupListener;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -33,17 +31,12 @@ public class DevPolitCompletionContributor extends CompletionContributor {
   private final CompletionFacade completionFacade =
       DependencyContainer.instanceOfCompletionFacade();
 
-  private final DevPilotLookupListener devPolitLookupListener = instanceOfDevPolitLookupListener();
   private final DevPolitInlineLookupListener devpolitInlineLookupListener =
       DependencyContainer.instanceOfDevPolitInlineLookupListener();
   private final SuggestionsModeService suggestionsModeService =
       DependencyContainer.instanceOfSuggestionsModeService();
   private final MessageBus messageBus = ApplicationManager.getApplication().getMessageBus();
   private boolean isLocked;
-
-  public static synchronized DevPilotLookupListener instanceOfDevPolitLookupListener() {
-    return new DevPilotLookupListener();
-  }
 
   @Override
   public void fillCompletionVariants(
@@ -62,7 +55,8 @@ public class DevPolitCompletionContributor extends CompletionContributor {
     if (!suggestionsModeService.getSuggestionMode().isPopupEnabled()) {
       return;
     }
-    registerLookupListener(parameters, devPolitLookupListener);
+    //select do not register
+//    registerLookupListener(parameters, devPolitLookupListener);
     //TODO 调用openai gayway
     AutocompleteResponse completions =
         this.completionFacade.retrieveCompletions(

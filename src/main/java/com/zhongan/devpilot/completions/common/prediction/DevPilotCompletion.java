@@ -5,14 +5,11 @@ import com.intellij.openapi.util.TextRange;
 import com.intellij.util.containers.FList;
 import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.CompletionMetadata;
 import com.zhongan.devpilot.completions.common.general.CompletionKind;
-import com.zhongan.devpilot.completions.common.general.CompletionOrigin;
 import com.zhongan.devpilot.completions.common.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.common.completions.Completion;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.zhongan.devpilot.completions.common.binary.requests.autocomplete.CompletionMetadata;
-import com.zhongan.devpilot.completions.common.completions.Completion;
 import org.jetbrains.annotations.Nullable;
 
 public class DevPilotCompletion implements Completion {
@@ -60,11 +57,6 @@ public class DevPilotCompletion implements Completion {
         this.cursorSuffix,
         this.completionMetadata,
         this.suggestionTrigger);
-  }
-
-  @Nullable
-  public CompletionOrigin getOrigin() {
-    return completionMetadata != null ? completionMetadata.getOrigin() : null;
   }
 
   public String getSuffix() {
