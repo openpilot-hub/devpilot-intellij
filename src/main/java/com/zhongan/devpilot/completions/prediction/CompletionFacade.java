@@ -31,7 +31,6 @@ public class CompletionFacade {
 
     public CompletionFacade() {
     }
-
     @Nullable
     public AutocompleteResponse retrieveCompletions(
             @NotNull Editor editor,
