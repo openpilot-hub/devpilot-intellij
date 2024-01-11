@@ -66,12 +66,12 @@
         </group>
 
         <!--TODO 修改action group模式-->
-        <action class="com.zhongan.devpilot.completions.common.inline.AcceptDevPilotInlineCompletionAction"
+        <action class="com.zhongan.devpilot.completions.inline.AcceptDevPilotInlineCompletionAction"
                 id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
             <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
         </action>
         <!--no default shortcut for this action, users should configure manually-->
-        <action class="com.zhongan.devpilot.completions.common.inline.ManualTriggerDevPilotInlineCompletionAction"
+        <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
                 id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
         </action>
 

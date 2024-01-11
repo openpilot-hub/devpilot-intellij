@@ -60,9 +60,9 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
             DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
         Document document = event.getDocument();
 
-//        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
-//            return true;
-//        }
+/*        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
+            return true;
+        }*/
 
         if (event.getNewLength() < 1) {
             return true;

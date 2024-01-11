@@ -28,18 +28,14 @@ import org.jetbrains.annotations.Nullable;
 
 public class InlineCompletionHandler {
     private final CompletionFacade completionFacade;
-//    private final SuggestionsModeService suggestionsModeService;
     private Future<?> lastDebounceRenderTask = null;
     private Future<?> lastFetchAndRenderTask = null;
     private Future<?> lastFetchInBackgroundTask = null;
 
     public InlineCompletionHandler(
             CompletionFacade completionFacade
-//            ,
-//            SuggestionsModeService suggestionsModeService
     ) {
         this.completionFacade = completionFacade;
-//        this.suggestionsModeService = suggestionsModeService;
     }
 
     public void retrieveAndShowCompletion(
@@ -190,8 +186,7 @@ public class InlineCompletionHandler {
      * type is not LookAhead
      */
 /*    private boolean shouldRemovePopupCompletions(@NotNull CompletionAdjustment completionAdjustment) {
-        return SuggestionsMode.INLINE != SuggestionsMode.INLINE
-//        return suggestionsModeService.getSuggestionMode() != SuggestionsMode.INLINE
+        return suggestionsModeService.getSuggestionMode() != SuggestionsMode.INLINE
                 && completionAdjustment.getSuggestionTrigger() != SuggestionTrigger.LookAhead;
     }*/
 

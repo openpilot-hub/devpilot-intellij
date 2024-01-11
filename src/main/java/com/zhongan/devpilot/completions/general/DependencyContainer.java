@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DependencyContainer {
     private static InlineCompletionHandler INLINE_COMPLETION_HANDLER_INSTANCE = null;
+
     private static Gson gson = instanceOfGson();
 
     public static synchronized Gson instanceOfGson() {
@@ -30,6 +31,8 @@ public class DependencyContainer {
             INLINE_COMPLETION_HANDLER_INSTANCE =
                     new InlineCompletionHandler(
                             instanceOfCompletionFacade()
+/*                            ,
+                            instanceOfSuggestionsModeService()*/
                     );
         }
 

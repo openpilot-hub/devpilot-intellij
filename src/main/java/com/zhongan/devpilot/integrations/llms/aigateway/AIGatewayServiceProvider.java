@@ -42,11 +42,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     public String chatCompletion(DevPilotChatCompletionRequest chatCompletionRequest) {
         var ssoEnum = ZaSsoUtils.getSsoEnum();
 
-/*
         if (!ZaSsoUtils.isLogin(ssoEnum)) {
             return "Chat completion failed: please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
         }
-*/
 
         var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
         var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
