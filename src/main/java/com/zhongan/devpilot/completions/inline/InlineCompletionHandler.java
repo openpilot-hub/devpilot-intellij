@@ -26,6 +26,8 @@ import com.zhongan.devpilot.completions.general.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.zhongan.devpilot.completions.general.StaticConfig.DEBOUNCE_VALUE_900;
+
 public class InlineCompletionHandler {
     private final CompletionFacade completionFacade;
     private Future<?> lastDebounceRenderTask = null;
@@ -95,32 +97,17 @@ public class InlineCompletionHandler {
                 Utils.executeThread(
                         () -> {
                             CompletionTracker.updateLastCompletionRequestTime(editor);
-//                            List<DevPilotCompletion> beforeDebounceCompletions =
-//                                    retrieveInlineCompletion(editor, offset, tabSize, completionAdjustment);
-                            long debounceTimeMs =
-/*                                    beforeDebounceCompletions.isEmpty()
-                                            ? logAndGetEmptySuggestionsDebounceMillis()
-                                            : CompletionTracker.calcDebounceTimeMs(editor, completionAdjustment);*/
-                            logAndGetEmptySuggestionsDebounceMillis() > 0 ? 5000
-                                    : CompletionTracker.calcDebounceTimeMs(editor, completionAdjustment);
-
-/*                            if (debounceTimeMs == 0) {
-                                rerenderCompletion(
-                                        editor,
-                                        beforeDebounceCompletions,
-                                        offset,
-                                        modificationStamp,
-                                        completionAdjustment);
-                                return;
-                            }*/
-
+                            long debounceTimeMs = CompletionTracker.calcDebounceTimeMs(editor, completionAdjustment);
+                            if (debounceTimeMs == 0) {
+                                debounceTimeMs = logAndGetEmptySuggestionsDebounceMillis();
+                            }
                             refetchCompletionsAfterDebounce(
                                     editor, tabSize, offset, modificationStamp, completionAdjustment, debounceTimeMs);
                         });
     }
 
     private int logAndGetEmptySuggestionsDebounceMillis() {
-        int debounceMillis = 800;
+        int debounceMillis = 900;
         Logger.getInstance(getClass())
                 .info(
                         String.format(

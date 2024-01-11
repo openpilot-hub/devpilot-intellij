@@ -66,11 +66,10 @@
                 id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
             <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
         </action>
-        <!--support alt + /-->
+        <!--support alt + B-->
         <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
                 id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
-<!--            <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>-->
-            <keyboard-shortcut first-keystroke="alt SLASH" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>
         </action>
 
     </actions>
