@@ -48,9 +48,6 @@
 
         <editorFactoryDocumentListener implementation="com.zhongan.devpilot.completions.inline.DevPolitDocumentListener"/>
 
-        <completion.contributor language="any"
-                                implementationClass="com.zhongan.devpilot.completions.DevPolitInlineCompletionContributor"
-                                order="first"/>
     </extensions>
 
     <resource-bundle>messages.devpilot</resource-bundle>

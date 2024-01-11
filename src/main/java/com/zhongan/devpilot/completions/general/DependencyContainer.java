@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
-import com.zhongan.devpilot.completions.inline.DevPolitInlineLookupListener;
 import com.zhongan.devpilot.completions.inline.InlineCompletionHandler;
 import com.zhongan.devpilot.completions.prediction.CompletionFacade;
 import org.jetbrains.annotations.NotNull;
@@ -22,17 +21,11 @@ public class DependencyContainer {
         return gson;
     }
 
-    public static synchronized DevPolitInlineLookupListener instanceOfDevPolitInlineLookupListener() {
-        return new DevPolitInlineLookupListener();
-    }
-
     public static InlineCompletionHandler singletonOfInlineCompletionHandler() {
         if (INLINE_COMPLETION_HANDLER_INSTANCE == null) {
             INLINE_COMPLETION_HANDLER_INSTANCE =
                     new InlineCompletionHandler(
                             instanceOfCompletionFacade()
-/*                            ,
-                            instanceOfSuggestionsModeService()*/
                     );
         }
 
