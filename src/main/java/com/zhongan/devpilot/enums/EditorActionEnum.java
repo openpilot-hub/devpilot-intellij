@@ -35,7 +35,8 @@ public enum EditorActionEnum {
 
     CODE_COMPLETIONS("devpilot.action.completions", "code completions",
             "You are a code completion service, please try to auto complete the code below at {{offsetCode}}, " +
-            "only output the code, don't try to have conversation with user.```{{selectedCode}}```");
+            "only output the code, don't try to have conversation with user.```{{selectedCode}}```\n" +
+            "The completion code returned is controlled within {{maxCompletionLength}} bytes within");
 
     private final String label;
 

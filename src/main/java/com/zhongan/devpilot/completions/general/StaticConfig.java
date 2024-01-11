@@ -21,7 +21,7 @@ public class StaticConfig {
     public static final int MAX_CHAT_COMPLETION_MESSAGE_LENGTH = 100000;
 
     // 100 B
-    public static final int MIN_CHAT_COMPLETION_MESSAGE_LENGTH = 100;
+    public static final String MIN_CHAT_COMPLETION_MESSAGE_LENGTH = "200";
 
     public static final int MIN_USER_PREFIX_LENGTH = 5;
 

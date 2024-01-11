@@ -1,8 +1,5 @@
 package com.zhongan.devpilot.completions.prediction;
 
-import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_OFFSET;
-import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
-
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -27,6 +24,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionReque
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static com.zhongan.devpilot.completions.general.StaticConfig.*;
 
 public class CompletionFacade {
 
@@ -83,7 +82,10 @@ public class CompletionFacade {
         //TODO Simulating request response. Calling OpenAI or returning a value.
         DevPilotMessage devPilotMessage = new DevPilotMessage();
         devPilotMessage.setRole("user");
-        String content = EditorActionEnum.CODE_COMPLETIONS.getPrompt().replace("{{offsetCode}}", document.getText(new TextRange(req.before.lastIndexOf("\n"), offset))).replace("{{selectedCode}}", getFileExtension(editor) + " " + req.before);
+        String content = EditorActionEnum.CODE_COMPLETIONS.getPrompt()
+                .replace("{{offsetCode}}", document.getText(new TextRange(req.before.lastIndexOf("\n"), offset)))
+                .replace("{{selectedCode}}", getFileExtension(editor) + " " + req.before)
+                .replace("{{maxCompletionLength}}", MIN_CHAT_COMPLETION_MESSAGE_LENGTH);
         devPilotMessage.setContent(content);
         DevPilotChatCompletionRequest request = new DevPilotChatCompletionRequest();
         // list content support update
