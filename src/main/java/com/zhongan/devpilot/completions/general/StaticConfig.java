@@ -28,5 +28,8 @@ public class StaticConfig {
     public static final int MIN_DELAY_TIME_IN_MILLIS = 6000;
     public static final int MAX_DELAY_TIME_IN_MILLIS = 12000;
 
+    public static final Long DEBOUNCE_VALUE_900 = 900L;
+    public static final Long DEBOUNCE_VALUE_1500 = 1500L;
+    public static final Long DEBOUNCE_VALUE_3000 = 3000L;
 
 }

@@ -29,6 +29,7 @@ import javax.swing.*;
 public class DevPolitDocumentListener implements BulkAwareDocumentListener {
     private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
 
+/*
     private Timer delayTimer;
     private AtomicBoolean isTimerRunning;
 
@@ -37,6 +38,7 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
         delayTimer.setRepeats(false);
         isTimerRunning = new AtomicBoolean(false);
     }
+*/
 
 
     @Override
@@ -59,23 +61,21 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
             return;
         }
 
-        if (isTimerRunning.get()) {
-            delayTimer.restart();
-        } else {
-            isTimerRunning.set(true);
-            delayTimer.addActionListener(e -> {
+//        if (isTimerRunning.get()) {
+//            delayTimer.restart();
+//        } else {
+//            isTimerRunning.set(true);
+//            delayTimer.addActionListener(e -> {
                 handler.retrieveAndShowCompletion(
                         editor,
                         offset,
                         lastShownCompletion,
                         event.getNewFragment().toString(),
                         new DefaultCompletionAdjustment());
-                isTimerRunning.set(false);
-            });
-            delayTimer.start();
-        }
-
-
+//                isTimerRunning.set(false);
+//            });
+//            delayTimer.start();
+//        }
     }
 
     private boolean shouldIgnoreChange(

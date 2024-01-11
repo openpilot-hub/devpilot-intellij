@@ -40,7 +40,6 @@
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
-        <applicationService serviceImplementation="com.zhongan.devpilot.completions.capabilities.CapabilitiesService"/>
 
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
 
@@ -67,9 +66,11 @@
                 id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
             <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
         </action>
-        <!--no default shortcut for this action, users should configure manually-->
+        <!--support alt + /-->
         <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
                 id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
+<!--            <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>-->
+            <keyboard-shortcut first-keystroke="alt SLASH" keymap="$default"/>
         </action>
 
     </actions>

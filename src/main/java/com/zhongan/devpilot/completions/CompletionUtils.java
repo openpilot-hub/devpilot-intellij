@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.completions.completions;
+package com.zhongan.devpilot.completions;
 
 import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
 import static com.zhongan.devpilot.completions.general.Utils.endsWithADot;
@@ -64,7 +64,7 @@ public class CompletionUtils {
                 index,
                 cursorPrefix,
                 cursorSuffix,
-                result.completion_metadata,
+                result.completionMetadata,
                 suggestionTrigger);
     }
 

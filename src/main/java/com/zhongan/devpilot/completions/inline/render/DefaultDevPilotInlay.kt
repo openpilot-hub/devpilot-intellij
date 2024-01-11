@@ -93,7 +93,7 @@ class DefaultDevPilotInlay(parent: Disposable) : DevPilotInlay {
             completion: DevPilotCompletion,
             offset: Int
     ) {
-        val blockElementRenderer = BlockElementRenderer(editor, lines, completion.completionMetadata?.deprecated
+        val blockElementRenderer = BlockElementRenderer(editor, lines, completion.completionMetadata ?.isDeprecated
                 ?: false)
         val element = editor
                 .inlayModel
@@ -156,7 +156,7 @@ class DefaultDevPilotInlay(parent: Disposable) : DevPilotInlay {
     ): Inlay<InlineElementRenderer>? {
         val element = editor
                 .inlayModel
-                .addInlineElement(offset, true, InlineElementRenderer(editor, before, completion.completionMetadata?.deprecated
+                .addInlineElement(offset, true, InlineElementRenderer(editor, before, completion.completionMetadata?.isDeprecated
                         ?: false))
 
         element?.let { Disposer.register(this, it) }

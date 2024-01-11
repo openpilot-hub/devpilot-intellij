@@ -6,7 +6,7 @@ import com.intellij.util.containers.FList;
 import com.zhongan.devpilot.completions.requests.CompletionMetadata;
 import com.zhongan.devpilot.completions.general.CompletionKind;
 import com.zhongan.devpilot.completions.general.SuggestionTrigger;
-import com.zhongan.devpilot.completions.completions.Completion;
+import com.zhongan.devpilot.completions.Completion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -86,10 +86,10 @@ public class DevPilotCompletion implements Completion {
 
     @Override
     public boolean isSnippet() {
-        if (this.completionMetadata == null || this.completionMetadata.getCompletion_kind() == null) {
+        if (this.completionMetadata == null || this.completionMetadata.getCompletionKind() == null) {
             return false;
         }
 
-        return this.completionMetadata.getCompletion_kind() == CompletionKind.Snippet;
+        return this.completionMetadata.getCompletionKind() == CompletionKind.Snippet;
     }
 }

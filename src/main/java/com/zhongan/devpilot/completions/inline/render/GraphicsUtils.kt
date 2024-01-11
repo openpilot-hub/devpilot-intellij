@@ -7,8 +7,6 @@ import com.intellij.openapi.editor.colors.EditorFontType
 import com.intellij.psi.PsiDocumentManager
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings
 import com.intellij.ui.JBColor
-import com.zhongan.devpilot.completions.capabilities.CapabilitiesService
-import com.zhongan.devpilot.completions.capabilities.Capability
 import java.awt.Color
 import java.awt.Font
 import java.awt.font.TextAttribute
@@ -74,9 +72,7 @@ fun getTabSize(editor: Editor): Int? {
 }
 
 private fun failIfAlpha() {
-    val isAlpha = CapabilitiesService.getInstance().isCapabilityEnabled(
-            Capability.ALPHA
-    )
+    val isAlpha = true;
     val isTest = ApplicationManager.getApplication().isUnitTestMode
     if (isAlpha && !isTest) {
         Logger.getInstance("GraphicsUtils")

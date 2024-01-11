@@ -10,7 +10,7 @@ import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.general.CompletionKind;
 import com.zhongan.devpilot.completions.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.inline.render.GraphicsUtilsKt;
-import com.zhongan.devpilot.completions.completions.CompletionUtils;
+import com.zhongan.devpilot.completions.CompletionUtils;
 import com.zhongan.devpilot.completions.prediction.CompletionFacade;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
@@ -95,14 +95,16 @@ public class InlineCompletionHandler {
                 Utils.executeThread(
                         () -> {
                             CompletionTracker.updateLastCompletionRequestTime(editor);
-                            List<DevPilotCompletion> beforeDebounceCompletions =
-                                    retrieveInlineCompletion(editor, offset, tabSize, completionAdjustment);
+//                            List<DevPilotCompletion> beforeDebounceCompletions =
+//                                    retrieveInlineCompletion(editor, offset, tabSize, completionAdjustment);
                             long debounceTimeMs =
-                                    beforeDebounceCompletions.isEmpty()
+/*                                    beforeDebounceCompletions.isEmpty()
                                             ? logAndGetEmptySuggestionsDebounceMillis()
-                                            : CompletionTracker.calcDebounceTimeMs(editor, completionAdjustment);
+                                            : CompletionTracker.calcDebounceTimeMs(editor, completionAdjustment);*/
+                            logAndGetEmptySuggestionsDebounceMillis() > 0 ? 5000
+                                    : CompletionTracker.calcDebounceTimeMs(editor, completionAdjustment);
 
-                            if (debounceTimeMs == 0) {
+/*                            if (debounceTimeMs == 0) {
                                 rerenderCompletion(
                                         editor,
                                         beforeDebounceCompletions,
@@ -110,7 +112,7 @@ public class InlineCompletionHandler {
                                         modificationStamp,
                                         completionAdjustment);
                                 return;
-                            }
+                            }*/
 
                             refetchCompletionsAfterDebounce(
                                     editor, tabSize, offset, modificationStamp, completionAdjustment, debounceTimeMs);
@@ -181,15 +183,6 @@ public class InlineCompletionHandler {
         return isModificationStampChanged || isOffsetChanged;
     }
 
-    /**
-     * remove popup completions when 1. the suggestion mode is HYBRID and 2. the completion adjustment
-     * type is not LookAhead
-     */
-/*    private boolean shouldRemovePopupCompletions(@NotNull CompletionAdjustment completionAdjustment) {
-        return suggestionsModeService.getSuggestionMode() != SuggestionsMode.INLINE
-                && completionAdjustment.getSuggestionTrigger() != SuggestionTrigger.LookAhead;
-    }*/
-
     private List<DevPilotCompletion> retrieveInlineCompletion(
             @NotNull Editor editor,
             int offset,
@@ -233,7 +226,7 @@ public class InlineCompletionHandler {
 
     private void afterCompletionShown(DevPilotCompletion completion, Editor editor) {
         if (completion.completionMetadata == null) return;
-        Boolean isCached = completion.completionMetadata.is_cached();
+        Boolean isCached = completion.completionMetadata.getIsCached();
 
         try {
             String filename =
@@ -243,21 +236,17 @@ public class InlineCompletionHandler {
                         .warn("Could not send SuggestionShown request. the filename is null");
                 return;
             }
-//      this.binaryRequestFacade.executeRequest(
-//          new SuggestionShownRequest(
-//              completion.getNetLength(), filename, completion.completionMetadata));
             //TODO 调用openAI
 
-            if (completion.completionMetadata.getCompletion_kind() == CompletionKind.Snippet
+            if (completion.completionMetadata.getCompletionKind() == CompletionKind.Snippet
                     && !isCached) {
-                Map<String, Object> context = completion.completionMetadata.getSnippet_context();
+                Map<String, Object> context = completion.completionMetadata.getSnippetContext();
                 if (context == null) {
                     Logger.getInstance(getClass())
                             .warn("Could not send SnippetShown request. intent is null");
                     return;
                 }
 
-//        this.binaryRequestFacade.executeRequest(new SnippetShownRequest(filename, context));
                 //TODO 调用openAI
             }
         } catch (RuntimeException e) {

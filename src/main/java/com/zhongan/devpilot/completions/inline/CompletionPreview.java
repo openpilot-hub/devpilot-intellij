@@ -150,6 +150,7 @@ public class CompletionPreview implements Disposable {
             editor.getDocument().deleteString(cursorOffset, cursorOffset + completion.oldSuffix.length());
         }
 
+        //TODO 代码自动格式化
         editor.getDocument().insertString(cursorOffset, suffix);
         editor.getCaretModel().moveToOffset(startOffset + completion.newPrefix.length());
         //TODO accept completion upload
