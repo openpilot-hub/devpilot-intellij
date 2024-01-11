@@ -29,18 +29,6 @@ import javax.swing.*;
 public class DevPolitDocumentListener implements BulkAwareDocumentListener {
     private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
 
-/*
-    private Timer delayTimer;
-    private AtomicBoolean isTimerRunning;
-
-    public DevPolitDocumentListener() {
-        delayTimer = new Timer(MIN_DELAY_TIME_IN_MILLIS, null);
-        delayTimer.setRepeats(false);
-        isTimerRunning = new AtomicBoolean(false);
-    }
-*/
-
-
     @Override
     public void documentChangedNonBulk(@NotNull DocumentEvent event) {
         //TODO Get from settings page
@@ -61,21 +49,13 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
             return;
         }
 
-//        if (isTimerRunning.get()) {
-//            delayTimer.restart();
-//        } else {
-//            isTimerRunning.set(true);
-//            delayTimer.addActionListener(e -> {
-                handler.retrieveAndShowCompletion(
-                        editor,
-                        offset,
-                        lastShownCompletion,
-                        event.getNewFragment().toString(),
-                        new DefaultCompletionAdjustment());
-//                isTimerRunning.set(false);
-//            });
-//            delayTimer.start();
-//        }
+        handler.retrieveAndShowCompletion(
+                editor,
+                offset,
+                lastShownCompletion,
+                event.getNewFragment().toString(),
+                new DefaultCompletionAdjustment());
+
     }
 
     private boolean shouldIgnoreChange(
