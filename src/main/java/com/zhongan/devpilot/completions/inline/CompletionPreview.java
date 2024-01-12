@@ -1,6 +1,6 @@
 package com.zhongan.devpilot.completions.inline;
 
-import static com.zhongan.devpilot.completions.inline.CompletionPreviewUtilsKt.*;
+import static com.zhongan.devpilot.completions.inline.CompletionPreviewUtils.*;
 
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
