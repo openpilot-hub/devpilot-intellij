@@ -26,8 +26,6 @@ import com.zhongan.devpilot.completions.general.Utils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.zhongan.devpilot.completions.general.StaticConfig.DEBOUNCE_VALUE_900;
-
 public class InlineCompletionHandler {
     private final CompletionFacade completionFacade;
     private Future<?> lastDebounceRenderTask = null;

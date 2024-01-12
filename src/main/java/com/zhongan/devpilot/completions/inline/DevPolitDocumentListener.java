@@ -2,13 +2,11 @@ package com.zhongan.devpilot.completions.inline;
 
 import static com.intellij.openapi.editor.EditorModificationUtil.checkModificationAllowed;
 import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
-import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_DELAY_TIME_IN_MILLIS;
 
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorKind;
@@ -19,12 +17,9 @@ import com.zhongan.devpilot.completions.general.EditorUtils;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
 import java.awt.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-
-import javax.swing.*;
 
 public class DevPolitDocumentListener implements BulkAwareDocumentListener {
     private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
