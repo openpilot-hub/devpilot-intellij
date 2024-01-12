@@ -53,7 +53,7 @@ public class InlineCompletionHandler {
         ObjectUtils.doIfNotNull(lastDebounceRenderTask, task -> task.cancel(false));
 
         List<DevPilotCompletion> cachedCompletions =
-                InlineCompletionCache.getInstance().retrieveAdjustedCompletions(editor, userInput);
+                InlineCompletionCache.instance.retrieveAdjustedCompletions(editor, userInput);
         if (!cachedCompletions.isEmpty()) {
             renderCachedCompletions(editor, offset, tabSize, cachedCompletions, completionAdjustment);
             return;
@@ -197,7 +197,7 @@ public class InlineCompletionHandler {
         if (completions.isEmpty()) {
             return;
         }
-        InlineCompletionCache.getInstance().store(editor, completions);
+        InlineCompletionCache.instance.store(editor, completions);
 
         DevPilotCompletion displayedCompletion =
                 CompletionPreview.createInstance(editor, completions, offset);

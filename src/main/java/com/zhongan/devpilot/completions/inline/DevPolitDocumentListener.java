@@ -45,7 +45,7 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
         int offset = event.getOffset() + event.getNewLength();
 
         if (shouldIgnoreChange(event, editor, offset, lastShownCompletion)) {
-            InlineCompletionCache.getInstance().clear(editor);
+            InlineCompletionCache.instance.clear(editor);
             return;
         }
 

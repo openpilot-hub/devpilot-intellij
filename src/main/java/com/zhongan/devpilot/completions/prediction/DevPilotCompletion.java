@@ -92,4 +92,64 @@ public class DevPilotCompletion implements Completion {
 
         return this.completionMetadata.getCompletionKind() == CompletionKind.Snippet;
     }
+
+    public String getOldPrefix() {
+        return oldPrefix;
+    }
+
+    public String getNewPrefix() {
+        return newPrefix;
+    }
+
+    public String getOldSuffix() {
+        return oldSuffix;
+    }
+
+    public String getNewSuffix() {
+        return newSuffix;
+    }
+
+    public int getIndex() {
+        return index;
+    }
+
+    public String getCursorPrefix() {
+        return cursorPrefix;
+    }
+
+    public void setCursorPrefix(String cursorPrefix) {
+        this.cursorPrefix = cursorPrefix;
+    }
+
+    public String getCursorSuffix() {
+        return cursorSuffix;
+    }
+
+    public void setCursorSuffix(String cursorSuffix) {
+        this.cursorSuffix = cursorSuffix;
+    }
+
+    public SuggestionTrigger getSuggestionTrigger() {
+        return suggestionTrigger;
+    }
+
+    public void setSuggestionTrigger(SuggestionTrigger suggestionTrigger) {
+        this.suggestionTrigger = suggestionTrigger;
+    }
+
+    public CompletionMetadata getCompletionMetadata() {
+        return completionMetadata;
+    }
+
+    public void setCompletionMetadata(CompletionMetadata completionMetadata) {
+        this.completionMetadata = completionMetadata;
+    }
+
+    public String getFullSuffix() {
+        return fullSuffix;
+    }
+
+    public void setFullSuffix(String fullSuffix) {
+        this.fullSuffix = fullSuffix;
+    }
 }
