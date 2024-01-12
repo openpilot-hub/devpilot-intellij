@@ -46,6 +46,8 @@
         <notificationGroup id="DevPilot Notification Group" displayType="BALLOON" key="notification.group.devpilot"/>
 
         <editorFactoryDocumentListener implementation="com.zhongan.devpilot.completions.inline.DevPolitDocumentListener"/>
+        <editorActionHandler action="EditorEscape" implementationClass="com.zhongan.devpilot.completions.inline.EscapeHandler"
+                             id="previewEscape" order="before hide-hints"/>
 
     </extensions>
 

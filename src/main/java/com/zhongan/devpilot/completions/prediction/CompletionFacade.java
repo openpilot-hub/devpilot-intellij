@@ -92,10 +92,10 @@ public class CompletionFacade {
         request.setMessages(new ArrayList<>() {{
             add(devPilotMessage);
         }});
-//        final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
+        final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
         //TODO 本地模拟，缺钱
 //        final String response = "public static void quickSort(int[] arr, int low, int high) {\n    if (low < high) {\n        int pivotIndex = partition(arr, low, high);\n        quickSort(arr, low, pivotIndex - 1);\n        quickSort(arr, pivotIndex + 1, high);\n    }\n}\n\nprivate static int partition(int[] arr, int low, int high) {\n    int pivot = arr[high];\n    int i = low - 1;\n    for (int j = low; j < high; j++) {\n        if (arr[j] < pivot) {\n            i++;\n            swap(arr, i, j);\n        }\n    }\n    swap(arr, i + 1, high);\n    return i + 1;\n}\n\nprivate static void swap(int[] arr, int i, int j) {\n    int temp = arr[i];\n    arr[i] = arr[j];\n    arr[j] = temp;\n}\n";
-        final String response = "当前时间：" + System.currentTimeMillis() + "";
+//        final String response = "date：" + DateFormatUtils.format(new Date(), "yyyy-mm-dd HH:mm:ss");
         AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
         autocompleteResponse.old_prefix = "";
         autocompleteResponse.user_message = new String[]{};
