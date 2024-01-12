@@ -107,7 +107,7 @@ public class InlineCompletionHandler {
     }
 
     private int logAndGetEmptySuggestionsDebounceMillis() {
-        int debounceMillis = 900;
+        int debounceMillis = 300;
         Logger.getInstance(getClass())
                 .info(
                         String.format(

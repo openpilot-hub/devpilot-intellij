@@ -12,7 +12,7 @@ public class DebounceUtils {
     }
 
     public static Long getDebounceMsFromCapabilities() {
-        return StaticConfig.DEBOUNCE_VALUE_3000;
+        return StaticConfig.DEBOUNCE_VALUE_300;
     }
 
 }
