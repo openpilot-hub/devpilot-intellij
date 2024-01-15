@@ -12,8 +12,6 @@ import java.awt.Rectangle;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.zhongan.devpilot.completions.inline.render.InlineStringProcessorKt.determineRendering;
-
 public class DefaultDevPilotInlay implements DevPilotInlay {
     private Inlay<?> beforeSuffixInlay;
     private Inlay<?> afterSuffixInlay;
@@ -78,7 +76,7 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
         String firstLine = lines.get(0);
         int endIndex = firstLine.indexOf(completion.getOldSuffix());
 
-        RenderingInstructions instructions = determineRendering(lines, completion.getOldSuffix());
+        RenderingInstructions instructions = InlineStringProcessor.determineRendering(lines, completion.getOldSuffix());
 
         switch (instructions.getFirstLine()) {
             case NoSuffix:
@@ -98,7 +96,7 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
                 break;
         }
 
-        if (instructions.getShouldRenderBlock()) {
+        if (instructions.shouldRenderBlock()) {
             List<String> otherLines = lines.stream().skip(1).collect(Collectors.toList());
             renderBlock(otherLines, editor, completion, offset);
         }
