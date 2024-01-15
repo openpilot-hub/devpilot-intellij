@@ -5,11 +5,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
-import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
-import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
-import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
-import com.zhongan.devpilot.settings.state.LanguageSettingsState;
-import com.zhongan.devpilot.settings.state.OpenAISettingsState;
+import com.zhongan.devpilot.settings.state.*;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
@@ -47,6 +43,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
         var selectedSso = serviceForm.getSelectedZaSso();
+        var completionEnable = CompletionSettingsState.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !selectedModel.getName().equals(settings.getSelectedModel())
@@ -56,7 +53,8 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !serviceForm.getOpenAIKey().equals(openAISettings.getPrivateKey())
                 || !serviceForm.getCodeLlamaBaseHost().equals(codeLlamaSettings.getModelHost())
                 || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex())
-                || !selectedSso.getName().equals(aiGatewaySettings.getSelectedSso());
+                || !selectedSso.getName().equals(aiGatewaySettings.getSelectedSso())
+                || !settingsComponent.getCompletionEnabled() == (completionEnable);
     }
 
     @Override
@@ -85,6 +83,9 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         aiGatewaySettings.setModelBaseHost(selectedModelType.getName(), serviceForm.getAIGatewayBaseHost());
         aiGatewaySettings.setSelectedModel(selectedModelType.getName());
         aiGatewaySettings.setSelectedSso(selectedSso.getName());
+
+        CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
+        completionSettings.setEnable(settingsComponent.getCompletionEnabled());
     }
 
     @Override

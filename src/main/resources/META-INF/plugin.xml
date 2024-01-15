@@ -40,6 +40,7 @@
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CompletionSettingsState"/>
 
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
 
@@ -63,7 +64,6 @@
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
 
-        <!--TODO 修改action group模式-->
         <action class="com.zhongan.devpilot.completions.inline.AcceptDevPilotInlineCompletionAction"
                 id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
             <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>

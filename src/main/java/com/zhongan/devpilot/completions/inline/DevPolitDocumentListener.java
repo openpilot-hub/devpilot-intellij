@@ -18,6 +18,7 @@ import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 
 import java.awt.*;
 
+import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,10 +27,9 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
 
     @Override
     public void documentChangedNonBulk(@NotNull DocumentEvent event) {
-        //TODO Get from settings page
-/*    if (!CompletionsState.INSTANCE.isCompletionsEnabled()) {
-      return;
-    }*/
+        if (!CompletionSettingsState.getInstance().getEnable()) {
+            return;
+        }
         Document document = event.getDocument();
         Editor editor = getActiveEditor(document);
         if (editor == null || !EditorUtils.isMainEditor(editor)) {
