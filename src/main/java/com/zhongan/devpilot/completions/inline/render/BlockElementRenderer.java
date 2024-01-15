@@ -25,7 +25,7 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
     public int calcWidthInPixels(Inlay inlay) {
         String firstLine = blockText.get(0);
         return editor.getContentComponent()
-                .getFontMetrics(GraphicsUtils.INSTANCE.getFont(editor, deprecated)).stringWidth(firstLine);
+                .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(firstLine);
     }
 
     @Override
@@ -35,9 +35,9 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
 
     @Override
     public void paint(Inlay inlay, Graphics g, Rectangle targetRegion, TextAttributes textAttributes) {
-        color = color != null ? color : GraphicsUtils.INSTANCE.getColor();
+        color = color != null ? color : GraphicsUtils.getColor();
         g.setColor(color);
-        g.setFont(GraphicsUtils.INSTANCE.getFont(editor, deprecated));
+        g.setFont(GraphicsUtils.getFont(editor, deprecated));
 
         for (int i = 0; i < blockText.size(); i++) {
             String line = blockText.get(i);

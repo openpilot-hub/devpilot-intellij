@@ -9,7 +9,7 @@ import com.intellij.util.ObjectUtils;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.general.CompletionKind;
 import com.zhongan.devpilot.completions.general.SuggestionTrigger;
-import com.zhongan.devpilot.completions.inline.render.GraphicsUtilsKt;
+import com.zhongan.devpilot.completions.inline.render.GraphicsUtils;
 import com.zhongan.devpilot.completions.CompletionUtils;
 import com.zhongan.devpilot.completions.prediction.CompletionFacade;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
@@ -44,7 +44,7 @@ public class InlineCompletionHandler {
             @Nullable DevPilotCompletion lastShownSuggestion,
             @NotNull String userInput,
             @NotNull CompletionAdjustment completionAdjustment) {
-        Integer tabSize = GraphicsUtilsKt.getTabSize(editor);
+        Integer tabSize = GraphicsUtils.getTabSize(editor);
 
         ObjectUtils.doIfNotNull(lastFetchInBackgroundTask, task -> task.cancel(false));
         ObjectUtils.doIfNotNull(lastFetchAndRenderTask, task -> task.cancel(false));

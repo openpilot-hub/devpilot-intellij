@@ -24,7 +24,7 @@ class InlineElementRenderer implements EditorCustomElementRenderer {
     @Override
     public int calcWidthInPixels(Inlay inlay) {
         return editor.getContentComponent()
-                .getFontMetrics(GraphicsUtils.INSTANCE.getFont(editor, deprecated)).stringWidth(suffix);
+                .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(suffix);
     }
 
     @TestOnly
@@ -34,9 +34,9 @@ class InlineElementRenderer implements EditorCustomElementRenderer {
 
     @Override
     public void paint(Inlay inlay, Graphics g, Rectangle targetRegion, TextAttributes textAttributes) {
-        color = color != null ? color : GraphicsUtils.INSTANCE.getColor();
+        color = color != null ? color : GraphicsUtils.getColor();
         g.setColor(color);
-        g.setFont(GraphicsUtils.INSTANCE.getFont(editor, deprecated));
+        g.setFont(GraphicsUtils.getFont(editor, deprecated));
         g.drawString(suffix, targetRegion.x, targetRegion.y + editor.getAscent());
     }
 }
