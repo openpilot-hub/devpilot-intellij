@@ -1,14 +1,11 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
     id("java")
     id("org.jetbrains.intellij") version "1.12.0"
     id("checkstyle")
-    kotlin("jvm") version "1.9.22"
 }
 
 group = "com.zhongan"
-version = "2.1.0"
+version = "2.2.0"
 
 repositories {
     mavenCentral()
@@ -30,7 +27,6 @@ dependencies {
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
     testImplementation("org.mockito:mockito-core:5.7.0")
-    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks {
@@ -61,12 +57,4 @@ tasks {
         configFile = rootProject.file("checkstyle.xml")
         maxWarnings = 0
     }
-}
-val compileKotlin: KotlinCompile by tasks
-compileKotlin.kotlinOptions {
-    jvmTarget = "11"
-}
-val compileTestKotlin: KotlinCompile by tasks
-compileTestKotlin.kotlinOptions {
-    jvmTarget = "11"
 }

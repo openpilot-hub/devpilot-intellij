@@ -4,15 +4,20 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorCustomElementRenderer;
 import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.markup.TextAttributes;
-import org.jetbrains.annotations.TestOnly;
+
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
-class InlineElementRenderer implements EditorCustomElementRenderer {
+import org.jetbrains.annotations.TestOnly;
+
+public class InlineElementRenderer implements EditorCustomElementRenderer {
     private final Editor editor;
+
     private final String suffix;
+
     private boolean deprecated;
+
     private Color color;
 
     public InlineElementRenderer(Editor editor, String suffix, boolean deprecated) {
@@ -24,7 +29,7 @@ class InlineElementRenderer implements EditorCustomElementRenderer {
     @Override
     public int calcWidthInPixels(Inlay inlay) {
         return editor.getContentComponent()
-                .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(suffix);
+            .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(suffix);
     }
 
     @TestOnly

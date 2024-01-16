@@ -9,12 +9,17 @@ import com.intellij.openapi.editor.event.EditorMouseMotionListener;
 import com.intellij.openapi.util.Disposer;
 import com.zhongan.devpilot.completions.inline.render.DevPilotInlay;
 
-import java.awt.*;
+import java.awt.Component;
+import java.awt.Point;
+import java.awt.Rectangle;
+
 import javax.swing.SwingUtilities;
 
 public class CompletionPreviewInsertionHint implements Disposable, EditorMouseMotionListener {
     private Editor editor;
+
     private DevPilotInlay inlay;
+
     private String suffix;
 
     public CompletionPreviewInsertionHint(Editor editor, DevPilotInlay inlay, String suffix) {
@@ -39,12 +44,12 @@ public class CompletionPreviewInsertionHint implements Disposable, EditorMouseMo
         }
 
         InlineKeybindingHintUtil.createAndShowHint(
-                editor,
-                SwingUtilities.convertPoint(
-                        (Component) mouseEvent.getSource(),
-                        point,
-                        editor.getComponent().getRootPane().getLayeredPane()
-                )
+            editor,
+            SwingUtilities.convertPoint(
+                (Component) mouseEvent.getSource(),
+                point,
+                editor.getComponent().getRootPane().getLayeredPane()
+            )
         );
     }
 

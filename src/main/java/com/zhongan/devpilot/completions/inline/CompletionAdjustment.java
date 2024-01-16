@@ -1,12 +1,13 @@
 package com.zhongan.devpilot.completions.inline;
 
+import com.zhongan.devpilot.completions.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.requests.AutocompleteRequest;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
-import com.zhongan.devpilot.completions.general.SuggestionTrigger;
 
 public abstract class CompletionAdjustment {
-    public abstract SuggestionTrigger getSuggestionTrigger();
     private boolean cachedOnly = false;
+
+    public abstract SuggestionTrigger getSuggestionTrigger();
 
     public CompletionAdjustment withCachedOnly() {
         cachedOnly = true;

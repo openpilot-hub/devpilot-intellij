@@ -6,10 +6,11 @@ import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSerializer;
 import com.zhongan.devpilot.completions.inline.InlineCompletionHandler;
 import com.zhongan.devpilot.completions.prediction.CompletionFacade;
+
 import org.jetbrains.annotations.NotNull;
 
 public class DependencyContainer {
-    private static InlineCompletionHandler INLINE_COMPLETION_HANDLER_INSTANCE = null;
+    private static InlineCompletionHandler inlineCompletionHandler = null;
 
     private static Gson gson = instanceOfGson();
 
@@ -22,14 +23,14 @@ public class DependencyContainer {
     }
 
     public static InlineCompletionHandler singletonOfInlineCompletionHandler() {
-        if (INLINE_COMPLETION_HANDLER_INSTANCE == null) {
-            INLINE_COMPLETION_HANDLER_INSTANCE =
+        if (inlineCompletionHandler == null) {
+            inlineCompletionHandler =
                     new InlineCompletionHandler(
                             instanceOfCompletionFacade()
                     );
         }
 
-        return INLINE_COMPLETION_HANDLER_INSTANCE;
+        return inlineCompletionHandler;
     }
 
     @NotNull

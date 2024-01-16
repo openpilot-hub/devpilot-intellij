@@ -1,8 +1,5 @@
 package com.zhongan.devpilot.completions.inline;
 
-import static com.intellij.openapi.editor.EditorModificationUtil.checkModificationAllowed;
-import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
-
 import com.intellij.ide.DataManager;
 import com.intellij.openapi.actionSystem.CommonDataKeys;
 import com.intellij.openapi.actionSystem.DataContext;
@@ -15,15 +12,39 @@ import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.wm.IdeFocusManager;
 import com.zhongan.devpilot.completions.general.EditorUtils;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
-
-import java.awt.*;
-
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
+
+import java.awt.Component;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.intellij.openapi.editor.EditorModificationUtil.checkModificationAllowed;
+import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
+
 public class DevPolitDocumentListener implements BulkAwareDocumentListener {
     private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
+
+    @Nullable
+    private static Editor getActiveEditor(@NotNull Document document) {
+        if (!ApplicationManager.getApplication().isDispatchThread()) {
+            return null;
+        }
+
+        Component focusOwner = IdeFocusManager.getGlobalInstance().getFocusOwner();
+        DataContext dataContext = DataManager.getInstance().getDataContext(focusOwner);
+        // ignore caret placing when exiting
+        Editor activeEditor =
+            ApplicationManager.getApplication().isDisposed()
+                ? null
+                : CommonDataKeys.EDITOR.getData(dataContext);
+
+        if (activeEditor != null && activeEditor.getDocument() != document) {
+            activeEditor = null;
+        }
+
+        return activeEditor;
+    }
 
     @Override
     public void documentChangedNonBulk(@NotNull DocumentEvent event) {
@@ -40,21 +61,21 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
         int offset = event.getOffset() + event.getNewLength();
 
         if (shouldIgnoreChange(event, editor, offset, lastShownCompletion)) {
-            InlineCompletionCache.instance.clear(editor);
+            InlineCompletionCache.INSTANCE.clear(editor);
             return;
         }
 
         handler.retrieveAndShowCompletion(
-                editor,
-                offset,
-                lastShownCompletion,
-                event.getNewFragment().toString(),
-                new DefaultCompletionAdjustment());
+            editor,
+            offset,
+            lastShownCompletion,
+            event.getNewFragment().toString(),
+            new DefaultCompletionAdjustment());
 
     }
 
     private boolean shouldIgnoreChange(
-            DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
+        DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
         Document document = event.getDocument();
 
 /*        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
@@ -66,7 +87,7 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
         }
 
         if (!editor.getEditorKind().equals(EditorKind.MAIN_EDITOR)
-                && !ApplicationManager.getApplication().isUnitTestMode()) {
+            && !ApplicationManager.getApplication().isUnitTestMode()) {
             return true;
         }
 
@@ -77,27 +98,6 @@ public class DevPolitDocumentListener implements BulkAwareDocumentListener {
         }
 
         return !CompletionUtils.isValidDocumentChange(document, offset, event.getOffset());
-    }
-
-    @Nullable
-    private static Editor getActiveEditor(@NotNull Document document) {
-        if (!ApplicationManager.getApplication().isDispatchThread()) {
-            return null;
-        }
-
-        Component focusOwner = IdeFocusManager.getGlobalInstance().getFocusOwner();
-        DataContext dataContext = DataManager.getInstance().getDataContext(focusOwner);
-        // ignore caret placing when exiting
-        Editor activeEditor =
-                ApplicationManager.getApplication().isDisposed()
-                        ? null
-                        : CommonDataKeys.EDITOR.getData(dataContext);
-
-        if (activeEditor != null && activeEditor.getDocument() != document) {
-            activeEditor = null;
-        }
-
-        return activeEditor;
     }
 
 }

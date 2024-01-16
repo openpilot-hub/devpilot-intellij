@@ -1,7 +1,5 @@
 package com.zhongan.devpilot.completions.inline;
 
-import static com.zhongan.devpilot.completions.inline.CompletionPreviewUtils.*;
-
 import com.intellij.openapi.Disposable;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Caret;
@@ -22,18 +20,24 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.zhongan.devpilot.completions.inline.CompletionPreviewUtils.shouldRemoveSuffix;
+
 public class CompletionPreview implements Disposable {
     private static final Key<CompletionPreview> INLINE_COMPLETION_PREVIEW =
-            Key.create("INLINE_COMPLETION_PREVIEW");
+        Key.create("INLINE_COMPLETION_PREVIEW");
 
     public final Editor editor;
-    private DevPilotInlay devPilotInlay;
-    private List<DevPilotCompletion> completions;
+
     private final int offset;
+
+    private DevPilotInlay devPilotInlay;
+
+    private List<DevPilotCompletion> completions;
+
     private int currentIndex = 0;
 
     private CompletionPreview(
-            @NotNull Editor editor, List<DevPilotCompletion> completions, int offset) {
+        @NotNull Editor editor, List<DevPilotCompletion> completions, int offset) {
         this.editor = editor;
         this.completions = completions;
         this.offset = offset;
@@ -43,7 +47,7 @@ public class CompletionPreview implements Disposable {
     }
 
     public static DevPilotCompletion createInstance(
-            Editor editor, List<DevPilotCompletion> completions, int offset) {
+        Editor editor, List<DevPilotCompletion> completions, int offset) {
         CompletionPreview preview = getInstance(editor);
 
         if (preview != null) {
@@ -95,8 +99,8 @@ public class CompletionPreview implements Disposable {
         DevPilotCompletion completion = completions.get(currentIndex);
 
         if (!(editor instanceof EditorImpl)
-                || editor.getSelectionModel().hasSelection()
-                || InplaceRefactoring.getActiveInplaceRenamer(editor) != null) {
+            || editor.getSelectionModel().hasSelection()
+            || InplaceRefactoring.getActiveInplaceRenamer(editor) != null) {
             return null;
         }
 

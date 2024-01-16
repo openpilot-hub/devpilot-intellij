@@ -9,14 +9,16 @@ import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.impl.status.EditorBasedWidget;
 import com.intellij.util.Consumer;
 import com.zhongan.devpilot.DevPilotIcons;
+
+import java.awt.event.MouseEvent;
+
+import javax.swing.Icon;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import javax.swing.*;
-import java.awt.event.MouseEvent;
-
 public class DevPolitStatusBarWidget extends EditorBasedWidget
-        implements StatusBarWidget, StatusBarWidget.MultipleTextValuesPresentation {
+    implements StatusBarWidget, StatusBarWidget.MultipleTextValuesPresentation {
     private static final String EMPTY_SYMBOL = "\u0000";
 
     public DevPolitStatusBarWidget(@NotNull Project project) {
@@ -51,15 +53,15 @@ public class DevPolitStatusBarWidget extends EditorBasedWidget
 
     private ListPopup createPopup() {
         ListPopup popup =
-                JBPopupFactory.getInstance()
-                        .createActionGroupPopup(
-                                null,
-                                StatusBarActions.buildStatusBarActionsGroup(
-                                        myStatusBar != null ? myStatusBar.getProject() : null),
-                                DataManager.getInstance()
-                                        .getDataContext(myStatusBar != null ? myStatusBar.getComponent() : null),
-                                JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
-                                true);
+            JBPopupFactory.getInstance()
+                .createActionGroupPopup(
+                    null,
+                    StatusBarActions.buildStatusBarActionsGroup(
+                        myStatusBar != null ? myStatusBar.getProject() : null),
+                    DataManager.getInstance()
+                        .getDataContext(myStatusBar != null ? myStatusBar.getComponent() : null),
+                    JBPopupFactory.ActionSelectionAid.SPEEDSEARCH,
+                    true);
         return popup;
     }
 

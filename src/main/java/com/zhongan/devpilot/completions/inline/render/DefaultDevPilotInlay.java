@@ -14,8 +14,11 @@ import java.util.stream.Collectors;
 
 public class DefaultDevPilotInlay implements DevPilotInlay {
     private Inlay<?> beforeSuffixInlay;
+
     private Inlay<?> afterSuffixInlay;
+
     private Inlay<?> blockInlay;
+
     private CompletionPreviewInsertionHint insertionHint;
 
     public DefaultDevPilotInlay(Disposable parent) {
@@ -25,8 +28,8 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
     @Override
     public Integer getOffset() {
         return beforeSuffixInlay != null ? beforeSuffixInlay.getOffset() :
-                afterSuffixInlay != null ? afterSuffixInlay.getOffset() :
-                        blockInlay != null ? blockInlay.getOffset() : null;
+            afterSuffixInlay != null ? afterSuffixInlay.getOffset() :
+                blockInlay != null ? blockInlay.getOffset() : null;
     }
 
     @Override
@@ -108,7 +111,7 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
 
     private void renderBlock(List<String> lines, Editor editor, DevPilotCompletion completion, int offset) {
         BlockElementRenderer blockElementRenderer = new BlockElementRenderer(editor, lines, completion.getCompletionMetadata() != null ?
-                completion.getCompletionMetadata().getIsDeprecated() : false);
+            completion.getCompletionMetadata().getIsDeprecated() : false);
         Inlay<?> element = editor.getInlayModel().addBlockElement(offset, true, false, 1, blockElementRenderer);
         if (element != null) {
             Disposer.register(this, element);
@@ -134,7 +137,7 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
 
     private Inlay<?> renderInline(Editor editor, String before, DevPilotCompletion completion, int offset) {
         InlineElementRenderer element = new InlineElementRenderer(editor, before, completion.getCompletionMetadata() != null ?
-                completion.getCompletionMetadata().getIsDeprecated() : false);
+            completion.getCompletionMetadata().getIsDeprecated() : false);
         Inlay<InlineElementRenderer> inlay = editor.getInlayModel().addInlineElement(offset, true, element);
         if (inlay != null) {
             Disposer.register(this, inlay);

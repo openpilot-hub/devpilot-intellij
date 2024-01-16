@@ -2,6 +2,7 @@ package com.zhongan.devpilot.completions.inline.render;
 
 public class RenderingInstructions {
     private FirstLineRendering firstLine;
+
     private boolean shouldRenderBlock;
 
     public RenderingInstructions(FirstLineRendering firstLine, boolean shouldRenderBlock) {

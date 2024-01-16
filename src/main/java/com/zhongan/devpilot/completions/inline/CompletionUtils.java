@@ -1,10 +1,8 @@
 package com.zhongan.devpilot.completions.inline;
 
-import com.intellij.openapi.util.TextRange;
-
-
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
+
 import java.util.regex.Pattern;
 
 public class CompletionUtils {
@@ -14,11 +12,10 @@ public class CompletionUtils {
         if (newOffset < 0 || previousOffset > newOffset) return false;
 
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
-        return (
-                isValidMidlinePosition(document, newOffset) &&
-                        isValidNonEmptyChange(addedText.length(), addedText) &&
-                        isSingleCharNonWhitespaceChange(addedText)
-        );
+        return
+            isValidMidlinePosition(document, newOffset) &&
+                isValidNonEmptyChange(addedText.length(), addedText) &&
+                isSingleCharNonWhitespaceChange(addedText);
     }
 
     public static boolean isValidMidlinePosition(Document document, int offset) {

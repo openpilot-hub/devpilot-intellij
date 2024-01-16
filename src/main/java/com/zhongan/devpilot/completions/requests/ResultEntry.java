@@ -1,12 +1,15 @@
 package com.zhongan.devpilot.completions.requests;
 
-import com.zhongan.devpilot.completions.general.CompletionKind;
 import com.zhongan.devpilot.completions.Completion;
+import com.zhongan.devpilot.completions.general.CompletionKind;
 
 public class ResultEntry implements Completion {
-    public String new_prefix;
-    public String old_suffix;
-    public String new_suffix;
+    public String newPrefix;
+
+    public String oldSuffix;
+
+    public String newSuffix;
+
     public CompletionMetadata completionMetadata;
 
     @Override

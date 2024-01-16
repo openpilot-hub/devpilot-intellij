@@ -13,9 +13,10 @@ import com.intellij.ui.SimpleColoredComponent;
 import com.intellij.ui.SimpleColoredText;
 import com.intellij.ui.SimpleTextAttributes;
 
-import java.awt.*;
+import java.awt.Point;
 import java.awt.event.KeyEvent;
-import javax.swing.*;
+
+import javax.swing.JComponent;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,16 +26,16 @@ public class InlineKeybindingHintUtil {
     public static void createAndShowHint(@NotNull Editor editor, @NotNull Point pos) {
         try {
             HintManagerImpl.getInstanceImpl()
-                    .showEditorHint(
-                            new LightweightHint(createInlineHintComponent()),
-                            editor,
-                            pos,
-                            HintManager.HIDE_BY_ANY_KEY | HintManager.UPDATE_BY_SCROLLING,
-                            0,
-                            false);
+                .showEditorHint(
+                    new LightweightHint(createInlineHintComponent()),
+                    editor,
+                    pos,
+                    HintManager.HIDE_BY_ANY_KEY | HintManager.UPDATE_BY_SCROLLING,
+                    0,
+                    false);
         } catch (Throwable e) {
             Logger.getInstance(InlineKeybindingHintUtil.class)
-                    .warn("Failed to show inline key bindings hints", e);
+                .warn("Failed to show inline key bindings hints", e);
         }
     }
 
@@ -45,7 +46,7 @@ public class InlineKeybindingHintUtil {
         component.setIcon(SYSTEM_ICON);
 
         SimpleColoredText coloredText =
-                new SimpleColoredText(hintText(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
+            new SimpleColoredText(hintText(), SimpleTextAttributes.REGULAR_ATTRIBUTES);
 
         coloredText.appendToComponent(component);
 
@@ -60,7 +61,7 @@ public class InlineKeybindingHintUtil {
 
     private static String getShortcutText(String actionId) {
         return StringUtil.defaultIfEmpty(
-                KeymapUtil.getFirstKeyboardShortcutText(ActionManager.getInstance().getAction(actionId)),
-                "Missing shortcut key");
+            KeymapUtil.getFirstKeyboardShortcutText(ActionManager.getInstance().getAction(actionId)),
+            "Missing shortcut key");
     }
 }

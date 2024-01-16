@@ -7,6 +7,10 @@ import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import java.awt.Rectangle;
 
 public interface DevPilotInlay extends Disposable {
+    static DevPilotInlay create(Disposable parent) {
+        return new DefaultDevPilotInlay(parent);
+    }
+
     Integer getOffset();
 
     Boolean isEmpty();
@@ -14,8 +18,4 @@ public interface DevPilotInlay extends Disposable {
     Rectangle getBounds();
 
     void render(Editor editor, DevPilotCompletion completion, int offset);
-
-    static DevPilotInlay create(Disposable parent) {
-        return new DefaultDevPilotInlay(parent);
-    }
 }

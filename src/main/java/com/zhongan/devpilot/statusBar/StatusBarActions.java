@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.statusBar;
 
-import com.intellij.openapi.actionSystem.*;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
@@ -20,17 +21,17 @@ public class StatusBarActions {
     private static DumbAwareAction createCompletionsAction() {
         if (CompletionSettingsState.getInstance().getEnable()) {
             return DumbAwareAction.create(
-                    DevPilotMessageBundle.get("devpilot.settings.service.code.completion.disabled.desc"),
-                    event -> {
-                        CompletionSettingsState.getInstance().setEnable(false);
-                    }
+                DevPilotMessageBundle.get("devpilot.settings.service.code.completion.disabled.desc"),
+                event -> {
+                    CompletionSettingsState.getInstance().setEnable(false);
+                }
             );
         } else {
             return DumbAwareAction.create(
-                    DevPilotMessageBundle.get("devpilot.settings.service.code.completion.enable.desc"),
-                    event -> {
-                        CompletionSettingsState.getInstance().setEnable(true);
-                    }
+                DevPilotMessageBundle.get("devpilot.settings.service.code.completion.enable.desc"),
+                event -> {
+                    CompletionSettingsState.getInstance().setEnable(true);
+                }
             );
         }
     }

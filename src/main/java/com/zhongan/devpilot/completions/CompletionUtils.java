@@ -1,18 +1,19 @@
 package com.zhongan.devpilot.completions;
 
-import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
-import static com.zhongan.devpilot.completions.general.Utils.endsWithADot;
-
 import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.util.TextRange;
-import com.zhongan.devpilot.completions.requests.ResultEntry;
 import com.zhongan.devpilot.completions.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.completions.requests.ResultEntry;
+
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
+import static com.zhongan.devpilot.completions.general.Utils.endsWithADot;
 
 public class CompletionUtils {
 
@@ -44,12 +45,12 @@ public class CompletionUtils {
 
     @Nullable
     public static DevPilotCompletion createDevpilotCompletion(
-            @NotNull Document document,
-            int offset,
-            String oldPrefix,
-            ResultEntry result,
-            int index,
-            SuggestionTrigger suggestionTrigger) {
+        @NotNull Document document,
+        int offset,
+        String oldPrefix,
+        ResultEntry result,
+        int index,
+        SuggestionTrigger suggestionTrigger) {
         String cursorPrefix = CompletionUtils.getCursorPrefix(document, offset);
         String cursorSuffix = CompletionUtils.getCursorSuffix(document, offset);
         if (cursorPrefix == null || cursorSuffix == null) {
@@ -57,28 +58,28 @@ public class CompletionUtils {
         }
 
         return new DevPilotCompletion(
-                oldPrefix,
-                result.new_prefix,
-                result.old_suffix,
-                result.new_suffix,
-                index,
-                cursorPrefix,
-                cursorSuffix,
-                result.completionMetadata,
-                suggestionTrigger);
+            oldPrefix,
+            result.newPrefix,
+            result.oldSuffix,
+            result.newSuffix,
+            index,
+            cursorPrefix,
+            cursorSuffix,
+            result.completionMetadata,
+            suggestionTrigger);
     }
 
     public static int completionLimit(
-            CompletionParameters parameters, CompletionResultSet result, boolean isLocked) {
+        CompletionParameters parameters, CompletionResultSet result, boolean isLocked) {
         return completionLimit(
-                parameters.getEditor().getDocument(),
-                result.getPrefixMatcher().getPrefix(),
-                parameters.getOffset(),
-                isLocked);
+            parameters.getEditor().getDocument(),
+            result.getPrefixMatcher().getPrefix(),
+            parameters.getOffset(),
+            isLocked);
     }
 
     public static int completionLimit(
-            @NotNull Document document, @NotNull String prefix, int offset, boolean isLocked) {
+        @NotNull Document document, @NotNull String prefix, int offset, boolean isLocked) {
         if (isLocked) {
             return 1;
         }

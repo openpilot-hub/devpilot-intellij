@@ -6,9 +6,13 @@ import java.util.Map;
 
 public class CompletionMetadata {
     private String detail;
+
     private CompletionKind completionKind;
+
     private Map<String, Object> snippetContext;
+
     private Boolean isCached;
+
     private Boolean deprecated;
 
     public CompletionMetadata(String detail, CompletionKind completionKind, Map<String, Object> snippetContext, Boolean isCached, Boolean deprecated) {

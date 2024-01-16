@@ -8,42 +8,30 @@ import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
+import com.zhongan.devpilot.completions.inline.CompletionAdjustment;
 import com.zhongan.devpilot.completions.requests.AutocompleteRequest;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.requests.ResultEntry;
-import com.zhongan.devpilot.completions.inline.CompletionAdjustment;
+import com.zhongan.devpilot.enums.EditorActionEnum;
+import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 
-import com.zhongan.devpilot.enums.EditorActionEnum;
-import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.zhongan.devpilot.completions.general.StaticConfig.*;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_CHAT_COMPLETION_MESSAGE_LENGTH;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_OFFSET;
 
 public class CompletionFacade {
 
     public CompletionFacade() {
-    }
-    @Nullable
-    public AutocompleteResponse retrieveCompletions(
-            @NotNull Editor editor,
-            int offset,
-            @Nullable Integer tabSize,
-            @Nullable CompletionAdjustment completionAdjustment) {
-        try {
-            String filename =
-                    getFilename(FileDocumentManager.getInstance().getFile(editor.getDocument()));
-            return retrieveCompletions(editor, offset, filename, tabSize, completionAdjustment);
-        } catch (Exception e) {
-            return null;
-        }
     }
 
     @Nullable
@@ -52,12 +40,27 @@ public class CompletionFacade {
     }
 
     @Nullable
+    public AutocompleteResponse retrieveCompletions(
+        @NotNull Editor editor,
+        int offset,
+        @Nullable Integer tabSize,
+        @Nullable CompletionAdjustment completionAdjustment) {
+        try {
+            String filename =
+                getFilename(FileDocumentManager.getInstance().getFile(editor.getDocument()));
+            return retrieveCompletions(editor, offset, filename, tabSize, completionAdjustment);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    @Nullable
     private AutocompleteResponse retrieveCompletions(
-            @NotNull Editor editor,
-            int offset,
-            @Nullable String filename,
-            @Nullable Integer tabSize,
-            @Nullable CompletionAdjustment completionAdjustment) {
+        @NotNull Editor editor,
+        int offset,
+        @Nullable String filename,
+        @Nullable Integer tabSize,
+        @Nullable CompletionAdjustment completionAdjustment) {
         Document document = editor.getDocument();
 
         int begin = Integer.max(0, offset - MIN_OFFSET);
@@ -72,7 +75,7 @@ public class CompletionFacade {
         req.offset = offset;
         req.line = document.getLineNumber(offset);
         req.character = offset - document.getLineStartOffset(req.line);
-        req.indentation_size = tabSize;
+        req.indentationSize = tabSize;
         req.sdkPath = getSdkPath(editor);
 
         if (completionAdjustment != null) {
@@ -83,27 +86,27 @@ public class CompletionFacade {
         DevPilotMessage devPilotMessage = new DevPilotMessage();
         devPilotMessage.setRole("user");
         String content = EditorActionEnum.CODE_COMPLETIONS.getPrompt()
-                .replace("{{offsetCode}}", document.getText(new TextRange(req.before.lastIndexOf("\n"), offset)))
-                .replace("{{selectedCode}}", getFileExtension(editor) + " " + req.before)
-                .replace("{{maxCompletionLength}}", MIN_CHAT_COMPLETION_MESSAGE_LENGTH);
+            .replace("{{offsetCode}}", document.getText(new TextRange(req.before.lastIndexOf("\n"), offset)))
+            .replace("{{selectedCode}}", getFileExtension(editor) + " " + req.before)
+            .replace("{{maxCompletionLength}}", MIN_CHAT_COMPLETION_MESSAGE_LENGTH);
         devPilotMessage.setContent(content);
         DevPilotChatCompletionRequest request = new DevPilotChatCompletionRequest();
         // list content support update
-        request.setMessages(new ArrayList<>() {{
-            add(devPilotMessage);
-        }});
+        ArrayList<DevPilotMessage> devPilotMessages = new ArrayList<>();
+        devPilotMessages.add(devPilotMessage);
+        request.setMessages(devPilotMessages);
         final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);
         //TODO 本地模拟，缺钱
 //        final String response = "public static void quickSort(int[] arr, int low, int high) {\n    if (low < high) {\n        int pivotIndex = partition(arr, low, high);\n        quickSort(arr, low, pivotIndex - 1);\n        quickSort(arr, pivotIndex + 1, high);\n    }\n}\n\nprivate static int partition(int[] arr, int low, int high) {\n    int pivot = arr[high];\n    int i = low - 1;\n    for (int j = low; j < high; j++) {\n        if (arr[j] < pivot) {\n            i++;\n            swap(arr, i, j);\n        }\n    }\n    swap(arr, i + 1, high);\n    return i + 1;\n}\n\nprivate static void swap(int[] arr, int i, int j) {\n    int temp = arr[i];\n    arr[i] = arr[j];\n    arr[j] = temp;\n}\n";
 //        final String response = "date：" + DateFormatUtils.format(new Date(), "yyyy-mm-dd HH:mm:ss");
         AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
-        autocompleteResponse.old_prefix = "";
-        autocompleteResponse.user_message = new String[]{};
+        autocompleteResponse.oldPrefix = "";
+        autocompleteResponse.userMessage = new String[] {};
         ResultEntry resultEntry = new ResultEntry();
-        resultEntry.new_prefix = response;
-        resultEntry.old_suffix = "";
-        resultEntry.new_suffix = "";
-        ResultEntry[] resultEntries = new ResultEntry[]{resultEntry};
+        resultEntry.newPrefix = response;
+        resultEntry.oldSuffix = "";
+        resultEntry.newSuffix = "";
+        ResultEntry[] resultEntries = new ResultEntry[] {resultEntry};
         autocompleteResponse.results = resultEntries;
 
         if (completionAdjustment != null) {
@@ -119,8 +122,8 @@ public class CompletionFacade {
 
         VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
         if (virtualFile == null
-                || virtualFile.getExtension() == null
-                || !virtualFile.getExtension().equals("java")) {
+            || virtualFile.getExtension() == null
+            || !virtualFile.getExtension().equals("java")) {
             return null;
         }
 

@@ -6,6 +6,8 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.actionSystem.EditorActionHandler;
 
 public class EscapeHandler extends EditorActionHandler {
+    public static final String ACTION_ID = "EditorEscape";
+
     private final EditorActionHandler myOriginalHandler;
 
     public EscapeHandler(EditorActionHandler originalHandler) {
@@ -25,6 +27,4 @@ public class EscapeHandler extends EditorActionHandler {
         CompletionPreview preview = CompletionPreview.getInstance(editor);
         return preview != null || myOriginalHandler.isEnabled(editor, caret, dataContext);
     }
-
-    public static final String ACTION_ID = "EditorEscape";
 }

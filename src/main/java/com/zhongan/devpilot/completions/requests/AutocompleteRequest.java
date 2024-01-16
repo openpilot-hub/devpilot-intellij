@@ -1,11 +1,14 @@
 package com.zhongan.devpilot.completions.requests;
 
 import com.google.gson.annotations.SerializedName;
+
 import org.jetbrains.annotations.Nullable;
 
 public class AutocompleteRequest {
     public String before;
+
     public String after;
+
     public String filename;
 
     @SerializedName(value = "region_includes_beginning")
@@ -18,11 +21,13 @@ public class AutocompleteRequest {
     public int maxResults;
 
     public int offset;
+
     public int line;
+
     public int character;
 
     @Nullable
-    public Integer indentation_size;
+    public Integer indentationSize;
 
     @Nullable
     public Boolean cachedOnly;
@@ -102,12 +107,12 @@ public class AutocompleteRequest {
         this.character = character;
     }
 
-    public Integer getIndentation_size() {
-        return indentation_size;
+    public Integer getIndentationSize() {
+        return indentationSize;
     }
 
-    public void setIndentation_size(Integer indentation_size) {
-        this.indentation_size = indentation_size;
+    public void setIndentationSize(Integer indentationSize) {
+        this.indentationSize = indentationSize;
     }
 
     public Boolean getCachedOnly() {

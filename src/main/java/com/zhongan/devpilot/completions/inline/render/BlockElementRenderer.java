@@ -4,15 +4,21 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorCustomElementRenderer;
 import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.markup.TextAttributes;
-import org.jetbrains.annotations.TestOnly;
 
-import java.awt.*;
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Rectangle;
 import java.util.List;
+
+import org.jetbrains.annotations.TestOnly;
 
 public class BlockElementRenderer implements EditorCustomElementRenderer {
     private Editor editor;
+
     private List<String> blockText;
+
     private boolean deprecated;
+
     private Color color;
 
     public BlockElementRenderer(Editor editor, List<String> blockText, boolean deprecated) {
@@ -25,7 +31,7 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
     public int calcWidthInPixels(Inlay inlay) {
         String firstLine = blockText.get(0);
         return editor.getContentComponent()
-                .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(firstLine);
+            .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(firstLine);
     }
 
     @Override
@@ -42,12 +48,13 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
         for (int i = 0; i < blockText.size(); i++) {
             String line = blockText.get(i);
             g.drawString(
-                    line,
-                    0,
-                    targetRegion.y + i * editor.getLineHeight() + editor.getAscent()
+                line,
+                0,
+                targetRegion.y + i * editor.getLineHeight() + editor.getAscent()
             );
         }
     }
+
     @TestOnly
     public String getContent() {
         return String.join("\n", blockText);
