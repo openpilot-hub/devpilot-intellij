@@ -12,6 +12,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.GithubAuthUtils;
+import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -46,7 +47,9 @@ public final class TrialServiceProvider implements LlmProvider {
         this.toolWindowService = service;
 
         if (!GithubAuthUtils.isLogin()) {
-            return "Chat completion failed: please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>";
+            var loginInfo = "Chat completion failed: please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>";
+            service.callErrorInfo(loginInfo);
+            return "";
         }
 
         chatCompletionRequest.setModel(model);
@@ -63,7 +66,8 @@ public final class TrialServiceProvider implements LlmProvider {
 
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
-            return "Chat completion failed: " + e.getMessage();
+            service.callErrorInfo("Chat completion failed: " + e.getMessage());
+            return "";
         }
 
         return "";
@@ -71,7 +75,33 @@ public final class TrialServiceProvider implements LlmProvider {
 
     @Override
     public DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest) {
-        return null;
+        if (!GithubAuthUtils.isLogin()) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>");
+        }
+
+        chatCompletionRequest.setModel(model);
+
+        okhttp3.Response response;
+
+        try {
+            var request = new Request.Builder()
+                    .url(host + "/v1/chat/completions")
+                    .header("User-Agent", UserAgentUtils.getGithubUserAgent())
+                    .header("Auth-Type", "github")
+                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .build();
+
+            var call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+
+        try {
+            return parseResult(chatCompletionRequest, response);
+        } catch (Exception e) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
     }
 
     @Override
@@ -90,9 +120,10 @@ public final class TrialServiceProvider implements LlmProvider {
         }
     }
 
-    private String parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
+    private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
+
         if (response == null) {
-            return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
+            return DevPilotChatCompletionResponse.failed(DevPilotMessageBundle.get("devpilot.chatWindow.response.null"));
         }
 
         var result = Objects.requireNonNull(response.body()).string();
@@ -102,20 +133,19 @@ public final class TrialServiceProvider implements LlmProvider {
                     .getChoices()
                     .get(0)
                     .getMessage();
-            // multi chat message
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setRole("assistant");
             devPilotMessage.setContent(message.getContent());
             chatCompletionRequest.getMessages().add(devPilotMessage);
-            return message.getContent();
+            return DevPilotChatCompletionResponse.success(message.getContent());
 
         } else if (response.code() == 401) {
             GithubAuthUtils.logout();
-            return "Chat completion failed: Unauthorized, please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>";
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>");
         } else {
-            return objectMapper.readValue(result, DevPilotFailedResponse.class)
+            return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                     .getError()
-                    .getMessage();
+                    .getMessage());
         }
     }
 }
