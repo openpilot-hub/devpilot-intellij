@@ -73,7 +73,7 @@ public class DevPilotSuccessResponse {
         @JsonProperty("finish_reason")
         private String finishReason;
 
-        private Message message;
+        private Message delta;
 
         public Integer getIndex() {
             return index;
@@ -91,14 +91,13 @@ public class DevPilotSuccessResponse {
             this.finishReason = finishReason;
         }
 
-        public Message getMessage() {
-            return message;
+        public Message getDelta() {
+            return delta;
         }
 
-        public void setMessage(Message message) {
-            this.message = message;
+        public void setDelta(Message delta) {
+            this.delta = delta;
         }
-
     }
 
     public static class Usage {

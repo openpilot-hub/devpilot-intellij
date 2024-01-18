@@ -10,6 +10,7 @@ import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
+import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JComponent;
@@ -65,6 +66,12 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         var languageSettings = LanguageSettingsState.getInstance();
         Integer languageIndex = settingsComponent.getLanguageIndex();
+
+        // if language changed, refresh webview
+        if (!languageIndex.equals(languageSettings.getLanguageIndex())) {
+            ConfigChangeUtils.localeChanged(languageIndex);
+        }
+
         languageSettings.setLanguageIndex(languageIndex);
 
         PopupMenuEditorActionGroupUtil.refreshActions(null);
