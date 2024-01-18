@@ -29,6 +29,9 @@
         <applicationConfigurable id="settings.devpilot" parentId="tools" displayName="DevPilot"
                                  instance="com.zhongan.devpilot.settings.DevPilotSettingsConfigurable"/>
 
+        <httpRequestHandler implementation="com.zhongan.devpilot.rest.za.ZaSsoCallbackRestService"/>
+        <httpRequestHandler implementation="com.zhongan.devpilot.rest.github.GithubAuthCallbackRestService"/>
+
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LanguageSettingsState"/>
@@ -36,6 +39,7 @@
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AIGatewaySettingsState"/>
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
 
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
         <projectService id="DevPilotChatToolWindowService" serviceImplementation="com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService"/>

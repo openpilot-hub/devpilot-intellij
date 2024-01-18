@@ -3,7 +3,6 @@ package com.zhongan.devpilot.integrations.llms.aigateway;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
-import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
@@ -13,9 +12,10 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
-import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.OkhttpUtils;
+import com.zhongan.devpilot.util.UserAgentUtils;
+import com.zhongan.devpilot.util.ZaSsoUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
@@ -43,6 +43,12 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
+        var ssoEnum = ZaSsoUtils.getSsoEnum();
+
+        if (!ZaSsoUtils.isLogin(ssoEnum)) {
+            return "Chat completion failed: please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
+        }
+
         var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
         var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
 
@@ -58,10 +64,11 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         try {
             var request = new Request.Builder()
-                .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", parseUserAgent())
-                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
-                .build();
+                    .url(host + "/devpilot/v1/chat/completions")
+                    .header("User-Agent", UserAgentUtils.getUserAgent())
+                    .header("Auth-Type", ZaSsoUtils.getSsoType())
+                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .build();
 
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
@@ -92,12 +99,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         this.resultModel = messageModel;
     }
 
-    private String parseUserAgent() {
-        // format: idea version|plugin version|uuid
-        return String.format("%s|%s|%s", DevPilotVersion.getIdeaVersion(),
-            DevPilotVersion.getDevPilotVersion(), DevPilotLlmSettingsState.getInstance().getUuid());
-    }
-
     @Override
     public DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest) {
         var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
@@ -115,7 +116,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                 .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", parseUserAgent())
+                .header("User-Agent", UserAgentUtils.getUserAgent())
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
@@ -150,6 +151,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             chatCompletionRequest.getMessages().add(devPilotMessage);
             return DevPilotChatCompletionResponse.success(message.getContent());
 
+        } else if (response.code() == 401) {
+            var ssoEnum = ZaSsoUtils.getSsoEnum();
+            ZaSsoUtils.logout(ssoEnum);
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>");
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                 .getError()

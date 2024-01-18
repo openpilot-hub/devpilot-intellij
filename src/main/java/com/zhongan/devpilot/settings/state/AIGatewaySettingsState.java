@@ -6,6 +6,7 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
+import com.zhongan.devpilot.enums.ZaSsoEnum;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +16,18 @@ public class AIGatewaySettingsState implements PersistentStateComponent<AIGatewa
     private String selectedModel = ModelTypeEnum.GPT3_5.getName();
 
     private Map<String, String> modelBaseHostMap = new ConcurrentHashMap<>();
+
+    private String selectedSso = ZaSsoEnum.ZA.getName();
+
+    // za
+    private String ssoToken;
+
+    private String ssoUsername;
+
+    // za_ti
+    private String tiSsoToken;
+
+    private String tiSsoUsername;
 
     public static AIGatewaySettingsState getInstance() {
         return ApplicationManager.getApplication().getService(AIGatewaySettingsState.class);
@@ -29,7 +42,7 @@ public class AIGatewaySettingsState implements PersistentStateComponent<AIGatewa
     }
 
     public String getModelBaseHost(String selectedModel) {
-        String openAIBaseHost = "";
+        String openAIBaseHost = "http://openapi-cloud-pub.zhonganinfo.com";
         return modelBaseHostMap.getOrDefault(selectedModel, openAIBaseHost);
     }
 
@@ -43,6 +56,46 @@ public class AIGatewaySettingsState implements PersistentStateComponent<AIGatewa
 
     public void setModelBaseHostMap(Map<String, String> modelBaseHostMap) {
         this.modelBaseHostMap = modelBaseHostMap;
+    }
+
+    public String getSelectedSso() {
+        return selectedSso;
+    }
+
+    public void setSelectedSso(String selectedSso) {
+        this.selectedSso = selectedSso;
+    }
+
+    public String getSsoToken() {
+        return ssoToken;
+    }
+
+    public void setSsoToken(String ssoToken) {
+        this.ssoToken = ssoToken;
+    }
+
+    public String getSsoUsername() {
+        return ssoUsername;
+    }
+
+    public void setSsoUsername(String ssoUsername) {
+        this.ssoUsername = ssoUsername;
+    }
+
+    public String getTiSsoToken() {
+        return tiSsoToken;
+    }
+
+    public void setTiSsoToken(String tiSsoToken) {
+        this.tiSsoToken = tiSsoToken;
+    }
+
+    public String getTiSsoUsername() {
+        return tiSsoUsername;
+    }
+
+    public void setTiSsoUsername(String tiSsoUsername) {
+        this.tiSsoUsername = tiSsoUsername;
     }
 
     @Override

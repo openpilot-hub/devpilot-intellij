@@ -16,7 +16,7 @@ public class DevPilotLlmSettingsState implements PersistentStateComponent<DevPil
 
     private String uuid;
 
-    private String selectedModel = ModelServiceEnum.LLAMA.getName();
+    private String selectedModel = ModelServiceEnum.AIGATEWAY.getName();
 
     public static DevPilotLlmSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(DevPilotLlmSettingsState.class);
