@@ -43,25 +43,27 @@ public final class OpenAIServiceProvider implements LlmProvider {
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
         var host = OpenAISettingsState.getInstance().getModelHost();
         var apiKey = OpenAISettingsState.getInstance().getPrivateKey();
+        var service = project.getService(DevPilotChatToolWindowService.class);
+        this.toolWindowService = service;
 
         if (StringUtils.isEmpty(host)) {
-            return "Chat completion failed: host is empty";
+            service.callErrorInfo("Chat completion failed: host is empty");
+            return "";
         }
 
         if (StringUtils.isEmpty(apiKey)) {
-            return "Chat completion failed: api key is empty";
+            service.callErrorInfo("Chat completion failed: api key is empty");
+            return "";
         }
 
         var modelName = OpenAISettingsState.getInstance().getModelName();
 
         if (StringUtils.isEmpty(modelName)) {
-            return "Chat completion failed: openai model name is empty";
+            service.callErrorInfo("Chat completion failed: openai model name is empty");
+            return "";
         }
 
         chatCompletionRequest.setModel(modelName);
-
-        var service = project.getService(DevPilotChatToolWindowService.class);
-        this.toolWindowService = service;
 
         try {
             var request = new Request.Builder()
@@ -73,7 +75,8 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
-            return "Chat completion failed: " + e.getMessage();
+            service.callErrorInfo("Chat completion failed: " + e.getMessage());
+            return "";
         }
 
         return "";

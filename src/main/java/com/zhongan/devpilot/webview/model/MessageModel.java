@@ -2,6 +2,8 @@ package com.zhongan.devpilot.webview.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.UUID;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MessageModel {
     private String id;
@@ -36,6 +38,10 @@ public class MessageModel {
 
     public static MessageModel buildUserMessage(String id, Long time, String content, String username) {
         return buildCodeMessage(id, time, content, username, null);
+    }
+
+    public static MessageModel buildErrorMessage(String content) {
+        return buildAssistantMessage(UUID.randomUUID().toString(), System.currentTimeMillis(), content, false);
     }
 
     public static MessageModel buildAssistantMessage(String id, Long time, String content, boolean streaming) {

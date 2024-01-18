@@ -51,16 +51,16 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
         var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+        var service = project.getService(DevPilotChatToolWindowService.class);
+        this.toolWindowService = service;
 
         if (StringUtils.isEmpty(host)) {
-            return "Chat completion failed: host is empty";
+            service.callErrorInfo("Chat completion failed: host is empty");
+            return "";
         }
 
         var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
         chatCompletionRequest.setModel(modelTypeEnum.getCode());
-
-        var service = project.getService(DevPilotChatToolWindowService.class);
-        this.toolWindowService = service;
 
         try {
             var request = new Request.Builder()
@@ -72,7 +72,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
-            return "Chat completion failed: " + e.getMessage();
+            service.callErrorInfo("Chat completion failed: " + e.getMessage());
+            return "";
         }
 
         return "";
