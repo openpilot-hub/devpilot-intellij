@@ -1,15 +1,10 @@
 package com.zhongan.devpilot.util;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vladsch.flexmark.ast.FencedCodeBlock;
 import com.vladsch.flexmark.parser.Parser;
 
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -19,10 +14,8 @@ import org.apache.commons.lang3.StringUtils;
 
 public class MarkdownUtil {
 
-    private static final String DEFAULT_CODE_FILE_EXTENSION = ".java";
-
     public static String getFileExtensionFromLanguage(String language) {
-        return languageFileExtMap.getOrDefault(language.toLowerCase(), DEFAULT_CODE_FILE_EXTENSION);
+        return LanguageUtil.getFileSuffixByLanguage(language);
     }
 
     /**
@@ -61,50 +54,6 @@ public class MarkdownUtil {
             return codeBlock;
         }
         return StringUtils.join(contents, "\n\n");
-    }
-
-    private static final Map<String, String> languageFileExtMap = buildLanguageFileExtMap();
-
-    private static Map<String, String> buildLanguageFileExtMap() {
-        Map<String, String> languageFileExtMap = new HashMap<>();
-        ObjectMapper objectMapper = new ObjectMapper();
-        List<LanguageFileExtInfo> languageFileExtInfos;
-        try {
-            URL resource = MarkdownUtil.class.getResource("/languageMappings.json");
-            languageFileExtInfos = objectMapper.readValue(resource, new TypeReference<>() {
-            });
-            for (LanguageFileExtInfo languageFileExtInfo : languageFileExtInfos) {
-                languageFileExtMap.put(languageFileExtInfo.getLanguageName().toLowerCase(),
-                    languageFileExtInfo.getFileExtensions().get(0));
-            }
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        return languageFileExtMap;
-    }
-
-    public static class LanguageFileExtInfo {
-
-        private String languageName;
-
-        private List<String> fileExtensions;
-
-        public String getLanguageName() {
-            return languageName;
-        }
-
-        public void setLanguageName(String languageName) {
-            this.languageName = languageName;
-        }
-
-        public List<String> getFileExtensions() {
-            return fileExtensions;
-        }
-
-        public void setFileExtensions(List<String> fileExtensions) {
-            this.fileExtensions = fileExtensions;
-        }
-
     }
 
 }
