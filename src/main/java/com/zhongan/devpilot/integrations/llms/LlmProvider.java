@@ -3,8 +3,9 @@ package com.zhongan.devpilot.integrations.llms;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
@@ -25,6 +26,8 @@ public interface LlmProvider {
 
     String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback);
 
+    DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest);
+
     void interruptSend();
 
     default void restoreMessage(MessageModel messageModel) {
@@ -44,7 +47,7 @@ public interface LlmProvider {
                     return;
                 }
 
-                var response = JsonUtils.fromJson(data, DevPilotSuccessResponse.class);
+                var response = JsonUtils.fromJson(data, DevPilotSuccessStreamingResponse.class);
 
                 if (response == null) {
                     interruptSend();
