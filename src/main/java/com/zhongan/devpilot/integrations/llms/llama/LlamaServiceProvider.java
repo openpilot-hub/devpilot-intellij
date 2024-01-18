@@ -5,6 +5,7 @@ import com.intellij.openapi.components.Service;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
@@ -64,6 +65,11 @@ public final class LlamaServiceProvider implements LlmProvider {
         } catch (Exception e) {
             return "Chat completion failed: " + e.getMessage();
         }
+    }
+
+    @Override
+    public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
+        return null;
     }
 
     @Override

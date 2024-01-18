@@ -6,6 +6,7 @@ import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
@@ -14,6 +15,9 @@ import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.util.ZaSsoUtils;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
@@ -42,10 +46,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     public String chatCompletion(DevPilotChatCompletionRequest chatCompletionRequest) {
         var ssoEnum = ZaSsoUtils.getSsoEnum();
 
-        //TODO 本地调试暂时关闭，记得打开
-/*        if (!ZaSsoUtils.isLogin(ssoEnum)) {
+        if (!ZaSsoUtils.isLogin(ssoEnum)) {
             return "Chat completion failed: please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
-        }*/
+        }
 
         var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
         var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
@@ -81,6 +84,50 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     }
 
     @Override
+    public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
+        //TODO 待优化，需要和sdk确认封装方法
+        var ssoEnum = ZaSsoUtils.getSsoEnum();
+
+        //TODO 本地调试暂时关闭，记得打开
+/*        if (!ZaSsoUtils.isLogin(ssoEnum)) {
+            return "Chat completion failed: please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
+        }*/
+
+        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+
+        if (StringUtils.isEmpty(host)) {
+            return "Chat completion failed: host is empty";
+        }
+
+//        var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
+//        instructCompletionRequest.setModel(modelTypeEnum.getCode());
+
+        okhttp3.Response response;
+
+        try {
+            var request = new Request.Builder()
+                .url(host + "/ai/test/azure/gpt-35-turbo-instruct/completions")
+                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("Auth-Type", ZaSsoUtils.getSsoType())
+                .header("access-key", "30bb0c2d46194cd5b11f892ded3c6fbc")
+                .post(RequestBody.create(objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json")))
+                .build();
+
+            call = client.newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            return "Chat completion failed: " + e.getMessage();
+        }
+
+        try {
+            return parseResult(instructCompletionRequest, response);
+        } catch (Exception e) {
+            return "Chat completion failed: " + e.getMessage();
+        }
+    }
+
+    @Override
     public void interruptSend() {
         if (call != null && !call.isCanceled()) {
             call.cancel();
@@ -105,6 +152,34 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             devPilotMessage.setContent(message.getContent());
             chatCompletionRequest.getMessages().add(devPilotMessage);
             return message.getContent();
+
+        } else if (response.code() == 401) {
+            var ssoEnum = ZaSsoUtils.getSsoEnum();
+            ZaSsoUtils.logout(ssoEnum);
+            return "Chat completion failed: Unauthorized, please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
+        } else {
+            return objectMapper.readValue(result, DevPilotFailedResponse.class)
+                .getError()
+                .getMessage();
+        }
+    }
+
+    private String parseResult(DevPilotInstructCompletionRequest instructCompletionRequest, okhttp3.Response response) throws IOException {
+        if (response == null) {
+            return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
+        }
+
+        var result = Objects.requireNonNull(response.body()).string();
+
+        if (response.isSuccessful()) {
+            List<Map> message = (List<Map>) objectMapper.readValue(result, Map.class).get("choices");
+            String content = (String) message.get(0).get("text");
+            // multi chat message
+            var devPilotMessage = new DevPilotMessage();
+            devPilotMessage.setRole("assistant");
+            devPilotMessage.setContent(content);
+//            instructCompletionRequest.getMessages().add(devPilotMessage);
+            return content;
 
         } else if (response.code() == 401) {
             var ssoEnum = ZaSsoUtils.getSsoEnum();
