@@ -16,6 +16,7 @@ import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
@@ -59,20 +60,25 @@ public class GenerateGitCommitMessageAction extends AnAction {
             if (editor != null) {
                 ((EditorEx) editor).setCaretVisible(false);
 
-                DevPilotMessage userMessage = MessageUtil.createUserMessage(gitDiff);
+                DevPilotMessage userMessage = MessageUtil.createUserMessage(gitDiff, "-1");
                 DevPilotChatCompletionRequest devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
                 devPilotChatCompletionRequest.getMessages().add(MessageUtil.createSystemMessage(PromptConst.GENERATE_COMMIT));
                 devPilotChatCompletionRequest.getMessages().add(userMessage);
                 devPilotChatCompletionRequest.setStream(Boolean.FALSE);
 
                 var llmProvider = new LlmProviderFactory().getLlmProvider(project);
-                String result = llmProvider.chatCompletion(devPilotChatCompletionRequest);
+                DevPilotChatCompletionResponse result = llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
 
-                var application = ApplicationManager.getApplication();
-                application.invokeLater(() ->
-                    application.runWriteAction(() ->
-                        WriteCommandAction.runWriteCommandAction(project, () ->
-                            editor.getDocument().setText(result))));
+                if (result.isSuccessful()) {
+                    var application = ApplicationManager.getApplication();
+                    application.invokeLater(() ->
+                        application.runWriteAction(() ->
+                            WriteCommandAction.runWriteCommandAction(project, () ->
+                                editor.getDocument().setText(result.getContent()))));
+                } else {
+                    DevPilotNotification.warn(result.getContent());
+                }
+
             }
         } catch (Exception ex) {
             DevPilotNotification.warn("Exception occurred while generating commit message");
