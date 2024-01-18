@@ -53,5 +53,11 @@
             </action>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
+        <group id="DevPilot.GenerateGitCommitMessageGroup">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
+            <action
+                    id="DevPilot.GenerateGitCommitMessage"
+                    class="com.zhongan.devpilot.actions.changesview.GenerateGitCommitMessageAction" />
+        </group>
     </actions>
 </idea-plugin>
