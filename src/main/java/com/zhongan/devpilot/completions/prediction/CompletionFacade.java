@@ -14,14 +14,12 @@ import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.requests.ResultEntry;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

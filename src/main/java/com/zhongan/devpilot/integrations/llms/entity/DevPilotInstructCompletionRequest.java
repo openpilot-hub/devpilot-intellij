@@ -1,7 +1,6 @@
 package com.zhongan.devpilot.integrations.llms.entity;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class DevPilotInstructCompletionRequest {
 
@@ -13,7 +12,8 @@ public class DevPilotInstructCompletionRequest {
 
     double temperature = 0L;
 
-    int max_tokens = 2000;
+    @JsonProperty("max_tokens")
+    int maxTokens = 2000;
 
     int n = 1;
 
@@ -55,12 +55,12 @@ public class DevPilotInstructCompletionRequest {
         this.temperature = temperature;
     }
 
-    public int getMax_tokens() {
-        return max_tokens;
+    public int getMaxTokens() {
+        return maxTokens;
     }
 
-    public void setMax_tokens(int max_tokens) {
-        this.max_tokens = max_tokens;
+    public void setMaxTokens(int maxTokens) {
+        this.maxTokens = maxTokens;
     }
 
     public int getN() {
