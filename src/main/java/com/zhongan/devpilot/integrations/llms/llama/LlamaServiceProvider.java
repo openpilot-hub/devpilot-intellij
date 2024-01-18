@@ -42,21 +42,22 @@ public final class LlamaServiceProvider implements LlmProvider {
     @Override
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
         var host = CodeLlamaSettingsState.getInstance().getModelHost();
+        var service = project.getService(DevPilotChatToolWindowService.class);
+        this.toolWindowService = service;
 
         if (StringUtils.isEmpty(host)) {
-            return "Chat completion failed: host is empty";
+            service.callErrorInfo("Chat completion failed: host is empty");
+            return "";
         }
 
         var modelName = CodeLlamaSettingsState.getInstance().getModelName();
 
         if (StringUtils.isEmpty(modelName)) {
-            return "Chat completion failed: code llama model name is empty";
+            service.callErrorInfo("Chat completion failed: code llama model name is empty");
+            return "";
         }
 
         chatCompletionRequest.setModel(modelName);
-
-        var service = project.getService(DevPilotChatToolWindowService.class);
-        this.toolWindowService = service;
 
         try {
             var request = new Request.Builder()
@@ -67,7 +68,8 @@ public final class LlamaServiceProvider implements LlmProvider {
 
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
-            return "Chat completion failed: " + e.getMessage();
+            service.callErrorInfo("Chat completion failed: " + e.getMessage());
+            return "";
         }
 
         return "";
