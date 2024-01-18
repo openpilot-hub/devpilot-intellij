@@ -243,6 +243,10 @@ public final class DevPilotChatToolWindowService {
         browser.executeJavaScript(jsCode, browser.getURL(), 0);
     }
 
+    public void callErrorInfo(String content) {
+        callWebView(MessageModel.buildErrorMessage(content));
+    }
+
     public void callWebView(MessageModel messageModel) {
         var messageList = getHistoryMessageList();
 
