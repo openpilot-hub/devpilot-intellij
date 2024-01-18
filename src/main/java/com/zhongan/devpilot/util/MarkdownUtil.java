@@ -3,11 +3,7 @@ package com.zhongan.devpilot.util;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vladsch.flexmark.ast.FencedCodeBlock;
-import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
-import com.vladsch.flexmark.util.ast.Document;
-import com.vladsch.flexmark.util.data.MutableDataSet;
-import com.zhongan.devpilot.gui.toolwindows.components.TextContentRenderer;
 
 import java.net.URL;
 import java.util.ArrayList;
@@ -46,15 +42,6 @@ public class MarkdownUtil {
         return blocks.stream()
             .filter(section -> !section.isBlank())
             .collect(Collectors.toList());
-    }
-
-    public static String textContent2Html(String markdownText) {
-        MutableDataSet options = new MutableDataSet();
-        Document document = Parser.builder(options).build().parse(markdownText);
-        return HtmlRenderer.builder(options)
-                .nodeRendererFactory(new TextContentRenderer.Factory())
-                .build()
-                .render(document);
     }
 
     public static String extractContents(String codeBlock) {
