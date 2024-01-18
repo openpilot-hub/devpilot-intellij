@@ -10,6 +10,7 @@ import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
+import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
@@ -52,9 +53,12 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !selectedModel.getName().equals(settings.getSelectedModel())
                 || !selectedModelType.getName().equals(aiGatewaySettings.getSelectedModel())
                 || !serviceForm.getOpenAIBaseHost().equals(openAISettings.getModelHost())
+                || !serviceForm.getOpenAIModelName().getName().equals(openAISettings.getModelName())
+                || !serviceForm.getOpenAICustomModelName().equals(openAISettings.getCustomModelName())
                 || !serviceForm.getAIGatewayBaseHost().equals(aiGatewaySettings.getModelBaseHost(selectedModelType.getName()))
                 || !serviceForm.getOpenAIKey().equals(openAISettings.getPrivateKey())
                 || !serviceForm.getCodeLlamaBaseHost().equals(codeLlamaSettings.getModelHost())
+                || !serviceForm.getCodeLlamaModelName().equals(codeLlamaSettings.getModelName())
                 || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex())
                 || !selectedSso.getName().equals(aiGatewaySettings.getSelectedSso());
     }
@@ -66,6 +70,12 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         var languageSettings = LanguageSettingsState.getInstance();
         Integer languageIndex = settingsComponent.getLanguageIndex();
+
+        // if language changed, refresh webview
+        if (!languageIndex.equals(languageSettings.getLanguageIndex())) {
+            ConfigChangeUtils.localeChanged(languageIndex);
+        }
+
         languageSettings.setLanguageIndex(languageIndex);
 
         PopupMenuEditorActionGroupUtil.refreshActions(null);
@@ -77,11 +87,15 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
         var selectedSso = serviceForm.getSelectedZaSso();
+        var openAIModelName = serviceForm.getOpenAIModelName();
 
         settings.setSelectedModel(selectedModel.getName());
         openAISettings.setModelHost(serviceForm.getOpenAIBaseHost());
         openAISettings.setPrivateKey(serviceForm.getOpenAIKey());
+        openAISettings.setModelName(openAIModelName.getName());
+        openAISettings.setCustomModelName(serviceForm.getOpenAICustomModelName());
         codeLlamaSettings.setModelHost(serviceForm.getCodeLlamaBaseHost());
+        codeLlamaSettings.setModelName(serviceForm.getCodeLlamaModelName());
         aiGatewaySettings.setModelBaseHost(selectedModelType.getName(), serviceForm.getAIGatewayBaseHost());
         aiGatewaySettings.setSelectedModel(selectedModelType.getName());
         aiGatewaySettings.setSelectedSso(selectedSso.getName());

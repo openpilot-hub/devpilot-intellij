@@ -1,7 +1,6 @@
 package com.zhongan.devpilot.rest.za;
 
 import com.zhongan.devpilot.enums.ZaSsoEnum;
-import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
 import com.zhongan.devpilot.util.CallbackUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.ZaSsoUtils;
@@ -54,12 +53,13 @@ public class ZaSsoCallbackRestService extends RestService {
 
         var project = getLastFocusedOrOpenedProject();
 
-        if (project != null) {
-            var toolWindow = DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(project);
-            if (toolWindow != null) {
-                toolWindow.zaLoginSuccess(selectedZaSso, user.getUsername());
-            }
-        }
+        // FIXME
+//        if (project != null) {
+//            var toolWindow = DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(project);
+//            if (toolWindow != null) {
+//                toolWindow.zaLoginSuccess(selectedZaSso, user.getUsername());
+//            }
+//        }
 
         sendResponse(fullHttpRequest, channelHandlerContext, CallbackUtils.buildSuccessResponse());
         return null;

@@ -1,37 +1,36 @@
 package com.zhongan.devpilot.gui.toolwindows;
 
-import com.google.common.collect.Maps;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
-import com.zhongan.devpilot.actions.toolbar.ToolbarClearAction;
-import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindow;
+import com.intellij.ui.jcef.JBCefApp;
+import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 
-import java.util.List;
-import java.util.Map;
+import java.awt.BorderLayout;
+
+import javax.swing.JPanel;
 
 import org.jetbrains.annotations.NotNull;
 
 public class DevPilotChatToolWindowFactory implements ToolWindowFactory {
-
-    private static final Map<Project, DevPilotChatToolWindow> devPilotChatToolWindows = Maps.newConcurrentMap();
+    static {
+        JBCefApp.getInstance();
+    }
 
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
-        DevPilotChatToolWindow devPilotChatToolWindow = new DevPilotChatToolWindow(project, toolWindow);
-        devPilotChatToolWindows.put(project, devPilotChatToolWindow);
-        ContentFactory contentFactory = ContentFactory.SERVICE.getInstance();
+        var devPilotChatToolWindowService = project.getService(DevPilotChatToolWindowService.class);
+        var contentFactory = ContentFactory.SERVICE.getInstance();
+        var webPanel = new JPanel(new BorderLayout());
 
-        Content content = contentFactory.createContent(devPilotChatToolWindow.getDevPilotChatToolWindowPanel(), "", false);
+        var devPilotChatToolWindow = devPilotChatToolWindowService.getDevPilotChatToolWindow();
 
-        toolWindow.getContentManager().addContent(content);
-
-        toolWindow.setTitleActions(List.of(new ToolbarClearAction()));
-    }
-
-    public static DevPilotChatToolWindow getDevPilotChatToolWindow(@NotNull Project project) {
-        return devPilotChatToolWindows.get(project);
+        if (devPilotChatToolWindow != null && devPilotChatToolWindow.getDevPilotChatToolWindowPanel() != null) {
+            webPanel.add(devPilotChatToolWindow.getDevPilotChatToolWindowPanel());
+            Content content = contentFactory.createContent(webPanel, "", false);
+            toolWindow.getContentManager().addContent(content);
+        }
     }
 }

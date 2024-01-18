@@ -1,6 +1,5 @@
 package com.zhongan.devpilot.rest.github;
 
-import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
 import com.zhongan.devpilot.util.CallbackUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.GithubAuthUtils;
@@ -44,12 +43,13 @@ public class GithubAuthCallbackRestService extends RestService {
 
         var project = getLastFocusedOrOpenedProject();
 
-        if (project != null) {
-            var toolWindow = DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(project);
-            if (toolWindow != null) {
-                toolWindow.githubLoginSuccess(user.getUsername());
-            }
-        }
+        // FIXME
+//        if (project != null) {
+//            var toolWindow = DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(project);
+//            if (toolWindow != null) {
+//                toolWindow.githubLoginSuccess(user.getUsername());
+//            }
+//        }
 
         sendResponse(fullHttpRequest, channelHandlerContext, CallbackUtils.buildSuccessResponse());
         return null;

@@ -14,18 +14,21 @@ import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
-import com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory;
-import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindow;
+import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState;
+import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.PerformanceCheckUtils;
+import com.zhongan.devpilot.webview.model.CodeReferenceModel;
+import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 import javax.swing.Icon;
@@ -60,16 +63,17 @@ public class PopupMenuEditorActionGroupUtil {
                             return;
                         }
 
+                        var editorActionEnum = EditorActionEnum.getEnumByLabel(label);
+                        if (Objects.isNull(editorActionEnum)) {
+                            return;
+                        }
+
                         Consumer<String> callback = result -> {
                             if (validateResult(result)) {
                                 DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.input.tooLong"));
                                 return;
                             }
 
-                            EditorActionEnum editorActionEnum = EditorActionEnum.getEnumByLabel(label);
-                            if (Objects.isNull(editorActionEnum)) {
-                                return;
-                            }
                             switch (editorActionEnum) {
                                 case PERFORMANCE_CHECK:
                                     // display result, and open diff window
@@ -85,15 +89,23 @@ public class PopupMenuEditorActionGroupUtil {
 
                         EditorInfo editorInfo = new EditorInfo(editor);
 
-                        DevPilotChatToolWindow devPilotChatToolWindow = DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(project);
-                        // right action clear session
-                        devPilotChatToolWindow.addClearSessionInfo();
                         String newPrompt = prompt.replace("{{selectedCode}}", selectedText);
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
                             newPrompt = newPrompt + PromptConst.ANSWER_IN_CHINESE;
                         }
-                        devPilotChatToolWindow.syncSendAndDisplay(SessionTypeEnum.MULTI_TURN.getCode(), EditorActionEnum.getEnumByLabel(label), newPrompt,
-                                callback, editorInfo);
+
+                        var service = project.getService(DevPilotChatToolWindowService.class);
+                        var username = DevPilotLlmSettingsState.getInstance().getFullName();
+                        service.clearRequestSession();
+
+                        var showText = DevPilotMessageBundle.get(label);
+                        var codeReference = new CodeReferenceModel(editorInfo.getFileUrl(),
+                                editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
+
+                        var codeMessage = MessageModel.buildCodeMessage(
+                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
+
+                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), newPrompt, callback, codeMessage);
                     }
                 };
                 group.add(action);
@@ -133,7 +145,7 @@ public class PopupMenuEditorActionGroupUtil {
             return true;
         }
         // valid chinese and english character length
-        return DocumentUtil.getChineseCharCount(content + prompt) / 2 + DocumentUtil.getEnglishCharCount(content + prompt) / 4 > DefaultConst.TOKEN_MAX_LENGTH;
+        return DocumentUtil.experienceEstimatedTokens(content + prompt) > DefaultConst.TOKEN_MAX_LENGTH;
     }
 
 }
