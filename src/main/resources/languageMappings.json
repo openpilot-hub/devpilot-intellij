@@ -188,6 +188,15 @@
       ".grt",
       ".gtpl",
       ".gvy"
+    ],
+    "testFrameworks": [
+      "JUnit4",
+      "JUnit5",
+      "Spock"
+    ],
+    "mockFrameworks": [
+      "Mockito",
+      "EasyMock"
     ]
   },
   {
@@ -220,6 +229,16 @@
     "languageName": "Java",
     "fileExtensions": [
       ".java"
+    ],
+    "testFrameworks": [
+      "JUnit4",
+      "JUnit5",
+      "TestNG",
+      "Spock"
+    ],
+    "mockFrameworks": [
+      "Mockito",
+      "EasyMock"
     ]
   },
   {
@@ -292,6 +311,14 @@
       ".kt",
       ".ktm",
       ".kts"
+    ],
+    "testFrameworks": [
+      "JUnit4",
+      "JUnit5"
+    ],
+    "mockFrameworks": [
+      "Mockito",
+      "MockK"
     ]
   },
   {
@@ -554,6 +581,14 @@
       ".scala",
       ".sbt",
       ".sc"
+    ],
+    "testFrameworks": [
+      "JUnit4",
+      "JUnit5"
+    ],
+    "mockFrameworks": [
+      "Mockito",
+      "EasyMock"
     ]
   },
   {

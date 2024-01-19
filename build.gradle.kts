@@ -17,7 +17,7 @@ intellij {
     version.set("2022.1.4")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf(/* Plugin Dependencies */))
+    plugins.set(listOf("com.intellij.java"))
 }
 
 dependencies {
@@ -26,6 +26,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.10.0")
     implementation("com.squareup.okhttp3:okhttp-sse:4.10.0")
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
+    implementation("org.apache.commons:commons-text:1.10.0")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
     testImplementation("org.mockito:mockito-core:5.7.0")
 }
