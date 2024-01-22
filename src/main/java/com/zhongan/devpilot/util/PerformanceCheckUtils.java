@@ -58,7 +58,7 @@ public class PerformanceCheckUtils {
         DevPilotChatCompletionRequest request = new DevPilotChatCompletionRequest();
         // list content support update
         request.setMessages(new ArrayList<>() {{ add(devPilotMessage); }});
-        final String response = new LlmProviderFactory().getLlmProvider(project).chatCompletion(request);
+        final String response = new LlmProviderFactory().getLlmProvider(project).chatCompletion(project, request, null);
         try {
             PerformanceCheckResponse performanceCheckResponse = objectMapper.readValue(response, PerformanceCheckResponse.class);
             if (StringUtils.isEmpty(performanceCheckResponse.getRewriteCode())) {

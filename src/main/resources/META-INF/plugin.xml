@@ -43,6 +43,7 @@
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CompletionSettingsState"/>
 
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
+        <projectService id="DevPilotChatToolWindowService" serviceImplementation="com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService"/>
 
         <notificationGroup id="DevPilot Notification Group" displayType="BALLOON" key="notification.group.devpilot"/>
 
@@ -76,5 +77,15 @@
             <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>
         </action>
 
+        <group id="DevPilot.GenerateGitCommitMessageGroup">
+            <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
+            <action
+                    id="DevPilot.GenerateGitCommitMessage"
+                    class="com.zhongan.devpilot.actions.changesview.GenerateGitCommitMessageAction" />
+        </group>
     </actions>
+
+    <applicationListeners>
+        <listener class="com.zhongan.devpilot.listener.ThemeChangeListener" topic="com.intellij.ide.ui.LafManagerListener"/>
+    </applicationListeners>
 </idea-plugin>
