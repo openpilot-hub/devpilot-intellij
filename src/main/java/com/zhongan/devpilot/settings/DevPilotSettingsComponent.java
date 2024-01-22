@@ -33,8 +33,6 @@ public class DevPilotSettingsComponent {
                 DevPilotMessageBundle.get("devpilot.settings.service.code.completion.desc"),
                 CompletionSettingsState.getInstance().getEnable());
 
-        //todo auto completioncompletion
-
         mainPanel = FormBuilder.createFormBuilder()
             .addComponent(UI.PanelFactory.panel(fullNameField)
                 .withLabel(DevPilotMessageBundle.get("devpilot.setting.displayNameFieldLabel"))

@@ -81,7 +81,7 @@ public class CompletionFacade {
             completionAdjustment.adjustRequest(req);
         }
 
-        //TODO Simulating request response. Calling OpenAI or returning a value.
+        //Simulating request response. Calling OpenAI or returning a value.
         DevPilotMessage devPilotMessage = new DevPilotMessage();
         devPilotMessage.setRole("user");
         String content = EditorActionEnum.CODE_COMPLETIONS.getPrompt()
@@ -89,23 +89,17 @@ public class CompletionFacade {
             .replace("{{selectedCode}}", getFileExtension(editor) + " " + req.before)
             .replace("{{maxCompletionLength}}", MIN_CHAT_COMPLETION_MESSAGE_LENGTH);
         devPilotMessage.setContent(content);
-/*        DevPilotChatCompletionRequest request = new DevPilotChatCompletionRequest();
-        // list content support update
-        ArrayList<DevPilotMessage> devPilotMessages = new ArrayList<>();
-        devPilotMessages.add(devPilotMessage);
-        request.setMessages(devPilotMessages);
-        final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).chatCompletion(request);*/
-        //todo 修改为instruct模式
+
         devPilotMessage.setContent(req.before);
         DevPilotInstructCompletionRequest request = new DevPilotInstructCompletionRequest();
         request.setPrompt(req.before);
         request.setSuffix(req.after);
 
         final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
+        if (response == null) {
+            return null;
+        }
 
-        //TODO 本地模拟，缺钱
-//        final String response = "public static void quickSort(int[] arr, int low, int high) {\n    if (low < high) {\n        int pivotIndex = partition(arr, low, high);\n        quickSort(arr, low, pivotIndex - 1);\n        quickSort(arr, pivotIndex + 1, high);\n    }\n}\n\nprivate static int partition(int[] arr, int low, int high) {\n    int pivot = arr[high];\n    int i = low - 1;\n    for (int j = low; j < high; j++) {\n        if (arr[j] < pivot) {\n            i++;\n            swap(arr, i, j);\n        }\n    }\n    swap(arr, i + 1, high);\n    return i + 1;\n}\n\nprivate static void swap(int[] arr, int i, int j) {\n    int temp = arr[i];\n    arr[i] = arr[j];\n    arr[j] = temp;\n}\n";
-//        final String response = "date：" + DateFormatUtils.format(new Date(), "yyyy-mm-dd HH:mm:ss");
         AutocompleteResponse autocompleteResponse = new AutocompleteResponse();
         autocompleteResponse.oldPrefix = "";
         autocompleteResponse.userMessage = new String[] {};

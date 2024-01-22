@@ -1,9 +1,14 @@
 package com.zhongan.devpilot.actions.notifications;
 
+import com.intellij.ide.BrowserUtil;
 import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
+import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+
+import org.jetbrains.annotations.NotNull;
 
 public class DevPilotNotification {
 
@@ -31,6 +36,21 @@ public class DevPilotNotification {
             DevPilotMessageBundle.get("notification.group.devpilot"),
             content,
             NotificationType.ERROR);
+        Notifications.Bus.notify(notification);
+    }
+
+    public static void infoAndAction(String content, String display, String url) {
+        var notification = new Notification(
+            "DevPilot Notification Group",
+            DevPilotMessageBundle.get("notification.group.devpilot"),
+            content,
+            NotificationType.INFORMATION);
+        notification.addAction(new NotificationAction(display) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent anActionEvent, @NotNull Notification notification) {
+                BrowserUtil.browse(url);
+            }
+        });
         Notifications.Bus.notify(notification);
     }
 

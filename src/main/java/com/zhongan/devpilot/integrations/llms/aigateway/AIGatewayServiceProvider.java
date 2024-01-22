@@ -2,6 +2,8 @@ package com.zhongan.devpilot.integrations.llms.aigateway;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.diagnostic.Logger;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -27,6 +29,9 @@ import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION_ACCESS_KEY_TEMP;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
@@ -84,45 +89,45 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
     @Override
     public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
-        //TODO 待优化，需要和sdk确认封装方法
         var ssoEnum = ZaSsoUtils.getSsoEnum();
 
-        //TODO 本地调试暂时关闭，记得打开
-/*        if (!ZaSsoUtils.isLogin(ssoEnum)) {
-            return "Chat completion failed: please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
-        }*/
+        if (!ZaSsoUtils.isLogin(ssoEnum)) {
+            DevPilotNotification.infoAndAction("Instruct completion failed: please login", ssoEnum.getDisplayName(), ZaSsoUtils.getZaSsoAuthUrl(ssoEnum));
+            return null;
+        }
 
         var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
         var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
 
         if (StringUtils.isEmpty(host)) {
-            return "Chat completion failed: host is empty";
+            Logger.getInstance(getClass()).warn("Instruct completion failed: host is empty");
+            return null;
         }
-
-//        var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
-//        instructCompletionRequest.setModel(modelTypeEnum.getCode());
 
         okhttp3.Response response;
 
         try {
             var request = new Request.Builder()
-                .url(host + "/ai/test/azure/gpt-35-turbo-instruct/completions")
+                .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
                 .header("User-Agent", UserAgentUtils.getUserAgent())
                 .header("Auth-Type", ZaSsoUtils.getSsoType())
-                .header("access-key", "30bb0c2d46194cd5b11f892ded3c6fbc")
+                 //TODO删除
+                .header("access-key", AI_GATEWAY_INSTRUCT_COMPLETION_ACCESS_KEY_TEMP)
                 .post(RequestBody.create(objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
             call = client.newCall(request);
             response = call.execute();
         } catch (Exception e) {
-            return "Chat completion failed: " + e.getMessage();
+            Logger.getInstance(getClass()).warn("Chat completion failed: " + e.getMessage());
+            return null;
         }
 
         try {
-            return parseResult(instructCompletionRequest, response);
+            return parseResult(response);
         } catch (Exception e) {
-            return "Chat completion failed: " + e.getMessage();
+            Logger.getInstance(getClass()).warn("Chat completion failed: " + e.getMessage());
+            return null;
         }
     }
 
@@ -163,7 +168,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         }
     }
 
-    private String parseResult(DevPilotInstructCompletionRequest instructCompletionRequest, okhttp3.Response response) throws IOException {
+    private String parseResult(okhttp3.Response response) throws IOException {
         if (response == null) {
             return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
         }
@@ -177,7 +182,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setRole("assistant");
             devPilotMessage.setContent(content);
-//            instructCompletionRequest.getMessages().add(devPilotMessage);
             return content;
 
         } else if (response.code() == 401) {

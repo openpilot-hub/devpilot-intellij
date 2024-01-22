@@ -5,6 +5,7 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
+import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
@@ -18,6 +19,8 @@ import javax.swing.JComponent;
 
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
+
+import static com.zhongan.devpilot.enums.ModelServiceEnum.AIGATEWAY;
 
 public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
@@ -91,10 +94,20 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
+        checkCodeCompletionConfig(selectedModel);
     }
 
     @Override
     public void dispose() {
+    }
+
+    private void checkCodeCompletionConfig(ModelServiceEnum serviceEnum) {
+        if (!AIGATEWAY.equals(serviceEnum) && CompletionSettingsState.getInstance().getEnable()) {
+            CompletionSettingsState.getInstance().setEnable(false);
+        }
+        if (AIGATEWAY.equals(serviceEnum) && !CompletionSettingsState.getInstance().getEnable()) {
+            CompletionSettingsState.getInstance().setEnable(true);
+        }
     }
 
 }
