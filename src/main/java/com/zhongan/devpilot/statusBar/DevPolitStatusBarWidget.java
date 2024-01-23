@@ -30,11 +30,10 @@ public class DevPolitStatusBarWidget extends EditorBasedWidget
     }
 
     public Icon getIcon() {
-        Icon icon = DevPilotIcons.SYSTEM_ICON;
         if (!CompletionSettingsState.getInstance().getEnable()) {
-            return IconLoader.getTransparentIcon(icon, 0.3f);
+            return DevPilotIcons.SYSTEM_ICON_GRAY;
         }
-        return icon;
+        return DevPilotIcons.SYSTEM_ICON;
     }
 
     public @Nullable("null means the widget is unable to show the popup") ListPopup getPopupStep() {
