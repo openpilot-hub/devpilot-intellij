@@ -119,9 +119,6 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         if (!AIGATEWAY.equals(serviceEnum) && CompletionSettingsState.getInstance().getEnable()) {
             CompletionSettingsState.getInstance().setEnable(false);
         }
-        if (AIGATEWAY.equals(serviceEnum) && !CompletionSettingsState.getInstance().getEnable()) {
-            CompletionSettingsState.getInstance().setEnable(true);
-        }
     }
 
 }

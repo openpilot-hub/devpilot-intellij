@@ -5,6 +5,7 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.zhongan.devpilot.statusBar.CompletionsStateNotifier;
 
 @State(name = "DevPilot_CompletionSettings", storages = @Storage("DevPilot_CompletionSettings.xml"))
 public class CompletionSettingsState implements PersistentStateComponent<CompletionSettingsState> {
@@ -20,6 +21,7 @@ public class CompletionSettingsState implements PersistentStateComponent<Complet
     }
 
     public void setEnable(Boolean enable) {
+        CompletionsStateNotifier.Companion.publish(enable);
         this.enable = enable;
     }
 

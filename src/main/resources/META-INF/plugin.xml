@@ -49,7 +49,7 @@
 
         <editorFactoryDocumentListener implementation="com.zhongan.devpilot.completions.inline.DevPolitDocumentListener"/>
         <editorActionHandler action="EditorEscape" implementationClass="com.zhongan.devpilot.completions.inline.EscapeHandler"
-                             id="previewEscape" order="before hide-hints"/>、
+                             id="previewEscape" order="before hide-hints"/>
         <statusBarWidgetFactory implementation="com.zhongan.devpilot.statusBar.StatusBarProvider" id="com.zhongan.devpilot.statusBar.StatusBarProvider"/>
 
 

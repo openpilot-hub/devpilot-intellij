@@ -5,10 +5,12 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.ListPopup;
+import com.intellij.openapi.util.IconLoader;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.impl.status.EditorBasedWidget;
 import com.intellij.util.Consumer;
 import com.zhongan.devpilot.DevPilotIcons;
+import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 
 import java.awt.event.MouseEvent;
 
@@ -23,12 +25,16 @@ public class DevPolitStatusBarWidget extends EditorBasedWidget
 
     public DevPolitStatusBarWidget(@NotNull Project project) {
         super(project);
+        CompletionsStateNotifier.Companion.subscribe(isEnabled -> update());
         //todo 初始化setting
     }
 
     public Icon getIcon() {
-        //todo 根据状态区分icon
-        return DevPilotIcons.SYSTEM_ICON;
+        Icon icon = DevPilotIcons.SYSTEM_ICON;
+        if (!CompletionSettingsState.getInstance().getEnable()) {
+            return IconLoader.getTransparentIcon(icon, 0.3f);
+        }
+        return icon;
     }
 
     public @Nullable("null means the widget is unable to show the popup") ListPopup getPopupStep() {
