@@ -21,8 +21,8 @@ public class CompletionSettingsState implements PersistentStateComponent<Complet
     }
 
     public void setEnable(Boolean enable) {
-        CompletionsStateNotifier.Companion.publish(enable);
         this.enable = enable;
+        CompletionsStateNotifier.Companion.publish(enable);
     }
 
     @Override
