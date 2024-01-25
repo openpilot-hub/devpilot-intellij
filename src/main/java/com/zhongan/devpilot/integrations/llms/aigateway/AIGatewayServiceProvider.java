@@ -2,13 +2,16 @@ package com.zhongan.devpilot.integrations.llms.aigateway;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
@@ -19,6 +22,8 @@ import com.zhongan.devpilot.util.ZaSsoUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -28,7 +33,11 @@ import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.sse.EventSource;
+
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION_ACCESS_KEY_TEMP;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
@@ -112,7 +121,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
         chatCompletionRequest.setModel(modelTypeEnum.getCode());
 
-        okhttp3.Response response;
+        Response response;
 
         try {
             var request = new Request.Builder()
@@ -134,7 +143,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         }
     }
 
-    private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
+    private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, Response response) throws IOException {
         if (response == null) {
             return DevPilotChatCompletionResponse.failed(DevPilotMessageBundle.get("devpilot.chatWindow.response.null"));
         }
@@ -160,6 +169,76 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                 .getError()
                 .getMessage());
+        }
+    }
+
+    @Override
+    public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
+        var ssoEnum = ZaSsoUtils.getSsoEnum();
+
+        if (!ZaSsoUtils.isLogin(ssoEnum)) {
+            DevPilotNotification.infoAndAction("Instruct completion failed: please login", ssoEnum.getDisplayName(), ZaSsoUtils.getZaSsoAuthUrl(ssoEnum));
+            return null;
+        }
+
+        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+
+        if (StringUtils.isEmpty(host)) {
+            Logger.getInstance(getClass()).warn("Instruct completion failed: host is empty");
+            return null;
+        }
+
+        okhttp3.Response response;
+
+        try {
+            var request = new Request.Builder()
+                .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
+                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("Auth-Type", ZaSsoUtils.getSsoType())
+                //TODO删除
+                .header("access-key", AI_GATEWAY_INSTRUCT_COMPLETION_ACCESS_KEY_TEMP)
+                .post(RequestBody.create(objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json")))
+                .build();
+            Call call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            Logger.getInstance(getClass()).warn("Chat completion failed: " + e.getMessage());
+            return null;
+        }
+
+        try {
+            return parseResult(response);
+        } catch (Exception e) {
+            Logger.getInstance(getClass()).warn("Chat completion failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private String parseResult(Response response) throws IOException {
+        if (response == null) {
+            return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
+        }
+
+        var result = Objects.requireNonNull(response.body()).string();
+
+        if (response.isSuccessful()) {
+            List<Map> message = (List<Map>) objectMapper.readValue(result, Map.class).get("choices");
+            String content = (String) message.get(0).get("text");
+            // multi chat message
+            var devPilotMessage = new DevPilotMessage();
+            devPilotMessage.setRole("assistant");
+            devPilotMessage.setContent(content);
+            return content;
+
+        } else if (response.code() == 401) {
+            var ssoEnum = ZaSsoUtils.getSsoEnum();
+            ZaSsoUtils.logout(ssoEnum);
+            return "Chat completion failed: Unauthorized, please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
+        } else {
+            return objectMapper.readValue(result, DevPilotFailedResponse.class)
+                .getError()
+                .getMessage();
         }
     }
 

@@ -8,6 +8,7 @@ import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
@@ -73,6 +74,11 @@ public final class LlamaServiceProvider implements LlmProvider {
         }
 
         return "";
+    }
+
+    @Override
+    public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
+        return null;
     }
 
     @Override

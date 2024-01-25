@@ -40,11 +40,19 @@
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CompletionSettingsState"/>
 
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
         <projectService id="DevPilotChatToolWindowService" serviceImplementation="com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService"/>
 
         <notificationGroup id="DevPilot Notification Group" displayType="BALLOON" key="notification.group.devpilot"/>
+
+        <editorFactoryDocumentListener implementation="com.zhongan.devpilot.completions.inline.DevPolitDocumentListener"/>
+        <editorActionHandler action="EditorEscape" implementationClass="com.zhongan.devpilot.completions.inline.EscapeHandler"
+                             id="previewEscape" order="before hide-hints"/>
+        <statusBarWidgetFactory implementation="com.zhongan.devpilot.statusBar.StatusBarProvider" id="com.zhongan.devpilot.statusBar.StatusBarProvider"/>
+
+
     </extensions>
 
     <resource-bundle>messages.devpilot</resource-bundle>
@@ -58,6 +66,17 @@
             </action>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
+
+        <action class="com.zhongan.devpilot.completions.inline.AcceptDevPilotInlineCompletionAction"
+                id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
+            <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
+        </action>
+        <!--support alt + B-->
+        <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
+                id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
+            <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>
+        </action>
+
         <group id="DevPilot.GenerateGitCommitMessageGroup">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
             <action

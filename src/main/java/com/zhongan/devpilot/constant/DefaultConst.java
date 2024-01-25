@@ -17,4 +17,11 @@ public class DefaultConst {
 
     public static final String DEFAULT_CODE_LANGUAGE = "java";
 
+    public final static String AI_GATEWAY_INSTRUCT_COMPLETION = "/ai/test/azure/gpt-35-turbo-instruct/completions";
+
+    @Deprecated
+    public final static String AI_GATEWAY_INSTRUCT_COMPLETION_ACCESS_KEY_TEMP = "30bb0c2d46194cd5b11f892ded3c6fbc";
+
+//    public final static String AI_GATEWAY_INSTRUCT_COMPLETION = "/devpilot/v1/completions";
+
 }
