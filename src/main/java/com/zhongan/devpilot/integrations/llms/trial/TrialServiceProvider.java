@@ -3,6 +3,7 @@ package com.zhongan.devpilot.integrations.llms.trial;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -12,9 +13,9 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionR
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
-import com.zhongan.devpilot.util.GithubAuthUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
+import com.zhongan.devpilot.util.WxAuthUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
@@ -32,7 +33,7 @@ import okhttp3.sse.EventSource;
 public final class TrialServiceProvider implements LlmProvider {
     private static final String host = "https://devpilot.zhongan.com/aigc";
 
-    private static final String model = "aws/codellama";
+    private static final String model = "azure/gpt-3.5-turbo";
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -47,9 +48,9 @@ public final class TrialServiceProvider implements LlmProvider {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
-        if (!GithubAuthUtils.isLogin()) {
-            var loginInfo = "Chat completion failed: please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>";
-            service.callErrorInfo(loginInfo);
+        if (!WxAuthUtils.isLogin()) {
+            service.callErrorInfo("Chat completion failed: please login");
+            DevPilotNotification.linkInfo("Please Login", "Wechat Account", WxAuthUtils.getWxAuthUrl());
             return "";
         }
 
@@ -60,8 +61,8 @@ public final class TrialServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getGithubUserAgent())
-                    .header("Auth-Type", "github")
+                    .header("User-Agent", UserAgentUtils.getWxUserAgent())
+                    .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
 
@@ -76,8 +77,8 @@ public final class TrialServiceProvider implements LlmProvider {
 
     @Override
     public DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest) {
-        if (!GithubAuthUtils.isLogin()) {
-            return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>");
+        if (!WxAuthUtils.isLogin()) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + WxAuthUtils.getWxAuthUrl() + "\">Wechat Login</a>");
         }
 
         chatCompletionRequest.setModel(model);
@@ -87,7 +88,7 @@ public final class TrialServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getGithubUserAgent())
+                    .header("User-Agent", UserAgentUtils.getWxUserAgent())
                     .header("Auth-Type", "github")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
@@ -126,6 +127,13 @@ public final class TrialServiceProvider implements LlmProvider {
         }
     }
 
+    @Override
+    public void handleNoAuth(DevPilotChatToolWindowService service) {
+        WxAuthUtils.logout();
+        service.callErrorInfo("Chat completion failed: No auth, please login");
+        DevPilotNotification.linkInfo("Please Login", "Wechat Account", WxAuthUtils.getWxAuthUrl());
+    }
+
     private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
 
         if (response == null) {
@@ -146,8 +154,8 @@ public final class TrialServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.success(message.getContent());
 
         } else if (response.code() == 401) {
-            GithubAuthUtils.logout();
-            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + GithubAuthUtils.getGithubAuthUrl() + "\">Github Login</a>");
+            WxAuthUtils.logout();
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + WxAuthUtils.getWxAuthUrl() + "\">Wechat Login</a>");
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                     .getError()

@@ -8,38 +8,38 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 
 @State(name = "DevPilot_TrialServiceSettings", storages = @Storage("DevPilot_TrialServiceSettings.xml"))
 public class TrialServiceSettingsState implements PersistentStateComponent<TrialServiceSettingsState> {
-    private String githubToken;
+    private String wxToken;
 
-    private String githubUsername;
+    private String wxUsername;
 
-    private Long githubUserId;
+    private String wxUserId;
 
     public static TrialServiceSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(TrialServiceSettingsState.class);
     }
 
-    public String getGithubToken() {
-        return githubToken;
+    public String getWxToken() {
+        return wxToken;
     }
 
-    public void setGithubToken(String githubToken) {
-        this.githubToken = githubToken;
+    public void setWxToken(String wxToken) {
+        this.wxToken = wxToken;
     }
 
-    public String getGithubUsername() {
-        return githubUsername;
+    public String getWxUsername() {
+        return wxUsername;
     }
 
-    public void setGithubUsername(String githubUsername) {
-        this.githubUsername = githubUsername;
+    public void setWxUsername(String wxUsername) {
+        this.wxUsername = wxUsername;
     }
 
-    public Long getGithubUserId() {
-        return githubUserId;
+    public String getWxUserId() {
+        return wxUserId;
     }
 
-    public void setGithubUserId(Long githubUserId) {
-        this.githubUserId = githubUserId;
+    public void setWxUserId(String wxUserId) {
+        this.wxUserId = wxUserId;
     }
 
     @Override

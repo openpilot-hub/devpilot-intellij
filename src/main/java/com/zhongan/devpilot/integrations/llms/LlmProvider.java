@@ -37,6 +37,14 @@ public interface LlmProvider {
         // default not restore message
     }
 
+    default void handleNoAuth(DevPilotChatToolWindowService service) {
+        var content = "Chat completion failed: Auth Failed";
+        var assistantMessage = MessageModel.buildInfoMessage(content);
+
+        service.callWebView(assistantMessage);
+        service.addMessage(assistantMessage);
+    }
+
     default EventSource buildEventSource(Request request,
                                          DevPilotChatToolWindowService service, Consumer<String> callback) {
         var time = System.currentTimeMillis();
@@ -90,7 +98,8 @@ public interface LlmProvider {
                 var message = "Chat completion failed";
 
                 if (response != null && response.code() == 401) {
-                    message = "Chat completion failed: Unauthorized";
+                    handleNoAuth(service);
+                    return;
                 }
 
                 if (t != null) {

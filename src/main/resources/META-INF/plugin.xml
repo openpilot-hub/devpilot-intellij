@@ -30,7 +30,7 @@
                                  instance="com.zhongan.devpilot.settings.DevPilotSettingsConfigurable"/>
 
         <httpRequestHandler implementation="com.zhongan.devpilot.rest.za.ZaSsoCallbackRestService"/>
-        <httpRequestHandler implementation="com.zhongan.devpilot.rest.github.GithubAuthCallbackRestService"/>
+        <httpRequestHandler implementation="com.zhongan.devpilot.rest.wx.WxAuthCallbackRestService"/>
 
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState"/>

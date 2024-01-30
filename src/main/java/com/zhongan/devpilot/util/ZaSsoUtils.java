@@ -1,87 +1,26 @@
 package com.zhongan.devpilot.util;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.ZaSsoEnum;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 
 import java.util.Locale;
-import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.ide.BuiltInServerManager;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-
 public class ZaSsoUtils {
-    public static final String ZA_SSO_AUTH_URL = "https://nsso.zhonganonline.com/login?service=codeai&target=http://127.0.0.1:%s/za/sso/callback";
+    private static final String ssoAuthUrl = "https://devpilot-h5.zhongan.com/login?scope=%s&backUrl=%s&source=%s";
 
-    public static final String ZA_TI_SSO_AUTH_URL = "https://za-uc.in.za/login?service=codeai&target=http://127.0.0.1:%s/za/sso/callback";
-
-    private static final String baseUrl = "http://openapi-cloud-pub.zhonganinfo.com/openpilot-hub";
-
-    private static final String zaUserInfoUrl = baseUrl + "/za/user?ticket=";
-
-    private static final String zaTiUserInfoUrl = baseUrl + "/zati/user?ticket=";
-
-    private static final OkHttpClient client = new OkHttpClient.Builder()
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .build();
-
-    private static final ObjectMapper objectMapper = new ObjectMapper();
+    private static final String ssoCallbackUrl = "http://127.0.0.1:%s/za/sso/callback";
 
     public static String getZaSsoAuthUrl(ZaSsoEnum ssoEnum) {
         var port = BuiltInServerManager.getInstance().getPort();
+        var scope = ssoEnum == ZaSsoEnum.ZA_TI ? "zati" : "za";
 
-        switch (ssoEnum) {
-            case ZA_TI:
-                return String.format(ZA_TI_SSO_AUTH_URL, port);
-            case ZA:
-            default:
-                return String.format(ZA_SSO_AUTH_URL, port);
-        }
-    }
+        var backUrl = String.format(ssoCallbackUrl, port);
 
-    public static ZaUser zaSsoAuth(ZaSsoEnum zaSsoEnum, String ticket) {
-        String url = getUserInfoUrl(zaSsoEnum) + ticket;
-
-        okhttp3.Response response = null;
-
-        try {
-            var request = new Request.Builder()
-                    .url(url)
-                    .get()
-                    .build();
-
-            var call = client.newCall(request);
-            response = call.execute();
-
-            if (response.isSuccessful()) {
-                var result = Objects.requireNonNull(response.body()).string();
-                return objectMapper.readValue(result, ZaUser.class);
-            }
-        } catch (Exception e) {
-            return null;
-        } finally {
-            if (response != null) {
-                response.close();
-            }
-        }
-
-        return null;
-    }
-
-    private static String getUserInfoUrl(ZaSsoEnum zaSsoEnum) {
-        switch (zaSsoEnum) {
-            case ZA_TI:
-                return zaTiUserInfoUrl;
-            case ZA:
-            default:
-                return zaUserInfoUrl;
-        }
+        return String.format(ssoAuthUrl, scope, backUrl, DefaultConst.DEFAULT_SOURCE_STRING);
     }
 
     public static boolean isLogin(ZaSsoEnum zaSsoEnum) {
@@ -97,6 +36,7 @@ public class ZaSsoUtils {
 
     public static void login(ZaSsoEnum zaSsoEnum, String token, String username) {
         var settings = AIGatewaySettingsState.getInstance();
+        settings.setSelectedSso(zaSsoEnum.getName());
         switch (zaSsoEnum) {
             case ZA_TI:
                 settings.setTiSsoToken(token);
@@ -144,87 +84,5 @@ public class ZaSsoUtils {
     public static ZaSsoEnum getSsoEnum() {
         var settings = AIGatewaySettingsState.getInstance();
         return ZaSsoEnum.fromName(settings.getSelectedSso());
-    }
-
-    public static class ZaUser {
-        private Long id;
-
-        private String username;
-
-        private String email;
-
-        private Long companyId;
-
-        private String companyName;
-
-        private Long departmentId;
-
-        private String userType;
-
-        private String token;
-
-        public Long getId() {
-            return id;
-        }
-
-        public void setId(Long id) {
-            this.id = id;
-        }
-
-        public String getUsername() {
-            return username;
-        }
-
-        public void setUsername(String username) {
-            this.username = username;
-        }
-
-        public String getEmail() {
-            return email;
-        }
-
-        public void setEmail(String email) {
-            this.email = email;
-        }
-
-        public Long getCompanyId() {
-            return companyId;
-        }
-
-        public void setCompanyId(Long companyId) {
-            this.companyId = companyId;
-        }
-
-        public String getCompanyName() {
-            return companyName;
-        }
-
-        public void setCompanyName(String companyName) {
-            this.companyName = companyName;
-        }
-
-        public Long getDepartmentId() {
-            return departmentId;
-        }
-
-        public void setDepartmentId(Long departmentId) {
-            this.departmentId = departmentId;
-        }
-
-        public String getUserType() {
-            return userType;
-        }
-
-        public void setUserType(String userType) {
-            this.userType = userType;
-        }
-
-        public String getToken() {
-            return token;
-        }
-
-        public void setToken(String token) {
-            this.token = token;
-        }
     }
 }

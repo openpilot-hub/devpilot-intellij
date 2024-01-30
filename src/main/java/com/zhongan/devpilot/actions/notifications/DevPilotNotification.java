@@ -39,6 +39,23 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
+    public static void linkInfo(String content, String text, String url) {
+        var notification = new Notification(
+            "DevPilot Notification Group",
+            DevPilotMessageBundle.get("notification.group.devpilot"),
+            content,
+            NotificationType.INFORMATION);
+
+        notification.addAction(new NotificationAction(text) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent e, @NotNull Notification notification) {
+                BrowserUtil.browse(url);
+            }
+        });
+
+        Notifications.Bus.notify(notification);
+    }
+
     public static void infoAndAction(String content, String display, String url) {
         var notification = new Notification(
             "DevPilot Notification Group",
