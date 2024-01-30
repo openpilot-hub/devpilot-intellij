@@ -52,16 +52,18 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
-        var ssoEnum = ZaSsoUtils.getSsoEnum();
+        var service = project.getService(DevPilotChatToolWindowService.class);
+        this.toolWindowService = service;
 
+        var ssoEnum = ZaSsoUtils.getSsoEnum();
         if (!ZaSsoUtils.isLogin(ssoEnum)) {
-            return "Chat completion failed: please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
+            service.callErrorInfo("Chat completion failed: please login");
+            DevPilotNotification.linkInfo("Please Login", ssoEnum.getDisplayName(), ZaSsoUtils.getZaSsoAuthUrl(ssoEnum));
+            return "";
         }
 
         var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
         var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
-        var service = project.getService(DevPilotChatToolWindowService.class);
-        this.toolWindowService = service;
 
         if (StringUtils.isEmpty(host)) {
             service.callErrorInfo("Chat completion failed: host is empty");
@@ -107,6 +109,14 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     @Override
     public void restoreMessage(MessageModel messageModel) {
         this.resultModel = messageModel;
+    }
+
+    @Override
+    public void handleNoAuth(DevPilotChatToolWindowService service) {
+        var ssoEnum = ZaSsoUtils.getSsoEnum();
+        ZaSsoUtils.logout(ssoEnum);
+        service.callErrorInfo("Chat completion failed: No auth, please login");
+        DevPilotNotification.linkInfo("Please Login", ssoEnum.getDisplayName(), ZaSsoUtils.getZaSsoAuthUrl(ssoEnum));
     }
 
     @Override

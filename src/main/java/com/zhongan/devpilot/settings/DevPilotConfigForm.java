@@ -18,7 +18,7 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.settings.state.TrialServiceSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
-import com.zhongan.devpilot.util.GithubAuthUtils;
+import com.zhongan.devpilot.util.WxAuthUtils;
 import com.zhongan.devpilot.util.ZaSsoUtils;
 
 import java.awt.FlowLayout;
@@ -70,11 +70,11 @@ public class DevPilotConfigForm {
 
     private final JPanel trialServicePanel;
 
-    private final JButton githubAuthButton;
+    private final JButton wxAuthButton;
 
-    private final JBLabel githubUserInfoLabel;
+    private final JBLabel wxUserInfoLabel;
 
-    private final JPanel githubLoginPanel;
+    private final JPanel wxLoginPanel;
 
     private Integer index;
 
@@ -131,13 +131,7 @@ public class DevPilotConfigForm {
         var ssoComboBox = new ComboBox<>(ZaSsoEnum.values());
         ssoComboBox.setSelectedItem(ZaSsoEnum.fromName(aiGatewaySettings.getSelectedSso()));
         ssoComboBox.addItemListener(e -> {
-            if (ZaSsoUtils.isLogin(getSelectedZaSso())) {
-                userInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + ZaSsoUtils.zaSsoUsername(getSelectedZaSso()));
-                zaSsoButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
-            } else {
-                userInfoLabel.setText(null);
-                zaSsoButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.zaSsoDesc"));
-            }
+            switchSelectedSso();
         });
 
         zaSsoComboBox = ssoComboBox;
@@ -150,21 +144,21 @@ public class DevPilotConfigForm {
         codeLlamaServicePanel = createCodeLlamaServicePanel();
 
         var trialServiceSettings = TrialServiceSettingsState.getInstance();
-        var username = trialServiceSettings.getGithubUsername();
+        var username = trialServiceSettings.getWxUsername();
 
-        githubAuthButton = createGithubAuthButton();
-        if (GithubAuthUtils.isLogin()) {
-            githubUserInfoLabel = new JBLabel(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
+        wxAuthButton = createWxAuthButton();
+        if (WxAuthUtils.isLogin()) {
+            wxUserInfoLabel = new JBLabel(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
         } else {
-            githubUserInfoLabel = new JBLabel();
+            wxUserInfoLabel = new JBLabel();
         }
 
-        var githubLoginWrapper = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
-        githubLoginWrapper.add(githubAuthButton);
-        githubLoginWrapper.add(Box.createHorizontalStrut(5));
-        githubLoginWrapper.add(githubUserInfoLabel);
+        var wxLoginWrapper = new JPanel(new FlowLayout(FlowLayout.LEADING, 0, 0));
+        wxLoginWrapper.add(wxAuthButton);
+        wxLoginWrapper.add(Box.createHorizontalStrut(5));
+        wxLoginWrapper.add(wxUserInfoLabel);
 
-        githubLoginPanel = githubLoginWrapper;
+        wxLoginPanel = wxLoginWrapper;
 
         trialServicePanel = createTrialServicePanel();
 
@@ -242,6 +236,16 @@ public class DevPilotConfigForm {
         return button;
     }
 
+    private void switchSelectedSso() {
+        if (ZaSsoUtils.isLogin(getSelectedZaSso())) {
+            userInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + ZaSsoUtils.zaSsoUsername(getSelectedZaSso()));
+            zaSsoButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
+        } else {
+            userInfoLabel.setText(null);
+            zaSsoButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.zaSsoDesc"));
+        }
+    }
+
     private JPanel createOpenAIServiceSectionPanel(String label, JComponent component) {
         var panel = UI.PanelFactory.grid()
             .add(UI.PanelFactory.panel(component)
@@ -304,31 +308,31 @@ public class DevPilotConfigForm {
 
     private JPanel createTrialServicePanel() {
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(githubLoginPanel)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.zaGithubLabel"))
+                .add(UI.PanelFactory.panel(wxLoginPanel)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.zaWxLabel"))
                         .resizeX(false))
                 .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
         return panel;
     }
 
-    private JButton createGithubAuthButton() {
-        String showText = DevPilotMessageBundle.get("devpilot.settings.service.zaGithubDesc");
+    private JButton createWxAuthButton() {
+        String showText = DevPilotMessageBundle.get("devpilot.settings.service.zaWxDesc");
 
-        if (GithubAuthUtils.isLogin()) {
+        if (WxAuthUtils.isLogin()) {
             showText = DevPilotMessageBundle.get("devpilot.settings.service.logout");
         }
 
         JButton button = new JButton(showText);
         button.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent evt) {
-                if (GithubAuthUtils.isLogin()) {
-                    button.setText(DevPilotMessageBundle.get("devpilot.settings.service.zaGithubDesc"));
+                if (WxAuthUtils.isLogin()) {
+                    button.setText(DevPilotMessageBundle.get("devpilot.settings.service.zaWxDesc"));
                     // logout clear user session info
-                    GithubAuthUtils.logout();
-                    githubUserInfoLabel.setText("");
+                    WxAuthUtils.logout();
+                    wxUserInfoLabel.setText("");
                 } else {
-                    String url = GithubAuthUtils.getGithubAuthUrl();
+                    String url = WxAuthUtils.getWxAuthUrl();
                     BrowserUtil.browse(url);
                 }
             }
@@ -413,17 +417,20 @@ public class DevPilotConfigForm {
         return (ModelTypeEnum) aiGatewayModelComboBox.getSelectedItem();
     }
 
-    public void zaSsoLogin(String token, String username) {
-        var zaSsoEnum = getSelectedZaSso();
+    public void zaSsoLogin(ZaSsoEnum zaSsoEnum, String token, String username) {
+        panelShow(ModelServiceEnum.AIGATEWAY);
+        zaSsoComboBox.setSelectedItem(zaSsoEnum);
+        switchSelectedSso();
         ZaSsoUtils.login(zaSsoEnum, token, username);
         zaSsoButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
         userInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
     }
 
-    public void githubLogin(String username, String token, Long userid) {
-        GithubAuthUtils.login(username, token, userid);
-        githubAuthButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
-        githubUserInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
+    public void wxLogin(String username, String token, String userid) {
+        panelShow(ModelServiceEnum.TRIAL);
+        WxAuthUtils.login(token, username, userid);
+        wxAuthButton.setText(DevPilotMessageBundle.get("devpilot.settings.service.logout"));
+        wxUserInfoLabel.setText(DevPilotMessageBundle.get("devpilot.settings.service.welcome") + " " + username);
     }
 
     public OpenAIModelNameEnum getOpenAIModelName() {

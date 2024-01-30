@@ -26,15 +26,15 @@ public class UserAgentUtils {
         }
 
         // format: idea version|plugin version|user token|username
-        return String.format("%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
+        return String.format("idea-%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
                 DevPilotVersion.getDevPilotVersion(), token, username);
     }
 
-    public static String getGithubUserAgent() {
+    public static String getWxUserAgent() {
         var settings = TrialServiceSettingsState.getInstance();
 
         // format: idea version|plugin version|token|userid
-        return String.format("%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
-                DevPilotVersion.getDevPilotVersion(), settings.getGithubToken(), settings.getGithubUserId());
+        return String.format("idea-%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
+                DevPilotVersion.getDevPilotVersion(), settings.getWxToken(), settings.getWxUserId());
     }
 }

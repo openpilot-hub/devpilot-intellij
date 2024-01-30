@@ -17,6 +17,8 @@ public class DefaultConst {
 
     public static final String DEFAULT_CODE_LANGUAGE = "java";
 
+    public static final String DEFAULT_SOURCE_STRING = "IntelliJ IDEA";
+
     public final static String AI_GATEWAY_INSTRUCT_COMPLETION = "/ai/test/azure/gpt-35-turbo-instruct/completions";
 
     @Deprecated

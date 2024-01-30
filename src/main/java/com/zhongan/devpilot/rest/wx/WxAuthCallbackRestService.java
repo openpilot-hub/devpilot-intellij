@@ -1,8 +1,10 @@
-package com.zhongan.devpilot.rest.github;
+package com.zhongan.devpilot.rest.wx;
 
+import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.util.CallbackUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
-import com.zhongan.devpilot.util.GithubAuthUtils;
+import com.zhongan.devpilot.util.RestServiceUtils;
+import com.zhongan.devpilot.util.WxAuthUtils;
 
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.http.FullHttpRequest;
@@ -15,19 +17,18 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.ide.RestService;
 
-public class GithubAuthCallbackRestService extends RestService {
+public class WxAuthCallbackRestService extends RestService {
     @Nullable
     @Override
     public String execute(@NotNull QueryStringDecoder queryStringDecoder, @NotNull FullHttpRequest fullHttpRequest, @NotNull ChannelHandlerContext channelHandlerContext) throws IOException {
-        var codeList = queryStringDecoder.parameters().get("code");
+        var token = RestServiceUtils.getParameter(queryStringDecoder, "token");
 
-        if (codeList == null || codeList.isEmpty()) {
+        if (token == null) {
             sendResponse(fullHttpRequest, channelHandlerContext, CallbackUtils.buildFailResponse());
             return null;
         }
 
-        var code = codeList.get(0);
-        var user = GithubAuthUtils.githubAuth(code);
+        var user = RestServiceUtils.parseToken(token);
 
         if (user == null) {
             sendResponse(fullHttpRequest, channelHandlerContext, CallbackUtils.buildFailResponse());
@@ -36,20 +37,16 @@ public class GithubAuthCallbackRestService extends RestService {
 
         var configurableCache = ConfigurableUtils.getConfigurableCache();
         if (configurableCache != null) {
-            configurableCache.getDevPilotConfigForm().githubLogin(user.getUsername(), user.getToken(), user.getId());
+            configurableCache.getDevPilotConfigForm().wxLogin(user.getNickname(), user.getToken(), user.getOpenid());
         } else {
-            GithubAuthUtils.login(user);
+            WxAuthUtils.login(user.getToken(), user.getNickname(), user.getOpenid());
         }
 
         var project = getLastFocusedOrOpenedProject();
-
-        // FIXME
-//        if (project != null) {
-//            var toolWindow = DevPilotChatToolWindowFactory.getDevPilotChatToolWindow(project);
-//            if (toolWindow != null) {
-//                toolWindow.githubLoginSuccess(user.getUsername());
-//            }
-//        }
+        if (project != null) {
+            var service = project.getService(DevPilotChatToolWindowService.class);
+            service.callLoginSuccess(user.getNickname(), "Wechat");
+        }
 
         sendResponse(fullHttpRequest, channelHandlerContext, CallbackUtils.buildSuccessResponse());
         return null;
@@ -69,6 +66,6 @@ public class GithubAuthCallbackRestService extends RestService {
     @NotNull
     @Override
     protected String getServiceName() {
-        return "github/callback";
+        return "wx/callback";
     }
 }

@@ -18,6 +18,7 @@ import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.EditorUtils;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.NewFileUtils;
+import com.zhongan.devpilot.util.TelemetryUtils;
 import com.zhongan.devpilot.webview.DevPilotCustomHandlerFactory;
 import com.zhongan.devpilot.webview.model.CodeActionModel;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
@@ -194,6 +195,21 @@ public class DevPilotChatToolWindow {
 
                     var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
                     clipboard.setContents(new StringSelection(copyModel.getContent()), null);
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "DislikeMessage":
+                case "LikeMessage": {
+                    var payload = jsCallModel.getPayload();
+                    var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
+                    if (messageModel == null || messageModel.getId() == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    var id = messageModel.getId();
+                    var action = !command.equals("DislikeMessage");
+
+                    TelemetryUtils.messageFeedback(id, action);
+                    return new JBCefJSQuery.Response("success");
                 }
                 default:
                     return new JBCefJSQuery.Response("success");
