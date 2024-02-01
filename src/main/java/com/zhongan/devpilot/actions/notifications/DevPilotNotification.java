@@ -6,8 +6,10 @@ import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class DevPilotNotification {
@@ -71,4 +73,16 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
+    public static void debug(String content) {
+        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+        if (StringUtils.endsWith(host, "dev") || StringUtils.endsWith(host, "prd")) {
+            var notification = new Notification(
+                "DevPilot Notification Group",
+                DevPilotMessageBundle.get("notification.group.devpilot"),
+                content,
+                NotificationType.ERROR);
+            Notifications.Bus.notify(notification);
+        }
+    }
 }

@@ -69,6 +69,7 @@ public class PopupMenuEditorActionGroupUtil {
                         }
 
                         Consumer<String> callback = result -> {
+                            DevPilotNotification.debug("result is -> [." + result+"].");
                             if (validateResult(result)) {
                                 DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.input.tooLong"));
                                 return;
