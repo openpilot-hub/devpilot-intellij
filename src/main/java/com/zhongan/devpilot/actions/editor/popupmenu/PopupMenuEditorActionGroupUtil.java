@@ -36,12 +36,12 @@ import javax.swing.Icon;
 public class PopupMenuEditorActionGroupUtil {
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
-            EditorActionEnum.PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
-            EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
-            EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
-            EditorActionEnum.FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
-            EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
-            EditorActionEnum.EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
+        EditorActionEnum.PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
+        EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
+        EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
+        EditorActionEnum.FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
+        EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
+        EditorActionEnum.EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction");
@@ -69,7 +69,7 @@ public class PopupMenuEditorActionGroupUtil {
                         }
 
                         Consumer<String> callback = result -> {
-                            DevPilotNotification.debug("result is -> [." + result+"].");
+                            DevPilotNotification.debug("result is -> [." + result + "].");
                             if (validateResult(result)) {
                                 DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.input.tooLong"));
                                 return;
@@ -101,10 +101,10 @@ public class PopupMenuEditorActionGroupUtil {
 
                         var showText = DevPilotMessageBundle.get(label);
                         var codeReference = new CodeReferenceModel(editorInfo.getFileUrl(),
-                                editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
+                            editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
 
                         var codeMessage = MessageModel.buildCodeMessage(
-                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
+                            UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
                         service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), newPrompt, callback, codeMessage);
                     }
