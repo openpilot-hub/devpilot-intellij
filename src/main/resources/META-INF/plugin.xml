@@ -6,6 +6,21 @@
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>DevPilot</name>
+    <version>2.2.0</version>
+
+    <change-notes><![CDATA[
+        <h2>New Features</h2>
+        <ul>
+          <li>Supports free trial for users who follow our Weixin Official Account by scanning QR code</li>
+          <li>Supports streaming response conversations</li>
+          <li>Supports generating commit logs based on change records</li>
+          <li>Supports single-round dialogue removal</li>
+          <li>Optimize dialogue interaction style</li>
+          <li>Supports Command Line mode</li>
+          <li>Some models support user feedback on likes and dislikes of results</li>
+          <li>Some models support line-level completion of code</li>
+        </ul>
+    ]]></change-notes>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="pilot_group@zhongan.com" url="https://www.zhongan.com">Zhongan Online</vendor>
