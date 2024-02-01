@@ -57,7 +57,7 @@ public class DevPilotChatToolWindow {
     private void load() {
         JBCefBrowser browser;
         try {
-            browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).build();
+            browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).createBrowser();
         } catch (Exception e) {
             browser = new JBCefBrowser();
         }

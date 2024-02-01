@@ -20,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 public class DevPolitStatusBarWidget extends EditorBasedWidget
     implements StatusBarWidget, StatusBarWidget.MultipleTextValuesPresentation {
-    private static final String EMPTY_SYMBOL = "\u0000";
+    private static final String EMPTY_SYMBOL = " ";
 
     public DevPolitStatusBarWidget(@NotNull Project project) {
         super(project);
@@ -40,7 +40,6 @@ public class DevPolitStatusBarWidget extends EditorBasedWidget
     }
 
     public String getSelectedValue() {
-        //todo 区分登录和非登录图标
         return EMPTY_SYMBOL;
     }
 
