@@ -89,7 +89,7 @@ public final class TrialServiceProvider implements LlmProvider {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
                     .header("User-Agent", UserAgentUtils.getWxUserAgent())
-                    .header("Auth-Type", "github")
+                    .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
 

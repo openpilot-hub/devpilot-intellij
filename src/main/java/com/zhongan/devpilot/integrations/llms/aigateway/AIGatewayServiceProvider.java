@@ -37,7 +37,6 @@ import okhttp3.Response;
 import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
-import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION_ACCESS_KEY_TEMP;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
@@ -75,14 +74,17 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         try {
             var request = new Request.Builder()
-                    .url(host + "/devpilot/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getUserAgent())
-                    .header("Auth-Type", ZaSsoUtils.getSsoType())
-                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
-                    .build();
+                .url(host + "/devpilot/v1/chat/completions")
+                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("Auth-Type", ZaSsoUtils.getSsoType())
+                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                .build();
 
+            DevPilotNotification.debug(ZaSsoUtils.getSsoType() + "---" + UserAgentUtils.getUserAgent());
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+
             service.callErrorInfo("Chat completion failed: " + e.getMessage());
             return "";
         }
@@ -133,27 +135,34 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         Response response;
 
+
         try {
+            String requestBody = objectMapper.writeValueAsString(chatCompletionRequest);
+            DevPilotNotification.debug("Send Request :[" + requestBody + "].");
+
             var request = new Request.Builder()
                 .url(host + "/devpilot/v1/chat/completions")
                 .header("User-Agent", UserAgentUtils.getUserAgent())
-                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                .header("Auth-Type", ZaSsoUtils.getSsoType())
+                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                 .build();
 
             Call call = OkhttpUtils.getClient().newCall(request);
             response = call.execute();
         } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
 
         try {
-            return parseResult(chatCompletionRequest, response);
+            return parseCompletionsResult(chatCompletionRequest, response);
         } catch (IOException e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
     }
 
-    private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, Response response) throws IOException {
+    private DevPilotChatCompletionResponse parseCompletionsResult(DevPilotChatCompletionRequest chatCompletionRequest, Response response) throws IOException {
         if (response == null) {
             return DevPilotChatCompletionResponse.failed(DevPilotMessageBundle.get("devpilot.chatWindow.response.null"));
         }
@@ -206,8 +215,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
                 .header("User-Agent", UserAgentUtils.getUserAgent())
                 .header("Auth-Type", ZaSsoUtils.getSsoType())
-                //TODO删除
-                .header("access-key", AI_GATEWAY_INSTRUCT_COMPLETION_ACCESS_KEY_TEMP)
                 .post(RequestBody.create(objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json")))
                 .build();
             Call call = OkhttpUtils.getClient().newCall(request);
@@ -218,17 +225,18 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         }
 
         try {
-            return parseResult(response);
+            return parseCompletionsResult(response);
         } catch (Exception e) {
             Logger.getInstance(getClass()).warn("Chat completion failed: " + e.getMessage());
             return null;
         }
     }
 
-    private String parseResult(Response response) throws IOException {
+    private String parseCompletionsResult(Response response) throws IOException {
         if (response == null) {
             return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
         }
+
 
         var result = Objects.requireNonNull(response.body()).string();
 
@@ -240,16 +248,15 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             devPilotMessage.setRole("assistant");
             devPilotMessage.setContent(content);
             return content;
-
-        } else if (response.code() == 401) {
+        }
+        DevPilotNotification.debug("SSO Type:" + ZaSsoUtils.getSsoEnum() + ", Status Code:" + response.code() + ".");
+        if (response.code() == 401) {
             var ssoEnum = ZaSsoUtils.getSsoEnum();
             ZaSsoUtils.logout(ssoEnum);
-            return "Chat completion failed: Unauthorized, please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>";
         } else {
-            return objectMapper.readValue(result, DevPilotFailedResponse.class)
-                .getError()
-                .getMessage();
+            DevPilotNotification.debug("Error message: [" + objectMapper.readValue(result, DevPilotFailedResponse.class).getError().getMessage() + "].");
         }
+        return StringUtils.EMPTY;
     }
 
 }
