@@ -135,7 +135,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         Response response;
 
-
         try {
             String requestBody = objectMapper.writeValueAsString(chatCompletionRequest);
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
@@ -236,7 +235,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         if (response == null) {
             return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
         }
-
 
         var result = Objects.requireNonNull(response.body()).string();
 
