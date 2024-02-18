@@ -17,7 +17,7 @@ public class DefaultConst {
 
     public static final String DEFAULT_CODE_LANGUAGE = "java";
 
-    public static final String DEFAULT_SOURCE_STRING = "IntelliJ IDEA";
+    public static final String DEFAULT_SOURCE_STRING = "JetBrains IDE";
 
     public static final String AI_GATEWAY_INSTRUCT_COMPLETION = "/devpilot/v1/completions";
 
