@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.zhongan"
-version = "1.2.0"
+version = "2.2.0"
 
 repositories {
     mavenCentral()
@@ -36,6 +36,7 @@ tasks {
     withType<JavaCompile> {
         sourceCompatibility = "11"
         targetCompatibility = "11"
+        options.encoding = "UTF-8"
     }
 
     patchPluginXml {

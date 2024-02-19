@@ -6,6 +6,7 @@ import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.integrations.llms.aigateway.AIGatewayServiceProvider;
 import com.zhongan.devpilot.integrations.llms.llama.LlamaServiceProvider;
 import com.zhongan.devpilot.integrations.llms.openai.OpenAIServiceProvider;
+import com.zhongan.devpilot.integrations.llms.trial.TrialServiceProvider;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 
 @Service
@@ -23,6 +24,8 @@ public final class LlmProviderFactory {
                 return project.getService(LlamaServiceProvider.class);
             case AIGATEWAY:
                 return project.getService(AIGatewayServiceProvider.class);
+            case TRIAL:
+                return project.getService(TrialServiceProvider.class);
         }
 
         return project.getService(AIGatewayServiceProvider.class);

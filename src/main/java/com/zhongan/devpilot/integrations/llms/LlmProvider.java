@@ -4,6 +4,7 @@ import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
 import com.zhongan.devpilot.util.JsonUtils;
@@ -28,10 +29,20 @@ public interface LlmProvider {
 
     DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest);
 
+    String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest);
+
     void interruptSend();
 
     default void restoreMessage(MessageModel messageModel) {
         // default not restore message
+    }
+
+    default void handleNoAuth(DevPilotChatToolWindowService service) {
+        var content = "Chat completion failed: Auth Failed";
+        var assistantMessage = MessageModel.buildInfoMessage(content);
+
+        service.callWebView(assistantMessage);
+        service.addMessage(assistantMessage);
     }
 
     default EventSource buildEventSource(Request request,
@@ -87,7 +98,8 @@ public interface LlmProvider {
                 var message = "Chat completion failed";
 
                 if (response != null && response.code() == 401) {
-                    message = "Chat completion failed: Unauthorized";
+                    handleNoAuth(service);
+                    return;
                 }
 
                 if (t != null) {

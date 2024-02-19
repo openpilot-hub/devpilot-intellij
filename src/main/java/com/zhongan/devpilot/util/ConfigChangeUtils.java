@@ -14,7 +14,7 @@ public class ConfigChangeUtils {
         var nowTheme = UIManager.getLookAndFeel().getName();
         var language = LanguageSettingsState.getInstance().getLanguageIndex();
         var locale = (language == 1) ? "cn" : "en";
-        var theme = (nowTheme.contains("Light")) ? "light" : "dark";
+        var theme = (nowTheme.contains("Darcula")) ? "dark" : "light";
         var username = DevPilotLlmSettingsState.getInstance().getFullName();
 
         return new ConfigModel(theme, locale, username);

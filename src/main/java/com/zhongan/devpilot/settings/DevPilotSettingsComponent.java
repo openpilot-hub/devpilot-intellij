@@ -1,9 +1,11 @@
 package com.zhongan.devpilot.settings;
 
 import com.intellij.ui.TitledSeparator;
+import com.intellij.ui.components.JBRadioButton;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.UI;
+import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
@@ -18,6 +20,8 @@ public class DevPilotSettingsComponent {
 
     private final DevPilotConfigForm devPilotConfigForm;
 
+    private final JBRadioButton autoCompletionRadio;
+
     public DevPilotSettingsComponent(DevPilotSettingsConfigurable devPilotSettingsConfigurable, DevPilotLlmSettingsState settings) {
         devPilotConfigForm = new DevPilotConfigForm();
 
@@ -25,12 +29,19 @@ public class DevPilotSettingsComponent {
 
         Integer languageIndex = LanguageSettingsState.getInstance().getLanguageIndex();
 
+        autoCompletionRadio = new JBRadioButton(
+                DevPilotMessageBundle.get("devpilot.settings.service.code.completion.desc"),
+                CompletionSettingsState.getInstance().getEnable());
+
         mainPanel = FormBuilder.createFormBuilder()
             .addComponent(UI.PanelFactory.panel(fullNameField)
                 .withLabel(DevPilotMessageBundle.get("devpilot.setting.displayNameFieldLabel"))
                 .resizeX(false)
                 .createPanel())
             .addComponent(devPilotConfigForm.createLanguageSectionPanel(languageIndex))
+            .addComponent(new TitledSeparator(
+                    DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
+            .addComponent(autoCompletionRadio)
             .addComponent(new TitledSeparator(DevPilotMessageBundle.get("devpilot.settings.service.title")))
             .addComponent(devPilotConfigForm.getForm())
             .addVerticalGap(8)
@@ -53,5 +64,9 @@ public class DevPilotSettingsComponent {
 
     public Integer getLanguageIndex() {
         return devPilotConfigForm.getLanguageIndex();
+    }
+
+    public boolean getCompletionEnabled() {
+        return autoCompletionRadio.isSelected();
     }
 }

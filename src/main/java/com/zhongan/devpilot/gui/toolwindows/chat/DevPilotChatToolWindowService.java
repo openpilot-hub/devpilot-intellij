@@ -14,6 +14,7 @@ import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
@@ -24,6 +25,7 @@ import com.zhongan.devpilot.webview.model.ThemeModel;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 
 @Service
@@ -244,7 +246,25 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void callErrorInfo(String content) {
-        callWebView(MessageModel.buildErrorMessage(content));
+        var messageModel = MessageModel.buildInfoMessage(content);
+        callWebView(messageModel);
+        addMessage(messageModel);
+    }
+
+    public void callLoginSuccess(String user, String type) {
+        var userContent = "I am going to Login...";
+        var time = System.currentTimeMillis();
+        var username = DevPilotLlmSettingsState.getInstance().getFullName();
+        var uuid = UUID.randomUUID().toString();
+
+        var userMessageModel = MessageModel.buildUserMessage(uuid, time, userContent, username);
+        callWebView(userMessageModel);
+        addMessage(userMessageModel);
+
+        var content = type + " Login Success: " + user;
+        var messageModel = MessageModel.buildInfoMessage(content);
+        callWebView(messageModel);
+        addMessage(messageModel);
     }
 
     public void callWebView(MessageModel messageModel) {
@@ -271,10 +291,10 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void changeTheme(String theme) {
-        if (theme.contains("Light")) {
-            theme = "light";
-        } else {
+        if (theme.contains("Darcula")) {
             theme = "dark";
+        } else {
+            theme = "light";
         }
 
         var javaCallModel = new JavaCallModel();

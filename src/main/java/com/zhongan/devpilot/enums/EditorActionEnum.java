@@ -34,7 +34,14 @@ public enum EditorActionEnum {
             "- Give optimization or best practice suggestion.\n"),
 
     EXPLAIN_THIS("devpilot.action.explain", "Explain this in the following code",
-        "{{selectedCode}}\nGiving the code above, please explain it in detail, line by line.\n");
+        "{{selectedCode}}\nGiving the code above, please explain it in detail, line by line.\n"),
+
+    CODE_COMPLETIONS("devpilot.action.completions", "code completions",
+            "You are a code completion service, please try to auto complete the code below at {{offsetCode}}, " +
+            "only output the code, don't try to have conversation with user.```{{selectedCode}}```"
+//                    +
+//            "\nThe completion code returned is controlled within {{maxCompletionLength}} bytes within"
+    );
 
     private final String label;
 

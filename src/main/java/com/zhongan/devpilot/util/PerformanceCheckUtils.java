@@ -17,8 +17,10 @@ import com.intellij.openapi.editor.event.EditorFactoryListener;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.PerformanceCheckResponse;
 
@@ -58,9 +60,14 @@ public class PerformanceCheckUtils {
         DevPilotChatCompletionRequest request = new DevPilotChatCompletionRequest();
         // list content support update
         request.setMessages(new ArrayList<>() {{ add(devPilotMessage); }});
-        final String response = new LlmProviderFactory().getLlmProvider(project).chatCompletion(project, request, null);
+
+        final DevPilotChatCompletionResponse response = new LlmProviderFactory().getLlmProvider(project).chatCompletionSync(request);
         try {
-            PerformanceCheckResponse performanceCheckResponse = objectMapper.readValue(response, PerformanceCheckResponse.class);
+            DevPilotNotification.debug("Getting PerformanceCheckResponse is [" + response.isSuccessful() + "], content is [" + response.getContent() + "].");
+            if (!response.isSuccessful()) {
+                return selectedText;
+            }
+            PerformanceCheckResponse performanceCheckResponse = objectMapper.readValue(response.getContent(), PerformanceCheckResponse.class);
             if (StringUtils.isEmpty(performanceCheckResponse.getRewriteCode())) {
                 return selectedText;
             }
@@ -89,7 +96,7 @@ public class PerformanceCheckUtils {
         DiffContent replaceContent = DiffEditorUtils.getDiffContent(diffContentFactory, project, replaceDocument);
         DiffContent originalContent = DiffEditorUtils.getDiffContent(diffContentFactory, project, editor.getDocument());
         DiffRequest diffRequest = new SimpleDiffRequest("Dev Pilot: Diff view",
-                replaceContent, originalContent, "Dev Pilot suggested code", originalFile.getName() + "(original code)");
+            replaceContent, originalContent, "Dev Pilot suggested code", originalFile.getName() + "(original code)");
         DiffManager diffManager = DiffManager.getInstance();
         diffManager.showDiff(project, diffRequest);
         EditorFactory.getInstance().addEditorFactoryListener(new EditorFactoryListener() {

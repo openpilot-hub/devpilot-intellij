@@ -5,18 +5,23 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
+import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
+import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
+import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JComponent;
 
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
+
+import static com.zhongan.devpilot.enums.ModelServiceEnum.AIGATEWAY;
 
 public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
@@ -32,6 +37,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
     public @Nullable JComponent createComponent() {
         var settings = DevPilotLlmSettingsState.getInstance();
         settingsComponent = new DevPilotSettingsComponent(this, settings);
+        ConfigurableUtils.setConfigurableCache(settingsComponent);
         return settingsComponent.getPanel();
     }
 
@@ -45,6 +51,8 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var serviceForm = settingsComponent.getDevPilotConfigForm();
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
+        var selectedSso = serviceForm.getSelectedZaSso();
+        var completionEnable = CompletionSettingsState.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !selectedModel.getName().equals(settings.getSelectedModel())
@@ -56,7 +64,9 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !serviceForm.getOpenAIKey().equals(openAISettings.getPrivateKey())
                 || !serviceForm.getCodeLlamaBaseHost().equals(codeLlamaSettings.getModelHost())
                 || !serviceForm.getCodeLlamaModelName().equals(codeLlamaSettings.getModelName())
-                || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex());
+                || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex())
+                || !selectedSso.getName().equals(aiGatewaySettings.getSelectedSso())
+                || !settingsComponent.getCompletionEnabled() == (completionEnable);
     }
 
     @Override
@@ -82,6 +92,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var serviceForm = settingsComponent.getDevPilotConfigForm();
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
+        var selectedSso = serviceForm.getSelectedZaSso();
         var openAIModelName = serviceForm.getOpenAIModelName();
 
         settings.setSelectedModel(selectedModel.getName());
@@ -93,10 +104,21 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         codeLlamaSettings.setModelName(serviceForm.getCodeLlamaModelName());
         aiGatewaySettings.setModelBaseHost(selectedModelType.getName(), serviceForm.getAIGatewayBaseHost());
         aiGatewaySettings.setSelectedModel(selectedModelType.getName());
+        aiGatewaySettings.setSelectedSso(selectedSso.getName());
+
+        CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
+        completionSettings.setEnable(settingsComponent.getCompletionEnabled());
+        checkCodeCompletionConfig(selectedModel);
     }
 
     @Override
     public void dispose() {
+    }
+
+    private void checkCodeCompletionConfig(ModelServiceEnum serviceEnum) {
+        if (!AIGATEWAY.equals(serviceEnum) && CompletionSettingsState.getInstance().getEnable()) {
+            CompletionSettingsState.getInstance().setEnable(false);
+        }
     }
 
 }
