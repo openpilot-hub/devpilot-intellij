@@ -100,7 +100,7 @@ public class PopupMenuEditorActionGroupUtil {
                         service.clearRequestSession();
 
                         var showText = DevPilotMessageBundle.get(label);
-                        var codeReference = new CodeReferenceModel(editorInfo.getFileUrl(),
+                        var codeReference = new CodeReferenceModel(editorInfo.getFilePresentableUrl(),
                             editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
 
                         var codeMessage = MessageModel.buildCodeMessage(
