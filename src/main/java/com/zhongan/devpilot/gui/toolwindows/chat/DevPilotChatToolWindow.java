@@ -142,7 +142,7 @@ public class DevPilotChatToolWindow {
 
                     ApplicationManager.getApplication().invokeLater(
                             () -> NewFileUtils.createNewFile(project, codeActionModel.getContent(),
-                                    userMessage.getCodeRef()));
+                                    userMessage.getCodeRef(), codeActionModel.getLang()));
 
                     return new JBCefJSQuery.Response("success");
                 }

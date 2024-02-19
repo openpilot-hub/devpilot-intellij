@@ -8,6 +8,8 @@ public class CodeActionModel {
 
     private String messageId;
 
+    private String lang;
+
     public String getContent() {
         return content;
     }
@@ -22,5 +24,13 @@ public class CodeActionModel {
 
     public void setMessageId(String messageId) {
         this.messageId = messageId;
+    }
+
+    public String getLang() {
+        return lang;
+    }
+
+    public void setLang(String lang) {
+        this.lang = lang;
     }
 }
