@@ -11,8 +11,11 @@ public enum EditorActionEnum {
         "{{selectedCode}}\nGiving the code above, please generate code comments, return code with comments."),
 
     GENERATE_TESTS("devpilot.action.generate.tests", "Generate Tests in the following code",
-        "{{selectedCode}}\nGiving the code above, " +
-            "please help to generate JUnit test cases for it, be aware that if the code is untestable, " +
+        "{{selectedCode}}\nGiving the {{language:unknown}} code above, " +
+            "please help to generate {{testFramework:suitable}} test cases for it, " +
+            "mocking test data with {{mockFramework:suitable mock framework}} if necessary, " +
+            "{{additionalMockPrompt:}}" +
+            "be aware that if the code is untestable, " +
             "please state it and give suggestions instead."),
 
     FIX_THIS("devpilot.action.fix", "Fix This in the following code",

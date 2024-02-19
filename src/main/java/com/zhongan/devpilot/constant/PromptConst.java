@@ -13,5 +13,7 @@ public class PromptConst {
     public static final String ANSWER_IN_CHINESE = "\nPlease answer in Chinese.";
 
     public static final String GENERATE_COMMIT = "Summarize the git diff with a concise and descriptive commit message. Adopt the imperative mood, present tense, active voice, and include relevant verbs. Remember that your entire response will be directly used as the git commit message.";
+    
+    public final static String MOCK_WEB_MVC = "please use MockMvc to mock web requests, ";
 
 }

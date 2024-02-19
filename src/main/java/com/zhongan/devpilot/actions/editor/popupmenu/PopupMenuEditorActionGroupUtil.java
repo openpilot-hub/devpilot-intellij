@@ -6,6 +6,7 @@ import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.extensions.PluginId;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
@@ -21,17 +22,27 @@ import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
+import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.PerformanceCheckUtils;
+import com.zhongan.devpilot.util.PromptTemplate;
+import com.zhongan.devpilot.util.PsiFileUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
 import javax.swing.Icon;
+
+import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
+import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
+import static com.zhongan.devpilot.constant.PlaceholderConst.MOCK_FRAMEWORK;
+import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
+import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 
 public class PopupMenuEditorActionGroupUtil {
 
@@ -89,10 +100,22 @@ public class PopupMenuEditorActionGroupUtil {
                         };
 
                         EditorInfo editorInfo = new EditorInfo(editor);
-
-                        String newPrompt = prompt.replace("{{selectedCode}}", selectedText);
+                        PromptTemplate promptTemplate = PromptTemplate.of(prompt);
+                        promptTemplate.setVariable(SELECTED_CODE, selectedText);
+                        if (editorActionEnum == EditorActionEnum.GENERATE_TESTS) {
+                            Optional.ofNullable(FileDocumentManager.getInstance().getFile(editor.getDocument()))
+                                    .map(vFile -> LanguageUtil.getLanguageByExtension(vFile.getExtension()))
+                                    .ifPresent(language -> {
+                                        promptTemplate.setVariable(LANGUAGE, language.getLanguageName());
+                                        promptTemplate.setVariable(TEST_FRAMEWORK, language.getDefaultTestFramework());
+                                        promptTemplate.setVariable(MOCK_FRAMEWORK, language.getDefaultMockFramework());
+                                        if (language.isJvmPlatform() && PsiFileUtil.isCaretInWebClass(project, editor)) {
+                                            promptTemplate.setVariable(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
+                                        }
+                                    });
+                        }
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
-                            newPrompt = newPrompt + PromptConst.ANSWER_IN_CHINESE;
+                            promptTemplate.appendLast(PromptConst.ANSWER_IN_CHINESE);
                         }
 
                         var service = project.getService(DevPilotChatToolWindowService.class);
@@ -106,7 +129,7 @@ public class PopupMenuEditorActionGroupUtil {
                         var codeMessage = MessageModel.buildCodeMessage(
                             UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
-                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), newPrompt, callback, codeMessage);
+                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), promptTemplate.getPrompt(), callback, codeMessage);
                     }
                 };
                 group.add(action);
