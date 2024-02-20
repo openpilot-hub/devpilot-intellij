@@ -15,6 +15,7 @@ env:
 jobs:
   sync_to_gitee:
     runs-on: ubuntu-latest
+    if: github.repository == 'openpilot-hub/devpilot-intellij'
     steps:
       - uses: actions/checkout@v4
         with:
