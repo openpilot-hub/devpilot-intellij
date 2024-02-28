@@ -1,5 +1,6 @@
 package com.zhongan.devpilot.integrations.llms.openai;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
@@ -32,7 +33,8 @@ import okhttp3.sse.EventSource;
 @Service(Service.Level.PROJECT)
 public final class OpenAIServiceProvider implements LlmProvider {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private EventSource es;
 

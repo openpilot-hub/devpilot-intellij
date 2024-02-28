@@ -2,6 +2,7 @@ package com.zhongan.devpilot.util;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.ImmutableSet;
 
@@ -63,7 +64,8 @@ public final class LanguageUtil {
         try {
             Map<String, Language> langMappings = new HashMap<>();
             Map<String, Language> extMappings = new HashMap<>();
-            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectMapper objectMapper = new ObjectMapper()
+                    .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
             URL resource = LanguageUtil.class.getResource("/languageMappings.json");
             List<Language> languages = objectMapper.readValue(resource, new TypeReference<>() { });
             for (Language language : languages) {
