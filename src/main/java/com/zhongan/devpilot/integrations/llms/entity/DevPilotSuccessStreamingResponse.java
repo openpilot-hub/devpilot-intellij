@@ -1,9 +1,11 @@
 package com.zhongan.devpilot.integrations.llms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DevPilotSuccessStreamingResponse {
 
     private String id;
@@ -66,6 +68,7 @@ public class DevPilotSuccessStreamingResponse {
         this.usage = usage;
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Choice {
 
         private Integer index;
@@ -100,6 +103,7 @@ public class DevPilotSuccessStreamingResponse {
         }
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Usage {
 
         @JsonProperty("completion_tokens")
@@ -137,6 +141,7 @@ public class DevPilotSuccessStreamingResponse {
 
     }
 
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Message {
 
         private String role;
