@@ -1,5 +1,6 @@
 package com.zhongan.devpilot.integrations.llms.trial;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
@@ -35,7 +36,8 @@ public final class TrialServiceProvider implements LlmProvider {
 
     private static final String model = "azure/gpt-3.5-turbo";
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private EventSource es;
 

@@ -1,5 +1,6 @@
 package com.zhongan.devpilot.util;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.intellij.diff.DiffContentFactory;
@@ -39,7 +40,8 @@ public class PerformanceCheckUtils {
     public static final List<String> NO_PERFORMANCE_ISSUES = Lists.newArrayList(NO_PERFORMANCE_ISSUES_DESC,
             NO_PERFORMANCE_ISSUES_NULL);
 
-    private final static ObjectMapper objectMapper = new ObjectMapper();
+    private final static ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private static final String CUSTOM_PROMPT = "Please optimize the code above for performance. " +
             "Provide two outputs: one as 'null' indicating no performance issues, " +

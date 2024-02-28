@@ -1,5 +1,6 @@
 package com.zhongan.devpilot.integrations.llms.aigateway;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
@@ -41,7 +42,8 @@ import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COM
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = new ObjectMapper()
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     private EventSource es;
 
