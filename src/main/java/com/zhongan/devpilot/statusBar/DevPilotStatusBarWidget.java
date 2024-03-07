@@ -18,11 +18,11 @@ import javax.swing.Icon;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class DevPolitStatusBarWidget extends EditorBasedWidget
-    implements StatusBarWidget, StatusBarWidget.MultipleTextValuesPresentation {
+public class DevPilotStatusBarWidget extends EditorBasedWidget
+        implements StatusBarWidget, StatusBarWidget.MultipleTextValuesPresentation {
     private static final String EMPTY_SYMBOL = " ";
 
-    public DevPolitStatusBarWidget(@NotNull Project project) {
+    public DevPilotStatusBarWidget(@NotNull Project project) {
         super(project);
         CompletionsStateNotifier.Companion.subscribe(isEnabled -> update());
         //todo 初始化setting

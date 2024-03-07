@@ -18,7 +18,7 @@ public class StatusBarProvider implements StatusBarWidgetFactory {
 
     @Override
     public @Nls @NotNull String getDisplayName() {
-        return "DevPolit";
+        return "DevPilot";
     }
 
     @Override
@@ -29,7 +29,7 @@ public class StatusBarProvider implements StatusBarWidgetFactory {
     @Override
     public @NotNull StatusBarWidget createWidget(@NotNull Project project) {
         Logger.getInstance(getClass()).info("creating status bar widget");
-        return new DevPolitStatusBarWidget(project);
+        return new DevPilotStatusBarWidget(project);
     }
 
     @Override
