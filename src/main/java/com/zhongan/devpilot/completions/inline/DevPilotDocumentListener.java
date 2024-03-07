@@ -22,7 +22,7 @@ import org.jetbrains.annotations.Nullable;
 import static com.intellij.openapi.editor.EditorModificationUtil.checkModificationAllowed;
 import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
 
-public class DevPolitDocumentListener implements BulkAwareDocumentListener {
+public class DevPilotDocumentListener implements BulkAwareDocumentListener {
     private final InlineCompletionHandler handler = singletonOfInlineCompletionHandler();
 
     @Nullable
