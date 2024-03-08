@@ -17,9 +17,9 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
-import com.zhongan.devpilot.util.ZaSsoUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
@@ -56,10 +56,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
-        var ssoEnum = ZaSsoUtils.getSsoEnum();
-        if (!ZaSsoUtils.isLogin(ssoEnum)) {
+        if (!LoginUtils.isLogin()) {
             service.callErrorInfo("Chat completion failed: please login");
-            DevPilotNotification.linkInfo("Please Login", ssoEnum.getDisplayName(), ZaSsoUtils.getZaSsoAuthUrl(ssoEnum));
+            DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
             return "";
         }
 
@@ -78,11 +77,11 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             var request = new Request.Builder()
                 .url(host + "/devpilot/v1/chat/completions")
                 .header("User-Agent", UserAgentUtils.getUserAgent())
-                .header("Auth-Type", ZaSsoUtils.getSsoType())
+                .header("Auth-Type", LoginUtils.getLoginType())
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
-            DevPilotNotification.debug(ZaSsoUtils.getSsoType() + "---" + UserAgentUtils.getUserAgent());
+            DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.getUserAgent());
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
@@ -117,10 +116,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
     @Override
     public void handleNoAuth(DevPilotChatToolWindowService service) {
-        var ssoEnum = ZaSsoUtils.getSsoEnum();
-        ZaSsoUtils.logout(ssoEnum);
+        LoginUtils.logout();
         service.callErrorInfo("Chat completion failed: No auth, please login");
-        DevPilotNotification.linkInfo("Please Login", ssoEnum.getDisplayName(), ZaSsoUtils.getZaSsoAuthUrl(ssoEnum));
+        DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
     }
 
     @Override
@@ -144,7 +142,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             var request = new Request.Builder()
                 .url(host + "/devpilot/v1/chat/completions")
                 .header("User-Agent", UserAgentUtils.getUserAgent())
-                .header("Auth-Type", ZaSsoUtils.getSsoType())
+                .header("Auth-Type", LoginUtils.getLoginType())
                 .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                 .build();
 
@@ -182,9 +180,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.success(message.getContent());
 
         } else if (response.code() == 401) {
-            var ssoEnum = ZaSsoUtils.getSsoEnum();
-            ZaSsoUtils.logout(ssoEnum);
-            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + ZaSsoUtils.getZaSsoAuthUrl(ssoEnum) + "\">" + ssoEnum.getDisplayName() + "</a>");
+            LoginUtils.logout();
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + LoginUtils.loginUrl() + "\">" + "sso" + "</a>");
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                 .getError()
@@ -194,10 +191,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
     @Override
     public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
-        var ssoEnum = ZaSsoUtils.getSsoEnum();
-
-        if (!ZaSsoUtils.isLogin(ssoEnum)) {
-            DevPilotNotification.infoAndAction("Instruct completion failed: please login", ssoEnum.getDisplayName(), ZaSsoUtils.getZaSsoAuthUrl(ssoEnum));
+        if (!LoginUtils.isLogin()) {
+            DevPilotNotification.infoAndAction("Instruct completion failed: please login", "", LoginUtils.loginUrl());
             return null;
         }
 
@@ -215,7 +210,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             var request = new Request.Builder()
                 .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
                 .header("User-Agent", UserAgentUtils.getUserAgent())
-                .header("Auth-Type", ZaSsoUtils.getSsoType())
+                .header("Auth-Type", LoginUtils.getLoginType())
                 .post(RequestBody.create(objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json")))
                 .build();
             Call call = OkhttpUtils.getClient().newCall(request);
@@ -249,10 +244,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             devPilotMessage.setContent(content);
             return content;
         }
-        DevPilotNotification.debug("SSO Type:" + ZaSsoUtils.getSsoEnum() + ", Status Code:" + response.code() + ".");
+        DevPilotNotification.debug("SSO Type:" + LoginUtils.getLoginType() + ", Status Code:" + response.code() + ".");
         if (response.code() == 401) {
-            var ssoEnum = ZaSsoUtils.getSsoEnum();
-            ZaSsoUtils.logout(ssoEnum);
+            LoginUtils.logout();
         } else {
             DevPilotNotification.debug("Error message: [" + objectMapper.readValue(result, DevPilotFailedResponse.class).getError().getMessage() + "].");
         }

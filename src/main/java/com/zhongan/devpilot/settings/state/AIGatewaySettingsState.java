@@ -17,6 +17,7 @@ public class AIGatewaySettingsState implements PersistentStateComponent<AIGatewa
 
     private Map<String, String> modelBaseHostMap = new ConcurrentHashMap<>();
 
+    @Deprecated
     private String selectedSso = ZaSsoEnum.ZA.getName();
 
     // za

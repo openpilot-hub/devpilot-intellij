@@ -20,6 +20,7 @@ import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
 import com.zhongan.devpilot.webview.model.JavaCallModel;
 import com.zhongan.devpilot.webview.model.LocaleModel;
+import com.zhongan.devpilot.webview.model.LoginModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 import com.zhongan.devpilot.webview.model.ThemeModel;
 
@@ -308,6 +309,14 @@ public final class DevPilotChatToolWindowService {
         var javaCallModel = new JavaCallModel();
         javaCallModel.setCommand("LocaleChanged");
         javaCallModel.setPayload(new LocaleModel(locale));
+
+        callWebView(javaCallModel);
+    }
+
+    public void changeLoginStatus(boolean isLoggedIn) {
+        var javaCallModel = new JavaCallModel();
+        javaCallModel.setCommand("ConfigurationChanged");
+        javaCallModel.setPayload(new LoginModel(isLoggedIn));
 
         callWebView(javaCallModel);
     }

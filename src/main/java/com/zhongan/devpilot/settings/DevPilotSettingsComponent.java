@@ -42,8 +42,6 @@ public class DevPilotSettingsComponent {
             .addComponent(new TitledSeparator(
                     DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
             .addComponent(autoCompletionRadio)
-            .addComponent(new TitledSeparator(DevPilotMessageBundle.get("devpilot.settings.service.title")))
-            .addComponent(devPilotConfigForm.getForm())
             .addVerticalGap(8)
             .addComponentFillVertically(new JPanel(), 0)
             .getPanel();

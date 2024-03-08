@@ -16,8 +16,9 @@ public class ConfigChangeUtils {
         var locale = (language == 1) ? "cn" : "en";
         var theme = (nowTheme.contains("Darcula")) ? "dark" : "light";
         var username = DevPilotLlmSettingsState.getInstance().getFullName();
+        var loggedIn = LoginUtils.isLogin();
 
-        return new ConfigModel(theme, locale, username);
+        return new ConfigModel(theme, locale, username, loggedIn);
     }
 
     public static void themeChanged(Project project) {
