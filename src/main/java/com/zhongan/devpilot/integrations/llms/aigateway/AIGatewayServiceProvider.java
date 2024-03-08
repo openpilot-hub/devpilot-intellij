@@ -76,12 +76,12 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                 .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("User-Agent", UserAgentUtils.buildUserAgent())
                 .header("Auth-Type", LoginUtils.getLoginType())
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
-            DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.getUserAgent());
+            DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
@@ -141,7 +141,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
             var request = new Request.Builder()
                 .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("User-Agent", UserAgentUtils.buildUserAgent())
                 .header("Auth-Type", LoginUtils.getLoginType())
                 .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                 .build();
@@ -209,7 +209,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                 .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
-                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("User-Agent", UserAgentUtils.buildUserAgent())
                 .header("Auth-Type", LoginUtils.getLoginType())
                 .post(RequestBody.create(objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json")))
                 .build();

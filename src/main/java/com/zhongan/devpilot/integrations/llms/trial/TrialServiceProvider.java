@@ -63,7 +63,7 @@ public final class TrialServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getWxUserAgent())
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
@@ -90,7 +90,7 @@ public final class TrialServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getWxUserAgent())
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
