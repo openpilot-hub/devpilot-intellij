@@ -6,7 +6,6 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
 import com.zhongan.devpilot.enums.LoginTypeEnum;
-import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -18,8 +17,6 @@ import javax.swing.JComponent;
 
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
-
-import static com.zhongan.devpilot.enums.ModelServiceEnum.AIGATEWAY;
 
 public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 

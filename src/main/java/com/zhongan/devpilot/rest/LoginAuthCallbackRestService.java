@@ -2,7 +2,6 @@ package com.zhongan.devpilot.rest;
 
 import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.enums.ZaSsoEnum;
-import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.CallbackUtils;
 import com.zhongan.devpilot.util.LoginUtils;
