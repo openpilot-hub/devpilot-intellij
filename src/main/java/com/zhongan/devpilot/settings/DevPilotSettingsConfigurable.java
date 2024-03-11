@@ -5,8 +5,8 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
+import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.enums.ModelServiceEnum;
-import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -42,15 +42,12 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
     @Override
     public boolean isModified() {
         var settings = DevPilotLlmSettingsState.getInstance();
-        var aiGatewaySettings = AIGatewaySettingsState.getInstance();
         var languageSettings = LanguageSettingsState.getInstance();
-        var serviceForm = settingsComponent.getDevPilotConfigForm();
-        var selectedSso = serviceForm.getSelectedZaSso();
+        var languageIndex = settingsComponent.getLanguageIndex();
         var completionEnable = CompletionSettingsState.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
-                || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex())
-                || !selectedSso.getName().equals(aiGatewaySettings.getSelectedSso())
+                || !languageIndex.equals(languageSettings.getLanguageIndex())
                 || !settingsComponent.getCompletionEnabled() == (completionEnable);
     }
 
@@ -71,20 +68,19 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         PopupMenuEditorActionGroupUtil.refreshActions(null);
 
-        var serviceForm = settingsComponent.getDevPilotConfigForm();
-        var selectedModel = serviceForm.getSelectedModel();
-
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
-        checkCodeCompletionConfig(selectedModel);
+        
+        checkCodeCompletionConfig(LoginTypeEnum.getLoginTypeEnum(settings.getLoginType()));
     }
 
     @Override
     public void dispose() {
     }
 
-    private void checkCodeCompletionConfig(ModelServiceEnum serviceEnum) {
-        if (!AIGATEWAY.equals(serviceEnum) && CompletionSettingsState.getInstance().getEnable()) {
+    private void checkCodeCompletionConfig(LoginTypeEnum loginType) {
+        if (!(LoginTypeEnum.ZA.equals(loginType) || LoginTypeEnum.ZA_TI.equals(loginType))
+                && CompletionSettingsState.getInstance().getEnable()) {
             CompletionSettingsState.getInstance().setEnable(false);
         }
     }

@@ -1,9 +1,11 @@
 package com.zhongan.devpilot.settings;
 
+import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.TitledSeparator;
 import com.intellij.ui.components.JBRadioButton;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
+import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UI;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
@@ -18,14 +20,15 @@ public class DevPilotSettingsComponent {
 
     private final JBTextField fullNameField;
 
-    private final DevPilotConfigForm devPilotConfigForm;
-
     private final JBRadioButton autoCompletionRadio;
 
-    public DevPilotSettingsComponent(DevPilotSettingsConfigurable devPilotSettingsConfigurable, DevPilotLlmSettingsState settings) {
-        devPilotConfigForm = new DevPilotConfigForm();
+    private Integer index;
 
+    public DevPilotSettingsComponent(DevPilotSettingsConfigurable devPilotSettingsConfigurable, DevPilotLlmSettingsState settings) {
         fullNameField = new JBTextField(settings.getFullName(), 20);
+
+        var instance = LanguageSettingsState.getInstance();
+        index = instance.getLanguageIndex();
 
         Integer languageIndex = LanguageSettingsState.getInstance().getLanguageIndex();
 
@@ -38,7 +41,7 @@ public class DevPilotSettingsComponent {
                 .withLabel(DevPilotMessageBundle.get("devpilot.setting.displayNameFieldLabel"))
                 .resizeX(false)
                 .createPanel())
-            .addComponent(devPilotConfigForm.createLanguageSectionPanel(languageIndex))
+            .addComponent(createLanguageSectionPanel(languageIndex))
             .addComponent(new TitledSeparator(
                     DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
             .addComponent(autoCompletionRadio)
@@ -47,12 +50,28 @@ public class DevPilotSettingsComponent {
             .getPanel();
     }
 
-    public JPanel getPanel() {
-        return mainPanel;
+    public JPanel createLanguageSectionPanel(Integer languageIndex) {
+        var comboBox = new ComboBox<>();
+        comboBox.addItem("English");
+        comboBox.addItem("中文");
+        comboBox.setSelectedIndex(languageIndex);
+
+        comboBox.addActionListener(e -> {
+            var box = (ComboBox<?>) e.getSource();
+            index = box.getSelectedIndex();
+        });
+
+        var panel = UI.PanelFactory.grid()
+                .add(UI.PanelFactory.panel(comboBox)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.setting.language"))
+                        .resizeX(false))
+                .createPanel();
+        panel.setBorder(JBUI.Borders.emptyLeft(0));
+        return panel;
     }
 
-    public DevPilotConfigForm getDevPilotConfigForm() {
-        return devPilotConfigForm;
+    public JPanel getPanel() {
+        return mainPanel;
     }
 
     // Getting the full name from the settings
@@ -61,7 +80,7 @@ public class DevPilotSettingsComponent {
     }
 
     public Integer getLanguageIndex() {
-        return devPilotConfigForm.getLanguageIndex();
+        return index;
     }
 
     public boolean getCompletionEnabled() {
