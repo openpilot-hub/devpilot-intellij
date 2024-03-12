@@ -5,6 +5,7 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.enums.ModelServiceEnum;
 
 import java.util.UUID;
@@ -16,7 +17,10 @@ public class DevPilotLlmSettingsState implements PersistentStateComponent<DevPil
 
     private String uuid;
 
+    @Deprecated
     private String selectedModel = ModelServiceEnum.AIGATEWAY.getName();
+
+    private String loginType = LoginTypeEnum.ZA.getType();
 
     public static DevPilotLlmSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(DevPilotLlmSettingsState.class);
@@ -28,6 +32,14 @@ public class DevPilotLlmSettingsState implements PersistentStateComponent<DevPil
 
     public void setSelectedModel(String selectedModel) {
         this.selectedModel = selectedModel;
+    }
+
+    public String getLoginType() {
+        return loginType;
+    }
+
+    public void setLoginType(String loginType) {
+        this.loginType = loginType;
     }
 
     public String getUuid() {

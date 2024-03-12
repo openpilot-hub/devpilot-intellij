@@ -14,6 +14,7 @@ public class ZaSsoUtils {
 
     private static final String ssoCallbackUrl = "http://127.0.0.1:%s/za/sso/callback";
 
+    @Deprecated
     public static String getZaSsoAuthUrl(ZaSsoEnum ssoEnum) {
         var port = BuiltInServerManager.getInstance().getPort();
         var scope = ssoEnum == ZaSsoEnum.ZA_TI ? "zati" : "za";

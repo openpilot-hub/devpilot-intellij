@@ -1,6 +1,6 @@
 package com.zhongan.devpilot.util;
 
-import com.zhongan.devpilot.rest.za.ZaSsoCallbackRestService;
+import com.zhongan.devpilot.rest.LoginAuthCallbackRestService;
 
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -13,7 +13,7 @@ import java.io.InputStream;
 
 public class CallbackUtils {
     public static ByteBuf getRedirectPage(String url) throws IOException {
-        InputStream inputStream = ZaSsoCallbackRestService.class.getResourceAsStream(url);
+        InputStream inputStream = LoginAuthCallbackRestService.class.getResourceAsStream(url);
 
         if (inputStream == null) {
             return Unpooled.EMPTY_BUFFER;

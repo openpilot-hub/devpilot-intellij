@@ -11,6 +11,7 @@ public class WxAuthUtils {
 
     private static final String wxCallbackUrl = "http://127.0.0.1:%s/wx/callback";
 
+    @Deprecated
     public static String getWxAuthUrl() {
         var backUrl = String.format(wxCallbackUrl, BuiltInServerManager.getInstance().getPort());
         return String.format(wxAuthUrl, "gzh", backUrl, DefaultConst.DEFAULT_SOURCE_STRING);
