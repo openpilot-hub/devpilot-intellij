@@ -42,7 +42,7 @@ public class UserAgentUtils {
         }
 
         // format: idea version|plugin version|user token|username
-        return String.format("idea-%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
+        return String.format("%s-%s|%s|%s|%s", DevPilotVersion.getVersionName(), DevPilotVersion.getIdeaVersion(),
                 DevPilotVersion.getDevPilotVersion(), token, username);
     }
 
@@ -50,7 +50,7 @@ public class UserAgentUtils {
         var settings = TrialServiceSettingsState.getInstance();
 
         // format: idea version|plugin version|token|userid
-        return String.format("idea-%s|%s|%s|%s", DevPilotVersion.getIdeaVersion(),
+        return String.format("%s-%s|%s|%s|%s", DevPilotVersion.getVersionName(), DevPilotVersion.getIdeaVersion(),
                 DevPilotVersion.getDevPilotVersion(), settings.getWxToken(), settings.getWxUserId());
     }
 }

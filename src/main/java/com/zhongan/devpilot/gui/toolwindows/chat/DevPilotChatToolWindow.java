@@ -16,6 +16,7 @@ import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.EditorUtils;
+import com.zhongan.devpilot.util.JetbrainsVersionUtils;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.NewFileUtils;
@@ -58,7 +59,8 @@ public class DevPilotChatToolWindow {
     private void load() {
         JBCefBrowser browser;
         try {
-            browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).createBrowser();
+            browser = JBCefBrowser.createBuilder().setOffScreenRendering(
+                    JetbrainsVersionUtils.isVersionLaterThan233()).build();
         } catch (Exception e) {
             browser = new JBCefBrowser();
         }

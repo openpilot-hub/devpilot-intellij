@@ -292,12 +292,6 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void changeTheme(String theme) {
-        if (theme.contains("Darcula")) {
-            theme = "dark";
-        } else {
-            theme = "light";
-        }
-
         var javaCallModel = new JavaCallModel();
         javaCallModel.setCommand("ThemeChanged");
         javaCallModel.setPayload(new ThemeModel(theme));
