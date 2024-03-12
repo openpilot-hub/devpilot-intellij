@@ -92,10 +92,10 @@
                 id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
             <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
         </action>
-        <!--support alt Enter and alt + B-->
+        <!--support alt + B-->
         <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
                 id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
-            <keyboard-shortcut first-keystroke="alt Enter" second-keystroke="alt B"  keymap="$default"/>
+            <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>
         </action>
 
         <group id="DevPilot.GenerateGitCommitMessageGroup">
