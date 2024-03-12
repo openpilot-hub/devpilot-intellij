@@ -36,7 +36,7 @@ public class CompletionUtils {
         return newText.trim().length() <= 1;
     }
 
-    //代码-单行仅空字符或者仅换行忽略请求，注释-单行仅换行忽略请求
+    //代码-单行仅空字符或者仅换行忽略请求，注释-单行除换行全部忽略请求
     public static boolean ignoreTrigger(String newText, String previousLineText) {
         boolean preLineIsPreComment = CommentUtil.containsComment(previousLineText);
         //contains empty and tab
@@ -44,7 +44,9 @@ public class CompletionUtils {
         if (emptyAndTabChar && !preLineIsPreComment) return true;
 
         boolean newlineChar = newText.equals("\n");
-        if (newlineChar) return true;
+        if (newlineChar && !preLineIsPreComment) return true;
+
+        if (!newlineChar && preLineIsPreComment) return true;
 
         return false;
     }
