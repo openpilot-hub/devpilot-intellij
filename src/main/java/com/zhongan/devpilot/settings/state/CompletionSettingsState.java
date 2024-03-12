@@ -10,7 +10,7 @@ import com.zhongan.devpilot.statusBar.CompletionsStateNotifier;
 @State(name = "DevPilot_CompletionSettings", storages = @Storage("DevPilot_CompletionSettings.xml"))
 public class CompletionSettingsState implements PersistentStateComponent<CompletionSettingsState> {
 
-    private static Boolean enable;
+    private Boolean enable = true;
 
     public static CompletionSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(CompletionSettingsState.class);
