@@ -34,7 +34,7 @@ public class CommentUtil {
 
     public static boolean containsComment(String text) {
         if (text == null) return false;
-        return isMultiLineComment(text) && isSingleLineComment(text);
+        return isMultiLineComment(text) || isSingleLineComment(text);
     }
 
 }
