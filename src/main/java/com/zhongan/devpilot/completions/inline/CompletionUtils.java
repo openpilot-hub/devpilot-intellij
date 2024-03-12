@@ -52,9 +52,6 @@ public class CompletionUtils {
     public static boolean ignoreChange(Editor editor, Document document, int newOffset, int previousOffset) {
         if (newOffset < 0 || previousOffset > newOffset) return false;
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
-        String escapedText = addedText.replace("\t", "\\t");
-        System.out.println(escapedText);
-
         int currentLine = editor.getCaretModel().getLogicalPosition().line;
         int previousLine = currentLine - 1;
         String previousLineText = previousLine < 0 ? null : document.getText(
