@@ -40,7 +40,7 @@ public class CompletionUtils {
     public static boolean ignoreTrigger(String newText, String previousLineText) {
         boolean preLineIsPreComment = CommentUtil.containsComment(previousLineText);
         //contains empty and tab
-        boolean emptyAndTabChar = newText.trim().length() < 1 ;
+        boolean emptyAndTabChar = newText.trim().length() < 1;
         if (emptyAndTabChar && !preLineIsPreComment) return true;
 
         boolean newlineChar = newText.equals("\n");
