@@ -6,6 +6,7 @@ import com.intellij.openapi.project.DumbAwareAction;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.LoginUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ public class StatusBarActions {
     public static DefaultActionGroup buildStatusBarActionsGroup(Project project) {
         List<AnAction> actions = new ArrayList<>();
         actions.add(createCompletionsAction());
+        actions.add(createLoginAction());
         return new DefaultActionGroup(actions);
     }
 
@@ -32,6 +34,24 @@ public class StatusBarActions {
                 event -> {
                     CompletionSettingsState.getInstance().setEnable(true);
                 }
+            );
+        }
+    }
+
+    private static DumbAwareAction createLoginAction() {
+        if (LoginUtils.isLogin()) {
+            return DumbAwareAction.create(
+                    DevPilotMessageBundle.get("devpilot.settings.service.statusbar.logout.desc"),
+                    event -> {
+                        LoginUtils.logout();
+                    }
+            );
+        } else {
+            return DumbAwareAction.create(
+                    DevPilotMessageBundle.get("devpilot.settings.service.statusbar.login.desc"),
+                    event -> {
+                        LoginUtils.gotoLogin();
+                    }
             );
         }
     }

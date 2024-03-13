@@ -65,7 +65,7 @@ public final class LlamaServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                 .url(host + "/v1/chat/completions")
-                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("User-Agent", UserAgentUtils.buildUserAgent())
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
@@ -125,7 +125,7 @@ public final class LlamaServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                 .url(host + "/v1/chat/completions")
-                .header("User-Agent", UserAgentUtils.getUserAgent())
+                .header("User-Agent", UserAgentUtils.buildUserAgent())
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
