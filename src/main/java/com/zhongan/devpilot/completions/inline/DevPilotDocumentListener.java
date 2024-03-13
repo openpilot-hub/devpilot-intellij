@@ -78,9 +78,9 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
         Document document = event.getDocument();
 
-/*        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
-            return true;
-        }*/
+//        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
+//            return true;
+//        }
 
         if (event.getNewLength() < 1) {
             return true;
@@ -93,11 +93,11 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
 
         if (!checkModificationAllowed(editor) || document.getRangeGuard(offset, offset) != null) {
             document.fireReadOnlyModificationAttempt();
-
             return true;
         }
 
-        return !CompletionUtils.isValidDocumentChange(document, offset, event.getOffset());
+//        return !CompletionUtils.isValidDocumentChange(document, offset, event.getOffset());
+        return CompletionUtils.ignoreChange(editor, document, offset, event.getOffset());
     }
 
 }

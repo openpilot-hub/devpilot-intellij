@@ -216,14 +216,14 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             Call call = OkhttpUtils.getClient().newCall(request);
             response = call.execute();
         } catch (Exception e) {
-            Logger.getInstance(getClass()).warn("Chat completion failed: " + e.getMessage());
+            Logger.getInstance(getClass()).warn("Instruct completion failed: " + e.getMessage());
             return null;
         }
 
         try {
             return parseCompletionsResult(response);
         } catch (Exception e) {
-            Logger.getInstance(getClass()).warn("Chat completion failed: " + e.getMessage());
+            Logger.getInstance(getClass()).warn("Instruct completion failed: " + e.getMessage());
             return null;
         }
     }

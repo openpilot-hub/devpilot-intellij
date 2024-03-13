@@ -25,6 +25,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_INSTRUCT_COMPLETION_TOKENS;
 import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_CHAT_COMPLETION_MESSAGE_LENGTH;
 import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_OFFSET;
 
@@ -94,6 +95,7 @@ public class CompletionFacade {
         DevPilotInstructCompletionRequest request = new DevPilotInstructCompletionRequest();
         request.setPrompt(req.before);
         request.setSuffix(req.after);
+        request.setMaxTokens(MAX_INSTRUCT_COMPLETION_TOKENS);
 
         final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
         if (response == null) {
