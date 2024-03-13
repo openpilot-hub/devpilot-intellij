@@ -10,10 +10,13 @@ public class ConfigModel {
 
     private String username;
 
-    public ConfigModel(String theme, String locale, String username) {
+    private boolean loggedIn;
+
+    public ConfigModel(String theme, String locale, String username, boolean loggedIn) {
         this.theme = theme;
         this.locale = locale;
         this.username = username;
+        this.loggedIn = loggedIn;
     }
 
     public String getTheme() {
@@ -38,5 +41,13 @@ public class ConfigModel {
 
     public void setUsername(String username) {
         this.username = username;
+    }
+
+    public boolean isLoggedIn() {
+        return loggedIn;
+    }
+
+    public void setLoggedIn(boolean loggedIn) {
+        this.loggedIn = loggedIn;
     }
 }

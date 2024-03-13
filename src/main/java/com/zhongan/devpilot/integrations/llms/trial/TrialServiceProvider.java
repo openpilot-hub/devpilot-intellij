@@ -14,9 +14,9 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionR
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
-import com.zhongan.devpilot.util.WxAuthUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
@@ -50,9 +50,9 @@ public final class TrialServiceProvider implements LlmProvider {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
-        if (!WxAuthUtils.isLogin()) {
+        if (!LoginUtils.isLogin()) {
             service.callErrorInfo("Chat completion failed: please login");
-            DevPilotNotification.linkInfo("Please Login", "Wechat Account", WxAuthUtils.getWxAuthUrl());
+            DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
             return "";
         }
 
@@ -63,7 +63,7 @@ public final class TrialServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getWxUserAgent())
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
@@ -79,8 +79,8 @@ public final class TrialServiceProvider implements LlmProvider {
 
     @Override
     public DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest) {
-        if (!WxAuthUtils.isLogin()) {
-            return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + WxAuthUtils.getWxAuthUrl() + "\">Wechat Login</a>");
+        if (!LoginUtils.isLogin()) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + LoginUtils.loginUrl() + "\">Wechat Login</a>");
         }
 
         chatCompletionRequest.setModel(model);
@@ -90,7 +90,7 @@ public final class TrialServiceProvider implements LlmProvider {
         try {
             var request = new Request.Builder()
                     .url(host + "/v1/chat/completions")
-                    .header("User-Agent", UserAgentUtils.getWxUserAgent())
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
@@ -131,9 +131,9 @@ public final class TrialServiceProvider implements LlmProvider {
 
     @Override
     public void handleNoAuth(DevPilotChatToolWindowService service) {
-        WxAuthUtils.logout();
+        LoginUtils.logout();
         service.callErrorInfo("Chat completion failed: No auth, please login");
-        DevPilotNotification.linkInfo("Please Login", "Wechat Account", WxAuthUtils.getWxAuthUrl());
+        DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
     }
 
     private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
@@ -156,8 +156,8 @@ public final class TrialServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.success(message.getContent());
 
         } else if (response.code() == 401) {
-            WxAuthUtils.logout();
-            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + WxAuthUtils.getWxAuthUrl() + "\">Wechat Login</a>");
+            LoginUtils.logout();
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + LoginUtils.loginUrl() + "\">Wechat Login</a>");
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                     .getError()

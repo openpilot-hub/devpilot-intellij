@@ -16,7 +16,9 @@ import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.EditorUtils;
+import com.zhongan.devpilot.util.JetbrainsVersionUtils;
 import com.zhongan.devpilot.util.JsonUtils;
+import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.NewFileUtils;
 import com.zhongan.devpilot.util.TelemetryUtils;
 import com.zhongan.devpilot.webview.DevPilotCustomHandlerFactory;
@@ -57,7 +59,8 @@ public class DevPilotChatToolWindow {
     private void load() {
         JBCefBrowser browser;
         try {
-            browser = JBCefBrowser.createBuilder().setOffScreenRendering(false).createBrowser();
+            browser = JBCefBrowser.createBuilder().setOffScreenRendering(
+                    JetbrainsVersionUtils.isVersionLaterThan233()).build();
         } catch (Exception e) {
             browser = new JBCefBrowser();
         }
@@ -197,6 +200,10 @@ public class DevPilotChatToolWindow {
                     clipboard.setContents(new StringSelection(copyModel.getContent()), null);
                     return new JBCefJSQuery.Response("success");
                 }
+                case "Login": {
+                    LoginUtils.gotoLogin();
+                    return new JBCefJSQuery.Response("success");
+                }
                 case "DislikeMessage":
                 case "LikeMessage": {
                     var payload = jsCallModel.getPayload();
@@ -230,9 +237,10 @@ public class DevPilotChatToolWindow {
                         0
                 );
 
-                var format = "window.intellijConfig = {theme: '%s', locale: '%s', username: '%s'};";
+                var format = "window.intellijConfig = {theme: '%s', locale: '%s', username: '%s', loggedIn: %s};";
                 var configModel = ConfigChangeUtils.configInit();
-                var code = String.format(format, configModel.getTheme(), configModel.getLocale(), configModel.getUsername());
+                var code = String.format(format, configModel.getTheme(),
+                        configModel.getLocale(), configModel.getUsername(), configModel.isLoggedIn());
 
                 browser.executeJavaScript(code, null, 0);
             }

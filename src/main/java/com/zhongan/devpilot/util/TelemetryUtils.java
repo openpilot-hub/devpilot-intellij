@@ -28,6 +28,7 @@ public class TelemetryUtils {
         try {
             var request = new Request.Builder()
                     .url(host + path)
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .put(RequestBody.create(requestJson, MediaType.parse("application/json")))
                     .build();
 
