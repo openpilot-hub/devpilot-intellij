@@ -5,11 +5,7 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
+import com.zhongan.devpilot.integrations.llms.entity.*;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.OkhttpUtils;
@@ -99,6 +95,16 @@ public final class OpenAIServiceProvider implements LlmProvider {
     }
 
     @Override
+    public void restoreMessage(MessageModel messageModel) {
+        LlmProvider.super.restoreMessage(messageModel);
+    }
+
+    @Override
+    public EventSource buildEventSource(Request request, DevPilotChatToolWindowService service, Consumer<String> callback) {
+        return LlmProvider.super.buildEventSource(request, service, callback);
+    }
+
+    @Override
     public DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest) {
         var host = OpenAISettingsState.getInstance().getModelHost();
         var apiKey = OpenAISettingsState.getInstance().getPrivateKey();
@@ -140,6 +146,11 @@ public final class OpenAIServiceProvider implements LlmProvider {
         } catch (IOException e) {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
+    }
+
+    @Override
+    public String instructCompletion(DevPilotInstructCompletionRequest var1) {
+        return null;
     }
 
     private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {

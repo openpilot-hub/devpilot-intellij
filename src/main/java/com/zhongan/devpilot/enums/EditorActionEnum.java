@@ -10,9 +10,9 @@ public enum EditorActionEnum {
     GENERATE_COMMENTS("devpilot.action.generate.comments", "Generate comments in the following code",
         "{{selectedCode}}\nGiving the code above, please generate code comments, return code with comments."),
 
-    GENERATE_TESTS("devpilot.action.generate.tests", "Generate Tests in the following code",
-        "{{selectedCode}}\nGiving the {{language:unknown}} code above, " +
-            "please help to generate {{testFramework:suitable}} test cases for it, " +
+        GENERATE_TESTS("devpilot.action.generate.tests", "Generate Tests in the following code",
+            "{{selectedCode}}\nGiving the {{language:unknown}} code above, " +
+                "please help to generate {{testFramework:suitable}} test cases for it, " +
             "mocking test data with {{mockFramework:suitable mock framework}} if necessary, " +
             "{{additionalMockPrompt:}}" +
             "be aware that if the code is untestable, " +
@@ -34,7 +34,9 @@ public enum EditorActionEnum {
             "- Give optimization or best practice suggestion.\n"),
 
     EXPLAIN_THIS("devpilot.action.explain", "Explain this in the following code",
-        "{{selectedCode}}\nGiving the code above, please explain it in detail, line by line.\n");
+        "{{selectedCode}}\nGiving the code above, please explain it in detail, line by line.\n"),
+    CODE_COMPLETIONS("devpilot.action.completions", "code completions", "You are a code completion service, please try to auto complete the code below at {{offsetCode}}, only output the code, don't try to have conversation with user.```{{selectedCode}}```");;
+
 
     private final String label;
 

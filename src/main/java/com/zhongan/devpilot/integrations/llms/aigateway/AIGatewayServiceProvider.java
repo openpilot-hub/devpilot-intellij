@@ -1,33 +1,34 @@
 package com.zhongan.devpilot.integrations.llms.aigateway;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.DevPilotVersion;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
+import com.zhongan.devpilot.integrations.llms.entity.*;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.OkhttpUtils;
+import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
 
-import okhttp3.Call;
-import okhttp3.MediaType;
-import okhttp3.Request;
-import okhttp3.RequestBody;
 import okhttp3.sse.EventSource;
 
 @Service(Service.Level.PROJECT)
@@ -58,10 +59,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         try {
             var request = new Request.Builder()
-                .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", parseUserAgent())
-                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
-                .build();
+                    .url(host + "/v1/chat/completions")
+                    .header("User-Agent", parseUserAgent())
+                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .build();
 
             this.es = this.buildEventSource(request, service, callback);
         } catch (Exception e) {
@@ -96,7 +97,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     private String parseUserAgent() {
         // format: idea version|plugin version|uuid
         return String.format("%s|%s|%s", DevPilotVersion.getIdeaVersion(),
-            DevPilotVersion.getDevPilotVersion(), DevPilotLlmSettingsState.getInstance().getUuid());
+                DevPilotVersion.getDevPilotVersion(), DevPilotLlmSettingsState.getInstance().getUuid());
     }
 
     @Override
@@ -115,10 +116,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         try {
             var request = new Request.Builder()
-                .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", parseUserAgent())
-                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
-                .build();
+                    .url(host + "/v1/chat/completions")
+                    .header("User-Agent", parseUserAgent())
+                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .build();
 
             Call call = OkhttpUtils.getClient().newCall(request);
             response = call.execute();
@@ -142,9 +143,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         if (response.isSuccessful()) {
             var message = objectMapper.readValue(result, DevPilotSuccessResponse.class)
-                .getChoices()
-                .get(0)
-                .getMessage();
+                    .getChoices()
+                    .get(0)
+                    .getMessage();
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setRole("assistant");
             devPilotMessage.setContent(message.getContent());
@@ -153,8 +154,71 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
-                .getError()
-                .getMessage());
+                    .getError()
+                    .getMessage());
+        }
+    }
+
+    public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
+        String selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        String host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+        if (StringUtils.isEmpty(host)) {
+            Logger.getInstance(this.getClass()).warn("Instruct completion failed: host is empty");
+            return null;
+        } else {
+            Response response;
+            try {
+                var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
+                instructCompletionRequest.setModel(modelTypeEnum.getCode());
+                Request request = (new Request.Builder()).url(host + "/v1/chat/completions").header("User-Agent", UserAgentUtils.getUserAgent()).post(RequestBody.create(this.objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json"))).build();
+                Call call = OkhttpUtils.getClient().newCall(request);
+                response = call.execute();
+            } catch (Exception var9) {
+                Logger.getInstance(this.getClass()).warn("Chat completion failed: " + var9.getMessage());
+                return null;
+            }
+
+            try {
+                return this.parseCompletionsResult(response);
+            } catch (Exception var8) {
+                Logger.getInstance(this.getClass()).warn("Chat completion failed: " + var8.getMessage());
+                return null;
+            }
+        }
+    }
+
+    private String parseCompletionsResult(Response response) throws IOException {
+        if (response == null) {
+            return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
+        } else {
+            String result = ((ResponseBody) Objects.requireNonNull(response.body())).string();
+            if (response.isSuccessful()) {
+                objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+                var message = objectMapper.readValue(result.substring(result.indexOf('{')), DevPilotSuccessResponse.class)
+                        .getChoices()
+                        .get(0)
+                        .getMessage().getContent();
+                // 正则表达式提取```{语言名称}\n(content)```中content的内容
+                String regex = "```[^`]+?\\n+?(.*?)```";
+
+                Pattern pattern = Pattern.compile(regex, Pattern.DOTALL);
+                Matcher matcher = pattern.matcher(message);
+
+                if (matcher.find()) {
+                    message = matcher.group(1);
+                } else {
+                    message = "";
+                }
+                return message;
+            } else {
+//                DevPilotNotification.debug("SSO Type:" + var10000 + ", Status Code:" + response.code() + ".");
+                if (response.code() == 401) {
+                } else {
+                    Object var6 = this.objectMapper.readValue(result, DevPilotFailedResponse.class);
+                    DevPilotNotification.debug("Error message: [" + ((DevPilotFailedResponse) var6).getError().getMessage() + "].");
+                }
+                return "";
+            }
         }
     }
 
