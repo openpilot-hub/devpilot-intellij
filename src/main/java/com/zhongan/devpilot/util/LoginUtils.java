@@ -7,6 +7,7 @@ import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.enums.ZaSsoEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
+import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 
 import java.util.Locale;
 
@@ -37,6 +38,7 @@ public class LoginUtils {
         for (var project : projects) {
             var service = project.getService(DevPilotChatToolWindowService.class);
             service.changeLoginStatus(isLoggedIn);
+            DevPilotStatusBarBaseWidget.update(project);
         }
     }
 

@@ -6,6 +6,7 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.popup.Balloon;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
@@ -15,6 +16,7 @@ import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
+import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
@@ -199,6 +201,7 @@ public final class DevPilotChatToolWindowService {
         ApplicationManager.getApplication().invokeLater(() -> {
             Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
             if (editor == null || !editor.getSelectionModel().hasSelection()) {
+                BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
             myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText());
