@@ -39,7 +39,9 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.java</depends>
+    <depends optional="true" config-file="plugin-withJava.xml">com.intellij.modules.java</depends>
+<!--    <depends optional="true" config-file="plugin-withPython.xml">com.intellij.modules.python</depends>-->
+    <!--    <depends>com.intellij.modules.java</depends>-->
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -56,6 +58,7 @@
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LanguageSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CodeLlamaSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AIGatewaySettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.ChatShortcutSettingState"/>
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
@@ -70,9 +73,7 @@
                 implementation="com.zhongan.devpilot.completions.inline.DevPilotDocumentListener"/>
         <editorActionHandler action="EditorEscape" implementationClass="com.zhongan.devpilot.completions.inline.EscapeHandler"
                              id="previewEscape" order="before hide-hints"/>
-        <statusBarWidgetFactory implementation="com.zhongan.devpilot.statusBar.StatusBarProvider" id="com.zhongan.devpilot.statusBar.StatusBarProvider"/>
-
-
+        <statusBarWidgetFactory id="com.zhongan.devpilot.status.widget" implementation="com.zhongan.devpilot.statusBar.DevPilotStatusBarWidgetFactory"/>
     </extensions>
 
     <resource-bundle>messages.devpilot</resource-bundle>
