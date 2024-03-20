@@ -41,7 +41,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("212")
-        untilBuild.set("233.*")
+        untilBuild.set("241.*")
 
         pluginDescription.set(provider { file("description.html").readText() })
     }
