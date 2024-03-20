@@ -58,6 +58,7 @@ public class CompletionUtils {
         }
 
         return new DevPilotCompletion(
+            result.id,
             oldPrefix,
             result.newPrefix,
             result.oldSuffix,

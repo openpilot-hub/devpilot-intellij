@@ -97,7 +97,7 @@ public class CompletionFacade {
         request.setSuffix(req.after);
         request.setMaxTokens(MAX_INSTRUCT_COMPLETION_TOKENS);
 
-        final String response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
+        final var response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
         if (response == null) {
             return null;
         }
@@ -106,7 +106,8 @@ public class CompletionFacade {
         autocompleteResponse.oldPrefix = "";
         autocompleteResponse.userMessage = new String[] {};
         ResultEntry resultEntry = new ResultEntry();
-        resultEntry.newPrefix = response;
+        resultEntry.id = response.getId();
+        resultEntry.newPrefix = response.getContent();
         resultEntry.oldSuffix = "";
         resultEntry.newSuffix = "";
         ResultEntry[] resultEntries = new ResultEntry[] {resultEntry};

@@ -190,7 +190,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     }
 
     @Override
-    public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
+    public DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
         if (!LoginUtils.isLogin()) {
             DevPilotNotification.infoAndAction("Instruct completion failed: please login", "", LoginUtils.loginUrl());
             return null;
@@ -228,21 +228,26 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         }
     }
 
-    private String parseCompletionsResult(Response response) throws IOException {
+    private DevPilotMessage parseCompletionsResult(Response response) throws IOException {
         if (response == null) {
-            return DevPilotMessageBundle.get("devpilot.chatWindow.response.null");
+            return null;
         }
 
         var result = Objects.requireNonNull(response.body()).string();
 
         if (response.isSuccessful()) {
-            List<Map> message = (List<Map>) objectMapper.readValue(result, Map.class).get("choices");
-            String content = (String) message.get(0).get("text");
+            var map = objectMapper.readValue(result, Map.class);
+            var message = (List<Map>) map.get("choices");
+
+            var id = (String) map.get("id");
+            var content = (String) message.get(0).get("text");
+
             // multi chat message
             var devPilotMessage = new DevPilotMessage();
+            devPilotMessage.setId(id);
             devPilotMessage.setRole("assistant");
             devPilotMessage.setContent(content);
-            return content;
+            return devPilotMessage;
         }
         DevPilotNotification.debug("SSO Type:" + LoginUtils.getLoginType() + ", Status Code:" + response.code() + ".");
         if (response.code() == 401) {
@@ -250,7 +255,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } else {
             DevPilotNotification.debug("Error message: [" + objectMapper.readValue(result, DevPilotFailedResponse.class).getError().getMessage() + "].");
         }
-        return StringUtils.EMPTY;
+
+        return null;
     }
 
 }
