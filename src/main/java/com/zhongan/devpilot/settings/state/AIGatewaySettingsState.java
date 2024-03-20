@@ -43,8 +43,7 @@ public class AIGatewaySettingsState implements PersistentStateComponent<AIGatewa
     }
 
     public String getModelBaseHost(String selectedModel) {
-        String openAIBaseHost = "http://openapi-cloud-pub.zhonganinfo.com";
-        return modelBaseHostMap.getOrDefault(selectedModel, openAIBaseHost);
+        return "http://openapi-cloud-pub.zhonganinfo.com";
     }
 
     public void setModelBaseHost(String model, String host) {
