@@ -93,7 +93,6 @@ public class GitlabUtil {
 
     private static final Pattern URL_SECTION = Pattern.compile("url \"(.*)\"", Pattern.CASE_INSENSITIVE);
 
-
     private static Remote parseRemote(String sectionName, Profile.Section section) {
         Matcher matcher = REMOTE_SECTION.matcher(sectionName);
         if (matcher.matches() && matcher.groupCount() == 1) {
