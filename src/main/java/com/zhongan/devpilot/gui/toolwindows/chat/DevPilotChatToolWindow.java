@@ -11,6 +11,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefBrowserBase;
 import com.intellij.ui.jcef.JBCefJSQuery;
+import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
@@ -24,7 +25,6 @@ import com.zhongan.devpilot.util.TelemetryUtils;
 import com.zhongan.devpilot.webview.DevPilotCustomHandlerFactory;
 import com.zhongan.devpilot.webview.model.CodeActionModel;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
-import com.zhongan.devpilot.webview.model.CopyModel;
 import com.zhongan.devpilot.webview.model.JsCallModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -116,6 +116,9 @@ public class DevPilotChatToolWindow {
                     }
 
                     insertAtCaret(codeActionModel.getContent());
+
+                    TelemetryUtils.chatAccept(codeActionModel, ChatActionTypeEnum.INSERT);
+
                     return new JBCefJSQuery.Response("success");
                 }
                 case "ReplaceSelectedCode": {
@@ -127,6 +130,9 @@ public class DevPilotChatToolWindow {
                     }
 
                     replaceSelectionCode(codeActionModel.getContent());
+
+                    TelemetryUtils.chatAccept(codeActionModel, ChatActionTypeEnum.REPLACE);
+
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CreateNewFile": {
@@ -146,6 +152,8 @@ public class DevPilotChatToolWindow {
                     ApplicationManager.getApplication().invokeLater(
                             () -> NewFileUtils.createNewFile(project, codeActionModel.getContent(),
                                     userMessage.getCodeRef(), codeActionModel.getLang()));
+
+                    TelemetryUtils.chatAccept(codeActionModel, ChatActionTypeEnum.NEW_FILE);
 
                     return new JBCefJSQuery.Response("success");
                 }
@@ -190,14 +198,17 @@ public class DevPilotChatToolWindow {
                 }
                 case "CopyCode": {
                     var payload = jsCallModel.getPayload();
-                    var copyModel = JsonUtils.fromJson(JsonUtils.toJson(payload), CopyModel.class);
+                    var codeActionModel = JsonUtils.fromJson(JsonUtils.toJson(payload), CodeActionModel.class);
 
-                    if (copyModel == null || copyModel.getContent() == null) {
+                    if (codeActionModel == null || codeActionModel.getContent() == null) {
                         return new JBCefJSQuery.Response("error");
                     }
 
                     var clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
-                    clipboard.setContents(new StringSelection(copyModel.getContent()), null);
+                    clipboard.setContents(new StringSelection(codeActionModel.getContent()), null);
+
+                    TelemetryUtils.chatAccept(codeActionModel, ChatActionTypeEnum.COPY);
+
                     return new JBCefJSQuery.Response("success");
                 }
                 case "Login": {

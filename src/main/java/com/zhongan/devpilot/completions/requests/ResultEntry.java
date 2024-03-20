@@ -4,6 +4,8 @@ import com.zhongan.devpilot.completions.Completion;
 import com.zhongan.devpilot.completions.general.CompletionKind;
 
 public class ResultEntry implements Completion {
+    public String id;
+
     public String newPrefix;
 
     public String oldSuffix;

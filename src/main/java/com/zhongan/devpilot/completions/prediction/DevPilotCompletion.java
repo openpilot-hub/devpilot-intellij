@@ -14,6 +14,8 @@ import java.util.List;
 import org.jetbrains.annotations.Nullable;
 
 public class DevPilotCompletion implements Completion {
+    public final String id;
+
     public final String oldPrefix;
 
     public final String newPrefix;
@@ -36,6 +38,7 @@ public class DevPilotCompletion implements Completion {
     private String fullSuffix = null;
 
     public DevPilotCompletion(
+        String id,
         String oldPrefix,
         String newPrefix,
         String oldSuffix,
@@ -45,6 +48,7 @@ public class DevPilotCompletion implements Completion {
         String cursorSuffix,
         @Nullable CompletionMetadata completionMetadata,
         SuggestionTrigger suggestionTrigger) {
+        this.id = id;
         this.oldPrefix = oldPrefix;
         this.newPrefix = newPrefix;
         this.oldSuffix = oldSuffix;
@@ -58,6 +62,7 @@ public class DevPilotCompletion implements Completion {
 
     public DevPilotCompletion createAdjustedCompletion(String oldPrefix, String cursorPrefix) {
         return new DevPilotCompletion(
+            this.id,
             oldPrefix,
             this.newPrefix,
             this.oldSuffix,

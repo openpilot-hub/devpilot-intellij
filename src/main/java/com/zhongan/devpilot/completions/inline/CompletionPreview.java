@@ -14,6 +14,7 @@ import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
 import com.zhongan.devpilot.completions.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.util.TelemetryUtils;
 
 import java.util.List;
 
@@ -157,6 +158,7 @@ public class CompletionPreview implements Disposable {
         //TODO 代码自动格式化
         editor.getDocument().insertString(cursorOffset, suffix);
         editor.getCaretModel().moveToOffset(startOffset + completion.newPrefix.length());
-        //TODO accept completion upload
+
+        TelemetryUtils.completionAccept(completion.id, file);
     }
 }

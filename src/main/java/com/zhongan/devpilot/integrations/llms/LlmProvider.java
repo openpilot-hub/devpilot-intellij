@@ -29,7 +29,7 @@ public interface LlmProvider {
 
     DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest);
 
-    String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest);
+    DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest);
 
     void interruptSend();
 

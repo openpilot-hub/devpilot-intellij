@@ -109,7 +109,7 @@ public final class TrialServiceProvider implements LlmProvider {
     }
 
     @Override
-    public String instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
+    public DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
         return null;
     }
 

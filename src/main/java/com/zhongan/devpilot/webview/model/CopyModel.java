@@ -2,6 +2,7 @@ package com.zhongan.devpilot.webview.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+@Deprecated
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CopyModel {
     private String content;
