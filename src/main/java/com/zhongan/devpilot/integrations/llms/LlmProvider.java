@@ -1,26 +1,24 @@
 package com.zhongan.devpilot.integrations.llms;
 
+import com.google.gson.Gson;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
-import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
-
-import java.util.UUID;
-import java.util.function.Consumer;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.UUID;
+import java.util.function.Consumer;
 
 public interface LlmProvider {
 
@@ -47,7 +45,8 @@ public interface LlmProvider {
                     return;
                 }
 
-                var response = JsonUtils.fromJson(data, DevPilotSuccessStreamingResponse.class);
+                // var response = JsonUtils.fromJson(data, DevPilotSuccessStreamingResponse.class);
+                var response = new Gson().fromJson(data, DevPilotSuccessStreamingResponse.class);
 
                 if (response == null) {
                     interruptSend();

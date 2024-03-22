@@ -35,6 +35,7 @@
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LanguageSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CodeLlamaSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AIGatewaySettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OllamaSettingsState"/>
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
 
