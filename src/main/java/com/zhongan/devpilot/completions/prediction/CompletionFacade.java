@@ -24,10 +24,7 @@ import java.nio.file.Paths;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
-import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_INSTRUCT_COMPLETION_TOKENS;
-import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_CHAT_COMPLETION_MESSAGE_LENGTH;
-import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_OFFSET;
+import static com.zhongan.devpilot.completions.general.StaticConfig.*;
 
 public class CompletionFacade {
 
@@ -63,8 +60,8 @@ public class CompletionFacade {
         @Nullable CompletionAdjustment completionAdjustment) {
         Document document = editor.getDocument();
 
-        int begin = Integer.max(0, offset - MIN_OFFSET);
-        int end = Integer.min(document.getTextLength(), offset + MIN_OFFSET);
+        int begin = Integer.max(0, offset - PREFIX_MAX_OFFSET);
+        int end = Integer.min(document.getTextLength(), offset + SUFFIX_MAX_OFFSET);
         AutocompleteRequest req = new AutocompleteRequest();
         req.before = document.getText(new TextRange(begin, offset));
         req.after = document.getText(new TextRange(offset, end));

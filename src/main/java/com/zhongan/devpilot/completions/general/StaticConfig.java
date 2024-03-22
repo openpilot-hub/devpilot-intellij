@@ -9,6 +9,12 @@ public class StaticConfig {
     // 100 KB
     public static final int MAX_OFFSET = 100000;
 
+    //15kb
+    public static final int PREFIX_MAX_OFFSET = 15000;
+
+    //2500
+    public static final int SUFFIX_MAX_OFFSET = 2500;
+
     // 200 B
     public static final int MIN_OFFSET = 200;
 
