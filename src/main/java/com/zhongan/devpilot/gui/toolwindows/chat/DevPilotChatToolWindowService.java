@@ -20,6 +20,7 @@ import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
+import com.zhongan.devpilot.webview.model.EmbeddedModel;
 import com.zhongan.devpilot.webview.model.JavaCallModel;
 import com.zhongan.devpilot.webview.model.LocaleModel;
 import com.zhongan.devpilot.webview.model.LoginModel;
@@ -314,6 +315,14 @@ public final class DevPilotChatToolWindowService {
         var javaCallModel = new JavaCallModel();
         javaCallModel.setCommand("ConfigurationChanged");
         javaCallModel.setPayload(new LoginModel(isLoggedIn));
+
+        callWebView(javaCallModel);
+    }
+
+    public void presentRepoCodeEmbeddedState(boolean isEmbedded, String repoName) {
+        JavaCallModel javaCallModel = new JavaCallModel();
+        javaCallModel.setCommand("PresentCodeEmbeddedState");
+        javaCallModel.setPayload(new EmbeddedModel(isEmbedded, repoName));
 
         callWebView(javaCallModel);
     }
