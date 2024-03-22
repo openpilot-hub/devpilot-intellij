@@ -17,6 +17,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.EditorUtils;
+import com.zhongan.devpilot.util.GitUtil;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
@@ -74,12 +76,21 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         chatCompletionRequest.setModel(modelTypeEnum.getCode());
 
         try {
-            var request = new Request.Builder()
-                .url(host + "/devpilot/v1/chat/completions")
-                .header("User-Agent", UserAgentUtils.buildUserAgent())
-                .header("Auth-Type", LoginUtils.getLoginType())
-                .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
-                .build();
+            var requestBuilder = new Request.Builder()
+                    .url(host + "/devpilot/v1/chat/completions")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", LoginUtils.getLoginType());
+
+            if (isLatestUserContentContainsRepo(chatCompletionRequest)) {
+                String repoName = EditorUtils.getCurrentEditorRepositoryName(project);
+                if (repoName != null && GitUtil.isRepoEmbedded(repoName)) {
+                    requestBuilder.header("Embedded-Repos", repoName);
+                    chatCompletionRequest.setModel(null);
+                }
+            }
+            var request = requestBuilder
+                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .build();
 
             DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
             this.es = this.buildEventSource(request, service, callback);
@@ -257,6 +268,20 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         }
 
         return null;
+    }
+
+    private Boolean isLatestUserContentContainsRepo(DevPilotChatCompletionRequest chatCompletionRequest) {
+        List<DevPilotMessage> messages = chatCompletionRequest.getMessages();
+        for (int i = messages.size() - 1; i >= 0; i--) {
+            if (messages.get(i).getRole().equals("user")) {
+                String content = messages.get(i).getContent();
+                if (content.startsWith("@repo")) {
+                    messages.get(i).setContent(content.substring(5));
+                    return Boolean.TRUE;
+                }
+            }
+        }
+        return false;
     }
 
 }

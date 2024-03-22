@@ -14,7 +14,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 
 public class TelemetryUtils {
-    private static final String host = "http://openapi-cloud-pub.zhonganinfo.com/openpilot-hub";
+    private static final String host = "https://devpilot.zhongan.com/hub";
+
+//    private static final String host = "http://openpilot-hub-foundation.test.za.biz";
 
     private static final String likePath = "/devpilot/v1/conversation-messages/%s";
 

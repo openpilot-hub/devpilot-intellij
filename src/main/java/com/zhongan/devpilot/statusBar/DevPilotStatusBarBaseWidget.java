@@ -25,7 +25,7 @@ public class DevPilotStatusBarBaseWidget extends EditorBasedStatusBarPopup {
     @Override
     protected @NotNull WidgetState getWidgetState(@Nullable VirtualFile file) {
         WidgetState widgetState = new WidgetState("DevPilot", "", true);
-        widgetState.setIcon(LoginUtils.isLogin() ? DevPilotIcons.SYSTEM_ICON : DevPilotIcons.SYSTEM_ICON_GRAY);
+        widgetState.setIcon(LoginUtils.isLogin() ? DevPilotIcons.SYSTEM_ICON_13 : DevPilotIcons.SYSTEM_ICON_GRAY_13);
         return widgetState;
     }
 

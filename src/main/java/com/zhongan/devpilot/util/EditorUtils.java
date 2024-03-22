@@ -35,4 +35,10 @@ public class EditorUtils {
             scrollingModel.scrollTo(new LogicalPosition(startLine, 0), ScrollType.CENTER);
         }
     }
+
+    public static String getCurrentEditorRepositoryName(Project project) {
+        FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+        VirtualFile currentFile = fileEditorManager.getSelectedFiles()[0];
+        return GitUtil.getRepoNameFromFile(project, currentFile);
+    }
 }
