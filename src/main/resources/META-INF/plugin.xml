@@ -6,13 +6,22 @@
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>DevPilot</name>
-    <version>2.3.0</version>
+    <version>2.4.0</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.4.0</h1>
+        <h2>New Features</h2>
+         <ul>
+          <li>Interactive optimization</li>
+          <li>Add inlay hint for Explain | Fix | Test</li>
+          <li>Optimize status bar action behavior</li>
+        </ul>
+        <h1>Release 2.3.0</h1>
         <h2>Enhancements</h2>
         <ul>
           <li>Enhance the plugin compatibility with LLM responses</li>
         </ul>
+        <h1>Release 2.2.0</h1>
         <h2>New Features</h2>
         <ul>
           <li>Supports free trial for users who follow our Weixin Official Account by scanning QR code</li>
