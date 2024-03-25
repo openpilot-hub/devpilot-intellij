@@ -71,8 +71,12 @@ public final class DevPilotChatToolWindowService {
                 historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
             }
             devPilotChatCompletionRequest.setStream(Boolean.TRUE);
+            if (message.startsWith("@repo")) {
+                clearRequestSession();
+                historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
+            }
             historyRequestMessageList.add(userMessage);
-            devPilotChatCompletionRequest.getMessages().addAll(historyRequestMessageList);
+            devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         }
 
         callWebView(messageModel);
@@ -99,7 +103,7 @@ public final class DevPilotChatToolWindowService {
             historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
         }
         devPilotChatCompletionRequest.setStream(Boolean.TRUE);
-        devPilotChatCompletionRequest.getMessages().addAll(historyRequestMessageList);
+        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
 
         callWebView(MessageModel.buildLoadingMessage());
 
@@ -191,6 +195,7 @@ public final class DevPilotChatToolWindowService {
 
         var id = lastMessage.getId();
         historyMessageList.removeIf(item -> item.getId().equals(id));
+        historyRequestMessageList.removeIf(item -> item.getId().equals(id));
         // todo handle real callback
         sendMessage(null);
     }
@@ -236,6 +241,18 @@ public final class DevPilotChatToolWindowService {
             }
         }
         return index;
+    }
+
+    private List<DevPilotMessage> copyHistoryRequestMessageList(List<DevPilotMessage> historyRequestMessageList){
+        List<DevPilotMessage> copiedList = new ArrayList<>();
+        for (DevPilotMessage message : historyRequestMessageList) {
+            DevPilotMessage copiedMessage = new DevPilotMessage();
+            copiedMessage.setContent(message.getContent());
+            copiedMessage.setRole(message.getRole());
+            copiedMessage.setId(message.getId());
+            copiedList.add(copiedMessage);
+        }
+        return copiedList;
     }
 
     public void callWebView(JavaCallModel javaCallModel) {

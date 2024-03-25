@@ -279,6 +279,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                     messages.get(i).setContent(content.substring(5));
                     return Boolean.TRUE;
                 }
+                return false;
             }
         }
         return false;
