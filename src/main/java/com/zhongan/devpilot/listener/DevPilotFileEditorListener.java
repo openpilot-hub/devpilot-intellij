@@ -11,6 +11,7 @@ import com.zhongan.devpilot.util.GitUtil;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.zhongan.devpilot.util.LoginUtils;
 import org.jetbrains.annotations.NotNull;
 
 import static com.zhongan.devpilot.util.GitUtil.isRepoEmbedded;
@@ -26,6 +27,10 @@ public class DevPilotFileEditorListener implements FileEditorManagerListener {
 
     @Override
     public void selectionChanged(@NotNull FileEditorManagerEvent event) {
+        if (!LoginUtils.isLogin() || LoginUtils.getLoginType().equals("wx")) {
+            return;
+        }
+
         VirtualFile file = event.getNewEditor() != null ? event.getNewEditor().getFile() : null;
         if (file == null) {
             return;
