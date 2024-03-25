@@ -5,21 +5,21 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class EmbeddedModel {
 
-    private Boolean embedded;
+    private Boolean repoEmbedded;
 
     private String repoName;
 
     public EmbeddedModel(Boolean embedded, String repoName) {
-        this.embedded = embedded;
+        this.repoEmbedded = embedded;
         this.repoName = repoName;
     }
 
-    public Boolean getEmbedded() {
-        return embedded;
+    public Boolean getRepoEmbedded() {
+        return repoEmbedded;
     }
 
-    public void setEmbedded(Boolean embedded) {
-        this.embedded = embedded;
+    public void setRepoEmbedded(Boolean repoEmbedded) {
+        this.repoEmbedded = repoEmbedded;
     }
 
     public String getRepoName() {
