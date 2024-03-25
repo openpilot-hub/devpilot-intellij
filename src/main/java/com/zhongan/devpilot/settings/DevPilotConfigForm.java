@@ -12,16 +12,27 @@ import com.intellij.util.ui.UI;
 import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.enums.OpenAIModelNameEnum;
-import com.zhongan.devpilot.settings.state.*;
+import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
+import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
+import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
+import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.OllamaSettingsState;
+import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.OkhttpUtils;
-import okhttp3.Call;
-import okhttp3.Request;
 
-import javax.swing.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.Objects;
+
+import javax.swing.BoxLayout;
+import javax.swing.JButton;
+import javax.swing.JComponent;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+
+import okhttp3.Call;
+import okhttp3.Request;
 
 public class DevPilotConfigForm {
 
@@ -61,7 +72,6 @@ public class DevPilotConfigForm {
     private final JButton ollamaRefreshModelBtn;
 
     private final ComboBox<String> ollamaModelComboBox;
-
 
     private Integer index;
 
@@ -131,12 +141,11 @@ public class DevPilotConfigForm {
 
         modelComboBox = combo;
         comboBoxPanel = createOpenAIServiceSectionPanel(
-                DevPilotMessageBundle.get("devpilot.settings.service.modelTypeLabel"), modelComboBox);
+            DevPilotMessageBundle.get("devpilot.settings.service.modelTypeLabel"), modelComboBox);
 
         var instance = LanguageSettingsState.getInstance();
         index = instance.getLanguageIndex();
     }
-
 
     public void refreshOllamaModels() {
         ollamaModelComboBox.removeAllItems();
@@ -147,13 +156,13 @@ public class DevPilotConfigForm {
             return;
         }
         if (host.endsWith("/")) {
-            host = host.substring(0, host.length()-1);
+            host = host.substring(0, host.length() - 1);
         }
         try {
             var request = new Request.Builder()
-                    .get()
-                    .url(host + "/api/tags")
-                    .build();
+                .get()
+                .url(host + "/api/tags")
+                .build();
             Call call = OkhttpUtils.getClient().newCall(request);
             okhttp3.Response response = call.execute();
             if (response.isSuccessful()) {
@@ -174,12 +183,12 @@ public class DevPilotConfigForm {
 
     public JComponent getForm() {
         var form = FormBuilder.createFormBuilder()
-                .addComponent(comboBoxPanel)
-                .addComponent(openAIServicePanel)
-                .addComponent(codeLlamaServicePanel)
-                .addComponent(aiGatewayServicePanel)
-                .addComponent(ollamaServicePanel)
-                .getPanel();
+            .addComponent(comboBoxPanel)
+            .addComponent(openAIServicePanel)
+            .addComponent(codeLlamaServicePanel)
+            .addComponent(aiGatewayServicePanel)
+            .addComponent(ollamaServicePanel)
+            .getPanel();
         form.setBorder(JBUI.Borders.emptyLeft(16));
         return form;
     }
@@ -196,65 +205,65 @@ public class DevPilotConfigForm {
         });
 
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(comboBox)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.setting.language"))
-                        .resizeX(false))
-                .createPanel();
+            .add(UI.PanelFactory.panel(comboBox)
+                .withLabel(DevPilotMessageBundle.get("devpilot.setting.language"))
+                .resizeX(false))
+            .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(0));
         return panel;
     }
 
     private JPanel createOpenAIServiceSectionPanel(String label, JComponent component) {
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(component)
-                        .withLabel(label)
-                        .resizeX(false))
-                .createPanel();
+            .add(UI.PanelFactory.panel(component)
+                .withLabel(label)
+                .resizeX(false))
+            .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
         return panel;
     }
 
     private JPanel createOpenAIServicePanel() {
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(openAIBaseHostField)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
-                        .resizeX(false))
-                .add(UI.PanelFactory.panel(openAIKeyField)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.apiKeyLabel"))
-                        .resizeX(false))
-                .add(UI.PanelFactory.panel(openAIModelNameComboBox)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
-                        .resizeX(false))
-                .add(UI.PanelFactory.panel(openAICustomModelNameField)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.customModelNameLabel"))
-                        .resizeX(false))
-                .createPanel();
+            .add(UI.PanelFactory.panel(openAIBaseHostField)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
+                .resizeX(false))
+            .add(UI.PanelFactory.panel(openAIKeyField)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.apiKeyLabel"))
+                .resizeX(false))
+            .add(UI.PanelFactory.panel(openAIModelNameComboBox)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
+                .resizeX(false))
+            .add(UI.PanelFactory.panel(openAICustomModelNameField)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.customModelNameLabel"))
+                .resizeX(false))
+            .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
         return panel;
     }
 
     private JPanel createAIGatewayServicePanel() {
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(aiGatewayBaseHostField)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
-                        .resizeX(false))
-                .add(UI.PanelFactory.panel(aiGatewayModelComboBox)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelTypeLabel"))
-                        .resizeX(false))
-                .createPanel();
+            .add(UI.PanelFactory.panel(aiGatewayBaseHostField)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
+                .resizeX(false))
+            .add(UI.PanelFactory.panel(aiGatewayModelComboBox)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelTypeLabel"))
+                .resizeX(false))
+            .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
         return panel;
     }
 
     private JPanel createCodeLlamaServicePanel() {
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(codeLlamaBaseHostField)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
-                        .resizeX(false))
-                .add(UI.PanelFactory.panel(codeLlamaModelNameField)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
-                        .resizeX(false))
-                .createPanel();
+            .add(UI.PanelFactory.panel(codeLlamaBaseHostField)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
+                .resizeX(false))
+            .add(UI.PanelFactory.panel(codeLlamaModelNameField)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
+                .resizeX(false))
+            .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
         return panel;
     }
@@ -266,13 +275,13 @@ public class DevPilotConfigForm {
         modelPanel.add(ollamaRefreshModelBtn);
 
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(ollamaBaseHostField)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
-                        .resizeX(false))
-                .add(UI.PanelFactory.panel(modelPanel)
-                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
-                        .resizeX(false))
-                .createPanel();
+            .add(UI.PanelFactory.panel(ollamaBaseHostField)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
+                .resizeX(false))
+            .add(UI.PanelFactory.panel(modelPanel)
+                .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
+                .resizeX(false))
+            .createPanel();
         panel.setBorder(JBUI.Borders.emptyLeft(16));
         return panel;
     }
