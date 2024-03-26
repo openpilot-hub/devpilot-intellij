@@ -1,12 +1,12 @@
 package com.zhongan.devpilot.integrations.llms;
 
-import com.google.gson.Gson;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
+import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -43,12 +43,11 @@ public interface LlmProvider {
         return EventSources.createFactory(client).newEventSource(request, new EventSourceListener() {
             @Override
             public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-                if (data.equals("[DONE]")) {
+                if ("[DONE]".equals(data)) {
                     return;
                 }
 
-                // var response = JsonUtils.fromJson(data, DevPilotSuccessStreamingResponse.class);
-                var response = new Gson().fromJson(data, DevPilotSuccessStreamingResponse.class);
+                var response = JsonUtils.fromJson(data, DevPilotSuccessStreamingResponse.class);
 
                 if (response == null) {
                     interruptSend();
