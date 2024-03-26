@@ -43,7 +43,7 @@ public interface LlmProvider {
         return EventSources.createFactory(client).newEventSource(request, new EventSourceListener() {
             @Override
             public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-                if (data.equals("[DONE]")) {
+                if ("[DONE]".equals(data)) {
                     return;
                 }
 
