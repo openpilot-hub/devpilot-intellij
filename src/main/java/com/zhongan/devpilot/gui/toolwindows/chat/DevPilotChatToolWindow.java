@@ -5,6 +5,7 @@ import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.SystemInfo;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.codeStyle.CodeStyleManager;
@@ -59,9 +60,20 @@ public class DevPilotChatToolWindow {
     private void load() {
         JBCefBrowser browser;
         try {
-            browser = JBCefBrowser.createBuilder().setOffScreenRendering(
-                    JetbrainsVersionUtils.isVersionLaterThan233()).build();
-        } catch (Exception e) {
+            boolean isOffScreenRendering = true;
+            if (SystemInfo.isMac) {
+                isOffScreenRendering = false;
+            } else if (!SystemInfo.isLinux && !SystemInfo.isUnix) {
+                if (SystemInfo.isWindows) {
+                    isOffScreenRendering = true;
+                }
+            } else {
+                isOffScreenRendering = JetbrainsVersionUtils.isVersionLaterThan233();
+            }
+
+            browser = JBCefBrowser.createBuilder().setOffScreenRendering(isOffScreenRendering).createBrowser();
+
+        } catch (Throwable e) {
             browser = new JBCefBrowser();
         }
 

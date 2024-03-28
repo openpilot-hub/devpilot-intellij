@@ -243,7 +243,7 @@ public final class DevPilotChatToolWindowService {
         return index;
     }
 
-    private List<DevPilotMessage> copyHistoryRequestMessageList(List<DevPilotMessage> historyRequestMessageList){
+    private List<DevPilotMessage> copyHistoryRequestMessageList(List<DevPilotMessage> historyRequestMessageList) {
         List<DevPilotMessage> copiedList = new ArrayList<>();
         for (DevPilotMessage message : historyRequestMessageList) {
             DevPilotMessage copiedMessage = new DevPilotMessage();

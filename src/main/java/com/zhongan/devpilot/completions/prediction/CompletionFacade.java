@@ -24,7 +24,11 @@ import java.nio.file.Paths;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.zhongan.devpilot.completions.general.StaticConfig.*;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_INSTRUCT_COMPLETION_TOKENS;
+import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_CHAT_COMPLETION_MESSAGE_LENGTH;
+import static com.zhongan.devpilot.completions.general.StaticConfig.PREFIX_MAX_OFFSET;
+import static com.zhongan.devpilot.completions.general.StaticConfig.SUFFIX_MAX_OFFSET;
 
 public class CompletionFacade {
 

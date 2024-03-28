@@ -7,11 +7,11 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.util.GitUtil;
+import com.zhongan.devpilot.util.LoginUtils;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import com.zhongan.devpilot.util.LoginUtils;
 import org.jetbrains.annotations.NotNull;
 
 import static com.zhongan.devpilot.util.GitUtil.isRepoEmbedded;
