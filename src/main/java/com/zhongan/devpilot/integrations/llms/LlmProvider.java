@@ -10,6 +10,8 @@ import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -105,5 +107,9 @@ public interface LlmProvider {
                 service.addMessage(assistantMessage);
             }
         });
+    }
+
+    default List<String> listModels(String host, String apiKey) {
+        return new ArrayList<>();
     }
 }

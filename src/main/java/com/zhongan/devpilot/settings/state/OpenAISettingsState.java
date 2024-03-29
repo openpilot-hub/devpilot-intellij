@@ -5,17 +5,16 @@ import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
-import com.zhongan.devpilot.enums.OpenAIModelNameEnum;
 
 @State(name = "DevPilot_OpenAISettings", storages = @Storage("DevPilot_OpenAISettings.xml"))
 public class OpenAISettingsState implements PersistentStateComponent<OpenAISettingsState> {
-    private String modelHost;
+    private String modelHost = "";
 
-    private String privateKey;
+    private String privateKey = "";
 
-    private String modelName = OpenAIModelNameEnum.GPT3_5_TURBO.getName();
+    private String modelName = "";
 
-    private String customModelName;
+    private String customModelName = "";
 
     public static OpenAISettingsState getInstance() {
         return ApplicationManager.getApplication().getService(OpenAISettingsState.class);

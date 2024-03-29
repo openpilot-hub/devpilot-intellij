@@ -52,7 +52,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !selectedModel.getName().equals(settings.getSelectedModel())
                 || !selectedModelType.getName().equals(aiGatewaySettings.getSelectedModel())
                 || !serviceForm.getOpenAIBaseHost().equals(openAISettings.getModelHost())
-                || !serviceForm.getOpenAIModelName().getName().equals(openAISettings.getModelName())
+                || !serviceForm.getOpenAIModelName().equals(openAISettings.getModelName())
                 || !serviceForm.getOpenAICustomModelName().equals(openAISettings.getCustomModelName())
                 || !serviceForm.getAIGatewayBaseHost().equals(aiGatewaySettings.getModelBaseHost(selectedModelType.getName()))
                 || !serviceForm.getOpenAIKey().equals(openAISettings.getPrivateKey())
@@ -94,7 +94,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         settings.setSelectedModel(selectedModel.getName());
         openAISettings.setModelHost(serviceForm.getOpenAIBaseHost());
         openAISettings.setPrivateKey(serviceForm.getOpenAIKey());
-        openAISettings.setModelName(openAIModelName.getName());
+        openAISettings.setModelName(openAIModelName);
         openAISettings.setCustomModelName(serviceForm.getOpenAICustomModelName());
         codeLlamaSettings.setModelHost(serviceForm.getCodeLlamaBaseHost());
         codeLlamaSettings.setModelName(serviceForm.getCodeLlamaModelName());

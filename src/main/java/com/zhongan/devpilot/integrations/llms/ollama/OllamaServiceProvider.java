@@ -2,6 +2,7 @@ package com.zhongan.devpilot.integrations.llms.ollama;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
@@ -10,13 +11,17 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRespo
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
+import com.zhongan.devpilot.integrations.llms.entity.OllamaModelListResponse;
 import com.zhongan.devpilot.settings.state.OllamaSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -30,6 +35,7 @@ import okhttp3.sse.EventSource;
 
 @Service(Service.Level.PROJECT)
 public final class OllamaServiceProvider implements LlmProvider {
+    private static final Logger log = Logger.getInstance(OllamaServiceProvider.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -92,6 +98,35 @@ public final class OllamaServiceProvider implements LlmProvider {
             // after interrupt, reset result model
             resultModel = null;
         }
+    }
+
+    @Override
+    public List<String> listModels(String host, String apiKey) {
+        if (host.endsWith("/")) {
+            host = host.substring(0, host.length() - 1);
+        }
+        List<String> modelList = new ArrayList<>();
+        try {
+            var request = new Request.Builder()
+                .get()
+                .url(host + "/api/tags")
+                .build();
+            Call call = OkhttpUtils.getClient().newCall(request);
+            okhttp3.Response response = call.execute();
+            if (response.isSuccessful()) {
+                var result = Objects.requireNonNull(response.body()).string();
+                var modelListResponse = JsonUtils.fromJson(result, OllamaModelListResponse.class);
+                if (modelListResponse != null) {
+                    for (OllamaModelListResponse.Model model : modelListResponse.getModels()) {
+                        modelList.add(model.getName());
+                    }
+                }
+            }
+            response.close();
+        } catch (Exception ex) {
+            log.error("ollama list models error", ex);
+        }
+        return modelList;
     }
 
     @Override

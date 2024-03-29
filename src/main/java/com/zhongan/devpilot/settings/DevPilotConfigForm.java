@@ -1,9 +1,6 @@
 package com.zhongan.devpilot.settings;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.ui.ComboBox;
 import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
@@ -11,7 +8,9 @@ import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UI;
 import com.zhongan.devpilot.enums.ModelServiceEnum;
 import com.zhongan.devpilot.enums.ModelTypeEnum;
-import com.zhongan.devpilot.enums.OpenAIModelNameEnum;
+import com.zhongan.devpilot.integrations.llms.LlmProvider;
+import com.zhongan.devpilot.integrations.llms.ollama.OllamaServiceProvider;
+import com.zhongan.devpilot.integrations.llms.openai.OpenAIServiceProvider;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
@@ -19,22 +18,19 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.settings.state.OllamaSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
-import com.zhongan.devpilot.util.OkhttpUtils;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.util.Objects;
+import java.util.List;
 
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComponent;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import okhttp3.Call;
-import okhttp3.Request;
-
 public class DevPilotConfigForm {
+
+    private static final String CUSTOM_MODEL = "custom";
 
     private final JPanel comboBoxPanel;
 
@@ -46,7 +42,9 @@ public class DevPilotConfigForm {
 
     private final JBTextField openAIKeyField;
 
-    private final ComboBox<OpenAIModelNameEnum> openAIModelNameComboBox;
+    private final ComboBox<String> openAIModelNameComboBox;
+
+    private final JButton openAIRefreshModelBtn;
 
     private final JBTextField openAICustomModelNameField;
 
@@ -85,13 +83,20 @@ public class DevPilotConfigForm {
         openAIBaseHostField = new JBTextField(openAISettings.getModelHost(), 30);
         openAIKeyField = new JBTextField(openAISettings.getPrivateKey(), 30);
         openAICustomModelNameField = new JBTextField(openAISettings.getCustomModelName(), 15);
-        var modelNameEnum = OpenAIModelNameEnum.fromName(openAISettings.getModelName());
-        openAICustomModelNameField.setEnabled(modelNameEnum == OpenAIModelNameEnum.CUSTOM);
-        openAIModelNameComboBox = new ComboBox<>(OpenAIModelNameEnum.values());
-        openAIModelNameComboBox.setSelectedItem(modelNameEnum);
+        var modelName = openAISettings.getModelName();
+        openAICustomModelNameField.setEnabled(CUSTOM_MODEL.equals(modelName));
+        openAIModelNameComboBox = new ComboBox<>();
         openAIModelNameComboBox.addItemListener(e -> {
-            var selected = (OpenAIModelNameEnum) e.getItem();
-            openAICustomModelNameField.setEnabled(selected == OpenAIModelNameEnum.CUSTOM);
+            var selected = (String) e.getItem();
+            openAICustomModelNameField.setEnabled(CUSTOM_MODEL.equals(selected));
+        });
+        openAIRefreshModelBtn = new JButton(DevPilotMessageBundle.get("devpilot.settings.service.refreshModelList"));
+        openAIRefreshModelBtn.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                super.mouseClicked(e);
+                refreshOpenAIModels();
+            }
         });
 
         openAIServicePanel = createOpenAIServicePanel();
@@ -119,7 +124,6 @@ public class DevPilotConfigForm {
         ollamaBaseHostField = new JBTextField(ollamaSettingsState.getModelHost(), 30);
         ollamaRefreshModelBtn = new JButton(DevPilotMessageBundle.get("devpilot.settings.service.refreshModelList"));
         ollamaModelComboBox = new ComboBox<>();
-        refreshOllamaModels();
         ollamaRefreshModelBtn.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -145,40 +149,42 @@ public class DevPilotConfigForm {
 
         var instance = LanguageSettingsState.getInstance();
         index = instance.getLanguageIndex();
+
+        refreshOpenAIModels();
+        refreshOllamaModels();
     }
 
     public void refreshOllamaModels() {
         ollamaModelComboBox.removeAllItems();
-        // 请求ollama接口,获取模型列表
         String host = ollamaBaseHostField.getText();
         if (null == host || "".equals(host)) {
-            JOptionPane.showMessageDialog(null, DevPilotMessageBundle.get("devpilot.settings.service.ollamaHostError"), DevPilotMessageBundle.get("devpilot.settings.service.dialog.error"), JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (host.endsWith("/")) {
-            host = host.substring(0, host.length() - 1);
+
+        LlmProvider llmProvider = ApplicationManager.getApplication().getService(OllamaServiceProvider.class);
+        List<String> modelList = llmProvider.listModels(host, "");
+        for (String modelName : modelList) {
+            ollamaModelComboBox.addItem(modelName);
         }
-        try {
-            var request = new Request.Builder()
-                .get()
-                .url(host + "/api/tags")
-                .build();
-            Call call = OkhttpUtils.getClient().newCall(request);
-            okhttp3.Response response = call.execute();
-            if (response.isSuccessful()) {
-                var result = Objects.requireNonNull(response.body()).string();
-                JsonObject dataJson = JsonParser.parseString(result).getAsJsonObject();
-                JsonArray modelArray = dataJson.get("models").getAsJsonArray();
-                for (JsonElement modelEle : modelArray) {
-                    String modelName = modelEle.getAsJsonObject().get("name").getAsString();
-                    ollamaModelComboBox.addItem(modelName);
-                }
-            }
-            response.close();
-        } catch (Exception ex) {
-            // throw new RuntimeException(ex);
-            JOptionPane.showMessageDialog(null, DevPilotMessageBundle.get("devpilot.settings.service.ollamaHostError"), DevPilotMessageBundle.get("devpilot.settings.service.dialog.error"), JOptionPane.ERROR_MESSAGE);
+        ollamaModelComboBox.setSelectedItem(OllamaSettingsState.getInstance().getModelName());
+    }
+
+    public void refreshOpenAIModels() {
+        openAIModelNameComboBox.removeAllItems();
+        String host = openAIBaseHostField.getText();
+        String apiKey = openAIKeyField.getText();
+        if (null == host || "".equals(host) || null == apiKey || "".equals(apiKey)) {
+            openAIModelNameComboBox.addItem(CUSTOM_MODEL);
+            return;
         }
+
+        LlmProvider llmProvider = ApplicationManager.getApplication().getService(OpenAIServiceProvider.class);
+        List<String> modelList = llmProvider.listModels(host, apiKey);
+        for (String modelName : modelList) {
+            openAIModelNameComboBox.addItem(modelName);
+        }
+        openAIModelNameComboBox.addItem(CUSTOM_MODEL);
+        openAIModelNameComboBox.setSelectedItem(OpenAISettingsState.getInstance().getModelName());
     }
 
     public JComponent getForm() {
@@ -224,6 +230,11 @@ public class DevPilotConfigForm {
     }
 
     private JPanel createOpenAIServicePanel() {
+        JPanel modelPanel = new JPanel();
+        modelPanel.setLayout(new BoxLayout(modelPanel, BoxLayout.X_AXIS));
+        modelPanel.add(openAIModelNameComboBox);
+        modelPanel.add(openAIRefreshModelBtn);
+
         var panel = UI.PanelFactory.grid()
             .add(UI.PanelFactory.panel(openAIBaseHostField)
                 .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelHostLabel"))
@@ -231,7 +242,7 @@ public class DevPilotConfigForm {
             .add(UI.PanelFactory.panel(openAIKeyField)
                 .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.apiKeyLabel"))
                 .resizeX(false))
-            .add(UI.PanelFactory.panel(openAIModelNameComboBox)
+            .add(UI.PanelFactory.panel(modelPanel)
                 .withLabel(DevPilotMessageBundle.get("devpilot.settings.service.modelNameLabel"))
                 .resizeX(false))
             .add(UI.PanelFactory.panel(openAICustomModelNameField)
@@ -349,8 +360,9 @@ public class DevPilotConfigForm {
         return (ModelTypeEnum) aiGatewayModelComboBox.getSelectedItem();
     }
 
-    public OpenAIModelNameEnum getOpenAIModelName() {
-        return (OpenAIModelNameEnum) openAIModelNameComboBox.getSelectedItem();
+    public String getOpenAIModelName() {
+        String modelName = (String) openAIModelNameComboBox.getSelectedItem();
+        return modelName == null ? "" : modelName;
     }
 
     public String getOllamaBaseHost() {
