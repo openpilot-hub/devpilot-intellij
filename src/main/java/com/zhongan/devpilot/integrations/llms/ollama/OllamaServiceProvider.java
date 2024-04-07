@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.integrations.llms.openai;
+package com.zhongan.devpilot.integrations.llms.ollama;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.intellij.openapi.components.Service;
@@ -11,8 +11,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRespo
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
-import com.zhongan.devpilot.integrations.llms.entity.OpenAIModelListResponse;
-import com.zhongan.devpilot.settings.state.OpenAISettingsState;
+import com.zhongan.devpilot.integrations.llms.entity.OllamaModelListResponse;
+import com.zhongan.devpilot.settings.state.OllamaSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
@@ -34,9 +34,8 @@ import okhttp3.RequestBody;
 import okhttp3.sse.EventSource;
 
 @Service(Service.Level.PROJECT)
-public final class OpenAIServiceProvider implements LlmProvider {
-
-    private static final Logger log = Logger.getInstance(OpenAIServiceProvider.class);
+public final class OllamaServiceProvider implements LlmProvider {
+    private static final Logger log = Logger.getInstance(OllamaServiceProvider.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -48,8 +47,8 @@ public final class OpenAIServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
-        var host = OpenAISettingsState.getInstance().getModelHost();
-        var apiKey = OpenAISettingsState.getInstance().getPrivateKey();
+        var host = OllamaSettingsState.getInstance().getModelHost();
+        var modelName = OllamaSettingsState.getInstance().getModelName();
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
@@ -58,16 +57,13 @@ public final class OpenAIServiceProvider implements LlmProvider {
             return "";
         }
 
-        if (StringUtils.isEmpty(apiKey)) {
-            service.callErrorInfo("Chat completion failed: api key is empty");
+        if (StringUtils.isEmpty(modelName)) {
+            service.callErrorInfo("Chat completion failed: ollama model name is empty");
             return "";
         }
 
-        var modelName = OpenAISettingsState.getInstance().getModelName();
-
-        if (StringUtils.isEmpty(modelName)) {
-            service.callErrorInfo("Chat completion failed: openai model name is empty");
-            return "";
+        if (host.endsWith("/")) {
+            host = host.substring(0, host.length() - 1);
         }
 
         chatCompletionRequest.setModel(modelName);
@@ -76,7 +72,6 @@ public final class OpenAIServiceProvider implements LlmProvider {
             var request = new Request.Builder()
                 .url(host + "/v1/chat/completions")
                 .header("User-Agent", UserAgentUtils.getUserAgent())
-                .header("Authorization", "Bearer " + apiKey)
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 
@@ -113,46 +108,38 @@ public final class OpenAIServiceProvider implements LlmProvider {
         List<String> modelList = new ArrayList<>();
         try {
             var request = new Request.Builder()
-                .header("User-Agent", UserAgentUtils.getUserAgent())
-                .header("Authorization", "Bearer " + apiKey)
                 .get()
-                .url(host + "/v1/models")
+                .url(host + "/api/tags")
                 .build();
             Call call = OkhttpUtils.getClient().newCall(request);
             okhttp3.Response response = call.execute();
             if (response.isSuccessful()) {
                 var result = Objects.requireNonNull(response.body()).string();
-                var modelListResponse = JsonUtils.fromJson(result, OpenAIModelListResponse.class);
+                var modelListResponse = JsonUtils.fromJson(result, OllamaModelListResponse.class);
                 if (modelListResponse != null) {
-                    for (OpenAIModelListResponse.Data model : modelListResponse.getData()) {
-                        modelList.add(model.getId());
+                    for (OllamaModelListResponse.Model model : modelListResponse.getModels()) {
+                        modelList.add(model.getName());
                     }
                 }
             }
             response.close();
         } catch (Exception ex) {
-            log.error("openAI list models error", ex);
+            log.error("ollama list models error", ex);
         }
         return modelList;
     }
 
     @Override
     public DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest) {
-        var host = OpenAISettingsState.getInstance().getModelHost();
-        var apiKey = OpenAISettingsState.getInstance().getPrivateKey();
+        var host = OllamaSettingsState.getInstance().getModelHost();
+        var modelName = OllamaSettingsState.getInstance().getModelName();
 
         if (StringUtils.isEmpty(host)) {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
         }
 
-        if (StringUtils.isEmpty(apiKey)) {
-            return DevPilotChatCompletionResponse.failed("Chat completion failed: api key is empty");
-        }
-
-        var modelName = OpenAISettingsState.getInstance().getModelName();
-
         if (StringUtils.isEmpty(modelName)) {
-            return DevPilotChatCompletionResponse.failed("Chat completion failed: openai model name is empty");
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: ollama model name is empty");
         }
 
         chatCompletionRequest.setModel(modelName);
@@ -163,7 +150,6 @@ public final class OpenAIServiceProvider implements LlmProvider {
             var request = new Request.Builder()
                 .url(host + "/v1/chat/completions")
                 .header("User-Agent", UserAgentUtils.getUserAgent())
-                .header("Authorization", "Bearer " + apiKey)
                 .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
                 .build();
 

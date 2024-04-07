@@ -9,6 +9,7 @@ import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.OllamaSettingsState;
 import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
@@ -42,6 +43,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var aiGatewaySettings = AIGatewaySettingsState.getInstance();
         var languageSettings = LanguageSettingsState.getInstance();
         var codeLlamaSettings = CodeLlamaSettingsState.getInstance();
+        var ollamaSettings = OllamaSettingsState.getInstance();
         var serviceForm = settingsComponent.getDevPilotConfigForm();
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
@@ -50,12 +52,14 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !selectedModel.getName().equals(settings.getSelectedModel())
                 || !selectedModelType.getName().equals(aiGatewaySettings.getSelectedModel())
                 || !serviceForm.getOpenAIBaseHost().equals(openAISettings.getModelHost())
-                || !serviceForm.getOpenAIModelName().getName().equals(openAISettings.getModelName())
+                || !serviceForm.getOpenAIModelName().equals(openAISettings.getModelName())
                 || !serviceForm.getOpenAICustomModelName().equals(openAISettings.getCustomModelName())
                 || !serviceForm.getAIGatewayBaseHost().equals(aiGatewaySettings.getModelBaseHost(selectedModelType.getName()))
                 || !serviceForm.getOpenAIKey().equals(openAISettings.getPrivateKey())
                 || !serviceForm.getCodeLlamaBaseHost().equals(codeLlamaSettings.getModelHost())
                 || !serviceForm.getCodeLlamaModelName().equals(codeLlamaSettings.getModelName())
+                || !serviceForm.getOllamaModelName().equals(ollamaSettings.getModelName())
+                || !serviceForm.getOllamaBaseHost().equals(ollamaSettings.getModelHost())
                 || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex());
     }
 
@@ -79,20 +83,25 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var openAISettings = OpenAISettingsState.getInstance();
         var aiGatewaySettings = AIGatewaySettingsState.getInstance();
         var codeLlamaSettings = CodeLlamaSettingsState.getInstance();
+        var ollamaSettings = OllamaSettingsState.getInstance();
         var serviceForm = settingsComponent.getDevPilotConfigForm();
         var selectedModel = serviceForm.getSelectedModel();
         var selectedModelType = serviceForm.getAIGatewayModel();
         var openAIModelName = serviceForm.getOpenAIModelName();
+        String ollamaBaseHost = serviceForm.getOllamaBaseHost();
+        String ollamaModelName = serviceForm.getOllamaModelName();
 
         settings.setSelectedModel(selectedModel.getName());
         openAISettings.setModelHost(serviceForm.getOpenAIBaseHost());
         openAISettings.setPrivateKey(serviceForm.getOpenAIKey());
-        openAISettings.setModelName(openAIModelName.getName());
+        openAISettings.setModelName(openAIModelName);
         openAISettings.setCustomModelName(serviceForm.getOpenAICustomModelName());
         codeLlamaSettings.setModelHost(serviceForm.getCodeLlamaBaseHost());
         codeLlamaSettings.setModelName(serviceForm.getCodeLlamaModelName());
         aiGatewaySettings.setModelBaseHost(selectedModelType.getName(), serviceForm.getAIGatewayBaseHost());
         aiGatewaySettings.setSelectedModel(selectedModelType.getName());
+        ollamaSettings.setModelHost(ollamaBaseHost);
+        ollamaSettings.setModelName(ollamaModelName);
     }
 
     @Override
