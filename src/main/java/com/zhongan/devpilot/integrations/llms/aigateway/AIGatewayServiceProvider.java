@@ -16,6 +16,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionR
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
+import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.EditorUtils;
 import com.zhongan.devpilot.util.GitUtil;
@@ -222,6 +223,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
                 .header("User-Agent", UserAgentUtils.buildUserAgent())
                 .header("Auth-Type", LoginUtils.getLoginType())
+                .header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US")
                 .post(RequestBody.create(objectMapper.writeValueAsString(instructCompletionRequest), MediaType.parse("application/json")))
                 .build();
             Call call = OkhttpUtils.getClient().newCall(request);
