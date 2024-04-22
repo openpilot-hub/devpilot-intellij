@@ -12,6 +12,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
+import com.zhongan.devpilot.completions.inline.listeners.InlineCaretListener;
 import com.zhongan.devpilot.completions.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.util.TelemetryUtils;
@@ -37,12 +38,16 @@ public class CompletionPreview implements Disposable {
 
     private int currentIndex = 0;
 
+    private InlineCaretListener inlineCaretListener;
+
     private CompletionPreview(
         @NotNull Editor editor, List<DevPilotCompletion> completions, int offset) {
         this.editor = editor;
         this.completions = completions;
         this.offset = offset;
         EditorUtil.disposeWithEditor(editor, this);
+
+        this.inlineCaretListener = new InlineCaretListener(this);
 
         devPilotInlay = DevPilotInlay.create(this);
     }

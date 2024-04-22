@@ -36,33 +36,34 @@ public class CompletionUtils {
         return newText.trim().length() <= 1;
     }
 
-    //代码-单行仅空字符或者仅换行忽略请求，注释-单行除换行全部忽略请求
-    public static boolean ignoreTrigger(String newText, String previousLineText) {
-        boolean preLineIsPreComment = CommentUtil.containsComment(previousLineText);
-        //contains empty and tab
+    // 代码-单行仅空字符或者仅换行忽略请求，注释-单行除换行全部忽略请求
+    public static boolean ignoreTrigger(String newText, String currentLineText) {
+        boolean isPreComment = CommentUtil.containsComment(currentLineText);
+
+        // only contains empty and tab
         boolean emptyAndTabChar = newText.trim().length() < 1;
-        if (emptyAndTabChar && !preLineIsPreComment) return true;
+        boolean currentLineEmpty = currentLineText.trim().length() < 1;
+        if (emptyAndTabChar && currentLineEmpty) return true;
 
-        boolean newlineChar = newText.equals("\n");
-        if (newlineChar && !preLineIsPreComment) return true;
+        boolean newlineChar = newText.startsWith("\n");
+        if (newlineChar && !isPreComment) return true;
 
-        if (!newlineChar && preLineIsPreComment) return true;
+        if (!newlineChar && isPreComment) return true;
 
         return false;
     }
 
-    public static boolean ignoreChange(Editor editor, Document document, int newOffset, int previousOffset) {
+    public static boolean isValidChange(Editor editor, Document document, int newOffset, int previousOffset) {
         if (newOffset < 0 || previousOffset > newOffset) return false;
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
         int currentLine = editor.getCaretModel().getLogicalPosition().line;
-        int previousLine = currentLine - 1;
-        String previousLineText = previousLine < 0 ? null : document.getText(
-                new TextRange(document.getLineStartOffset(previousLine), document.getLineEndOffset(previousLine)));
+        String currentLineText = currentLine < 0 ? null : document.getText(
+                new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
         return
                 isValidMidlinePosition(document, newOffset) &&
                         isValidNonEmptyChange(addedText.length(), addedText) &&
                         isSingleCharNonWhitespaceChange(addedText) &&
-                        ignoreTrigger(addedText, previousLineText);
+                        !ignoreTrigger(addedText, currentLineText);
     }
 }
 

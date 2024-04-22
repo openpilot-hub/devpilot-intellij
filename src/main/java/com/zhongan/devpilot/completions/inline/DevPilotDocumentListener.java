@@ -97,7 +97,7 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         }
 
 //        return !CompletionUtils.isValidDocumentChange(document, offset, event.getOffset());
-        return CompletionUtils.ignoreChange(editor, document, offset, event.getOffset());
+        return !CompletionUtils.isValidChange(editor, document, offset, event.getOffset());
     }
 
 }
