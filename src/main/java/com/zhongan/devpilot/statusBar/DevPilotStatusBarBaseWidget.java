@@ -9,7 +9,7 @@ import com.intellij.openapi.wm.StatusBar;
 import com.intellij.openapi.wm.StatusBarWidget;
 import com.intellij.openapi.wm.WindowManager;
 import com.intellij.openapi.wm.impl.status.EditorBasedStatusBarPopup;
-import com.zhongan.devpilot.DevPilotIcons;
+import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
 import com.zhongan.devpilot.util.LoginUtils;
 
 import org.jetbrains.annotations.NonNls;
@@ -18,14 +18,16 @@ import org.jetbrains.annotations.Nullable;
 
 public class DevPilotStatusBarBaseWidget extends EditorBasedStatusBarPopup {
 
+    private static DevPilotStatusEnum currentStatus = LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn;
+
     public DevPilotStatusBarBaseWidget(@NotNull Project project) {
         super(project, false);
     }
 
     @Override
     protected @NotNull WidgetState getWidgetState(@Nullable VirtualFile file) {
-        WidgetState widgetState = new WidgetState("DevPilot", "", true);
-        widgetState.setIcon(LoginUtils.isLogin() ? DevPilotIcons.SYSTEM_ICON_13 : DevPilotIcons.SYSTEM_ICON_GRAY_13);
+        WidgetState widgetState = new WidgetState(currentStatus.getText(), "", true);
+        widgetState.setIcon(currentStatus.getIcon());
         return widgetState;
     }
 
@@ -48,7 +50,8 @@ public class DevPilotStatusBarBaseWidget extends EditorBasedStatusBarPopup {
         return "com.zhongan.devpilot.status.widget";
     }
 
-    public static void update(Project project) {
+    public static void update(Project project, DevPilotStatusEnum devPilotStatus) {
+        currentStatus = devPilotStatus;
         DevPilotStatusBarBaseWidget statusBarWidget = findStatusBarWidget(project);
         if (statusBarWidget != null) {
             statusBarWidget.update(() -> statusBarWidget.myStatusBar.updateWidget("com.zhongan.devpilot.status.widget"));

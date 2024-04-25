@@ -2,8 +2,17 @@ package com.zhongan.devpilot.integrations.llms.trial;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.intellij.lang.Language;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.psi.PsiDocumentManager;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
@@ -13,6 +22,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
+import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
+import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
@@ -20,15 +31,22 @@ import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import okhttp3.Call;
+import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.sse.EventSource;
+
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.util.VirtualFileUtil.getRelativeFilePath;
 
 @Service(Service.Level.PROJECT)
 public final class TrialServiceProvider implements LlmProvider {
@@ -110,7 +128,77 @@ public final class TrialServiceProvider implements LlmProvider {
 
     @Override
     public DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
-        return null;
+        if (!LoginUtils.isLogin()) {
+            DevPilotNotification.infoAndAction("Instruct completion failed: please login", "", LoginUtils.loginUrl());
+            return null;
+        }
+
+        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+
+        if (StringUtils.isEmpty(host)) {
+            Logger.getInstance(getClass()).warn("Instruct completion failed: host is empty");
+            return null;
+        }
+
+        int offset = instructCompletionRequest.getOffset();
+        Editor editor = instructCompletionRequest.getEditor();
+        final Document[] document = new Document[1];
+        final Language[] language = new Language[1];
+        final VirtualFile[] virtualFile = new VirtualFile[1];
+
+        ApplicationManager.getApplication().runReadAction(() -> {
+            document[0] = editor.getDocument();
+            language[0] = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(document[0]).getLanguage();
+            virtualFile[0] = FileDocumentManager.getInstance().getFile(document[0]);
+        });
+
+        String text = document[0].getText();
+        String relativePath = getRelativeFilePath(editor.getProject(), virtualFile[0]);
+
+        Map<String, String> map = new HashMap<>();
+        map.put("document", text);
+        map.put("position", String.valueOf(offset));
+        map.put("language", language[0].getID());
+        map.put("filePath", relativePath);
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        okhttp3.Response response;
+        String json;
+        try {
+            json = objectMapper.writeValueAsString(map);
+            var request = new Request.Builder()
+                    .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", LoginUtils.getLoginType())
+                    .header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US")
+                    .post(RequestBody.create(json, MediaType.parse("application/json")))
+                    .build();
+            Call call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            Logger.getInstance(getClass()).warn("Instruct completion failed: " + e.getMessage());
+            return null;
+        }
+
+        try {
+            return parseResponse(response);
+        } catch (Exception e) {
+            Logger.getInstance(getClass()).warn("Instruct completion failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private DevPilotMessage parseResponse(Response response) {
+        DevPilotMessage devPilotMessage = null;
+        try (response) {
+            String responseBody = response.body().string();
+            Gson gson = new Gson();
+            devPilotMessage = gson.fromJson(responseBody, DevPilotMessage.class);
+        } catch (IOException e) {
+            Logger.getInstance(getClass()).warn("Parse completion response failed: " + e.getMessage());
+        }
+        return devPilotMessage;
     }
 
     @Override
