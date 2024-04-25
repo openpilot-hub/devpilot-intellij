@@ -14,12 +14,27 @@ import java.awt.font.TextAttribute;
 import java.util.HashMap;
 import java.util.Map;
 
+import static org.apache.batik.svggen.SVGFont.POSTURE_OBLIQUE;
+
 public class GraphicsUtils {
     public static Font getFont(Editor editor, boolean deprecated) {
         Font font = editor.getColorsScheme().getFont(EditorFontType.ITALIC);
+
+        // Check if the font family is Monospaced
+        if ("JetBrains Mono".equalsIgnoreCase(font.getFamily()) || "Monospaced".equalsIgnoreCase(font.getFamily())) {
+            // Create a new font with the font attributes, but change the family to DialogInput
+            Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
+            attributes.put(TextAttribute.FAMILY, "DialogInput");
+            attributes.put(TextAttribute.POSTURE, POSTURE_OBLIQUE);
+            font = new Font(attributes);
+        }
+
+        // If the font is not deprecated, return it as it is
         if (!deprecated) {
             return font;
         }
+
+        // Create a new font with the font attributes, but add the strikethrough attribute
         Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
         attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
         return new Font(attributes);
@@ -49,11 +64,7 @@ public class GraphicsUtils {
     }
 
     private static double getBrightness(Color color) {
-        return Math.sqrt(
-            (color.getRed() * color.getRed() * 0.241) +
-                (color.getGreen() * color.getGreen() * 0.691) +
-                (color.getBlue() * color.getBlue() * 0.068)
-        );
+        return Math.sqrt((color.getRed() * color.getRed() * 0.241) + (color.getGreen() * color.getGreen() * 0.691) + (color.getBlue() * color.getBlue() * 0.068));
     }
 
     public static Integer getTabSize(Editor editor) {
@@ -62,22 +73,16 @@ public class GraphicsUtils {
             failIfAlpha();
             return null;
         }
-        CommonCodeStyleSettings commonCodeStyleSettings = editor.getProject() != null
-            ? PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()) != null
-            ? new CommonCodeStyleSettings(PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()).getLanguage())
-            : null
-            : null;
+        CommonCodeStyleSettings commonCodeStyleSettings = editor.getProject() != null ? PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()) != null ? new CommonCodeStyleSettings(PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()).getLanguage()) : null : null;
 
-        return commonCodeStyleSettings != null && commonCodeStyleSettings.getIndentOptions() != null ?
-            commonCodeStyleSettings.getIndentOptions().TAB_SIZE : editor.getSettings().getTabSize(editor.getProject());
+        return commonCodeStyleSettings != null && commonCodeStyleSettings.getIndentOptions() != null ? commonCodeStyleSettings.getIndentOptions().TAB_SIZE : editor.getSettings().getTabSize(editor.getProject());
     }
 
     private static void failIfAlpha() {
         boolean isAlpha = true;
         boolean isTest = ApplicationManager.getApplication().isUnitTestMode();
         if (isAlpha && !isTest) {
-            Logger.getInstance("GraphicsUtils")
-                .error("!!!Alpha user please notice!!! You called `getTabSize` from a thread without read access. Because you're alpha, a `RuntimeException` will be thrown - This is being done in order to cause chaos for alpha devs, so that they'll fix it.");
+            Logger.getInstance("GraphicsUtils").error("!!!Alpha user please notice!!! You called `getTabSize` from a thread without read access. Because you're alpha, a `RuntimeException` will be thrown - This is being done in order to cause chaos for alpha devs, so that they'll fix it.");
             throw new RuntimeException("You called `getTabSize` from a thread without read access!");
         }
     }

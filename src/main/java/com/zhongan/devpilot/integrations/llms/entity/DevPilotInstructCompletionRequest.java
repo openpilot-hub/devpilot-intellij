@@ -1,12 +1,13 @@
 package com.zhongan.devpilot.integrations.llms.entity;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.intellij.openapi.editor.Editor;
 
 public class DevPilotInstructCompletionRequest {
 
-//    String model;
+    private Editor editor;
 
-//    List<DevPilotMessage> messages = new ArrayList<>();
+    private int offset;
 
     boolean stream = Boolean.FALSE;
 
@@ -21,23 +22,21 @@ public class DevPilotInstructCompletionRequest {
 
     String suffix = "";
 
-//    public String getModel() {
-//        return model;
-//    }
-//
-//    public void setModel(String model) {
-//        this.model = model;
-//    }
-
-/*
-    public List<DevPilotMessage> getMessages() {
-        return messages;
+    public Editor getEditor() {
+        return editor;
     }
 
-    public void setMessages(List<DevPilotMessage> messages) {
-        this.messages = messages;
+    public void setEditor(Editor editor) {
+        this.editor = editor;
     }
-*/
+
+    public int getOffset() {
+        return offset;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
 
     public boolean isStream() {
         return stream;

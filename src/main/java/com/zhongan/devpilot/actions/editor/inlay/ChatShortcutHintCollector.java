@@ -4,6 +4,13 @@ import com.intellij.codeInsight.hints.FactoryInlayHintsCollector;
 import com.intellij.codeInsight.hints.InlayHintsSink;
 import com.intellij.codeInsight.hints.presentation.InlayPresentation;
 import com.intellij.codeInsight.hints.presentation.PresentationFactory;
+import com.intellij.openapi.actionSystem.ActionManager;
+import com.intellij.openapi.actionSystem.AnAction;
+import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.actionSystem.DataContext;
+import com.intellij.openapi.actionSystem.Presentation;
+import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
@@ -14,6 +21,7 @@ import com.zhongan.devpilot.DevPilotIcons;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
+import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import java.util.List;
 
@@ -45,9 +53,16 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             inlayHintsSink.addBlockElement(getAnchorOffset(psiElement), true, true, 1000,
                     factory.seq(factory.textSpacePlaceholder(computeInitialWhitespace(editor, psiElement), false),
                             factory.icon(DevPilotIcons.SYSTEM_ICON_INLAY),
-                            buildClickableTextChatShortcutEntry(" Explain | ", EditorActionEnum.EXPLAIN_THIS, psiElement),
-                            buildClickableTextChatShortcutEntry("Fix | ", EditorActionEnum.FIX_THIS, psiElement),
-                            buildClickableTextChatShortcutEntry("Test", EditorActionEnum.GENERATE_TESTS, psiElement)));
+                            buildClickableTextChatShortcutEntry(" " + DevPilotMessageBundle.get("devpilot.inlay.shortcut.inlineComment")
+                                    + " | ", EditorActionEnum.GENERATE_COMMENTS, psiElement),
+                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.explain")
+                                    + " | ", EditorActionEnum.EXPLAIN_THIS, psiElement),
+                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.fix")
+                                    + " | ", EditorActionEnum.FIX_THIS, psiElement),
+                            buildClickableMethodCommentsShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.methodComments") +
+                                    " | ", psiElement),
+                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.test"),
+                                    EditorActionEnum.GENERATE_TESTS, psiElement)));
         }
         return true;
     }
@@ -58,6 +73,19 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             editor.getSelectionModel().setSelection(getAnchorOffset(psiElement), textRange.getEndOffset());
 
             service.handleActions(actionEnum);
+        }));
+    }
+
+    private InlayPresentation buildClickableMethodCommentsShortcutEntry(String text, PsiElement psiElement) {
+        return factory.seq(factory.referenceOnHover(factory.smallText(text), (mouseEvent, point) -> {
+            TextRange textRange = psiElement.getTextRange();
+            editor.getSelectionModel().setSelection(getAnchorOffset(psiElement), textRange.getEndOffset());
+
+            ApplicationManager.getApplication().invokeLater(() -> {
+                AnAction action = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.generate.method.comments");
+                DataContext context = SimpleDataContext.getProjectContext(editor.getProject());
+                action.actionPerformed(new AnActionEvent(null, context, "", new Presentation(), ActionManager.getInstance(), 0));
+            });
         }));
     }
 

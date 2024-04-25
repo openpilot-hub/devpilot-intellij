@@ -23,7 +23,6 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
-import com.zhongan.devpilot.util.PerformanceCheckUtils;
 import com.zhongan.devpilot.util.PromptTemplate;
 import com.zhongan.devpilot.util.PsiFileUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
@@ -86,16 +85,8 @@ public class PopupMenuEditorActionGroupUtil {
                                 return;
                             }
 
-                            switch (editorActionEnum) {
-                                case PERFORMANCE_CHECK:
-                                    // display result, and open diff window
-                                    PerformanceCheckUtils.showDiffWindow(selectedText, project, editor);
-                                    break;
-                                case GENERATE_COMMENTS:
-                                    DocumentUtil.diffCommentAndFormatWindow(project, editor, result);
-                                    break;
-                                default:
-                                    break;
+                            if (editorActionEnum == EditorActionEnum.GENERATE_COMMENTS) {
+                                DocumentUtil.diffCommentAndFormatWindow(project, editor, result);
                             }
                         };
 
@@ -114,7 +105,8 @@ public class PopupMenuEditorActionGroupUtil {
                                         }
                                     });
                         }
-                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
+                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
+                                && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
                             promptTemplate.appendLast(PromptConst.ANSWER_IN_CHINESE);
                         }
 
@@ -152,7 +144,7 @@ public class PopupMenuEditorActionGroupUtil {
      *
      * @return
      */
-    private static boolean validateResult(String content) {
+    public static boolean validateResult(String content) {
         return content.contains(DefaultConst.MAX_TOKEN_EXCEPTION_MSG);
     }
 

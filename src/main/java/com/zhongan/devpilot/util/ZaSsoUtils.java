@@ -86,4 +86,8 @@ public class ZaSsoUtils {
         var settings = AIGatewaySettingsState.getInstance();
         return ZaSsoEnum.fromName(settings.getSelectedSso());
     }
+
+    public static String getSsoUserName() {
+        return zaSsoUsername(getSsoEnum());
+    }
 }

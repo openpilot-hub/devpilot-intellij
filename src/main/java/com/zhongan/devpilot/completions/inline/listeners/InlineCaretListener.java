@@ -6,6 +6,7 @@ import com.intellij.openapi.editor.event.CaretListener;
 import com.intellij.openapi.util.Disposer;
 import com.zhongan.devpilot.completions.inline.CompletionPreview;
 import com.zhongan.devpilot.completions.inline.InlineCompletionCache;
+
 import org.jetbrains.annotations.NotNull;
 
 public class InlineCaretListener implements CaretListener, Disposable {

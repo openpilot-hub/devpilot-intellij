@@ -16,6 +16,9 @@ import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
+import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
+import com.zhongan.devpilot.util.LoginUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -51,6 +54,7 @@ public class CompletionFacade {
                 getFilename(FileDocumentManager.getInstance().getFile(editor.getDocument()));
             return retrieveCompletions(editor, offset, filename, tabSize, completionAdjustment);
         } catch (Exception e) {
+            DevPilotStatusBarBaseWidget.update(editor.getProject(), LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
             return null;
         }
     }
@@ -98,7 +102,11 @@ public class CompletionFacade {
         request.setSuffix(req.after);
         request.setMaxTokens(MAX_INSTRUCT_COMPLETION_TOKENS);
 
+        DevPilotStatusBarBaseWidget.update(editor.getProject(), DevPilotStatusEnum.InCompletion);
+        request.setOffset(offset);
+        request.setEditor(editor);
         final var response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
+        DevPilotStatusBarBaseWidget.update(editor.getProject(), LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
         if (response == null) {
             return null;
         }
@@ -187,5 +195,4 @@ public class CompletionFacade {
 
         return virtualFile.getExtension();
     }
-
 }
