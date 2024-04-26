@@ -7,6 +7,8 @@ import com.zhongan.devpilot.util.CommentUtil;
 
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class CompletionUtils {
     private static final Pattern END_OF_LINE_VALID_PATTERN = Pattern.compile("^\\s*[)}\\]\"'`]*\\s*[:{;,]?\\s*$");
 
@@ -15,9 +17,9 @@ public class CompletionUtils {
 
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
         return
-                isValidMidlinePosition(document, newOffset) &&
-                        isValidNonEmptyChange(addedText.length(), addedText) &&
-                        isSingleCharNonWhitespaceChange(addedText);
+            isValidMidlinePosition(document, newOffset) &&
+                isValidNonEmptyChange(addedText.length(), addedText) &&
+                isSingleCharNonWhitespaceChange(addedText);
     }
 
     public static boolean isValidMidlinePosition(Document document, int offset) {
@@ -41,16 +43,18 @@ public class CompletionUtils {
         boolean isPreComment = CommentUtil.containsComment(currentLineText);
 
         // only contains empty and tab
-        boolean emptyAndTabChar = newText.trim().length() < 1;
-        boolean currentLineEmpty = currentLineText.trim().length() < 1;
-        if (emptyAndTabChar && currentLineEmpty) return true;
+        boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
+        boolean currentLineEmpty = StringUtils.isEmpty(StringUtils.trim(currentLineText));
+        if (emptyAndTabChar && currentLineEmpty) {
+            return true;
+        }
 
-        boolean newlineChar = newText.startsWith("\n");
-        if (newlineChar && !isPreComment) return true;
+        boolean newlineChar = StringUtils.startsWith(newText, "\n");
+        if (newlineChar && !isPreComment) {
+            return true;
+        }
 
-        if (!newlineChar && isPreComment) return true;
-
-        return false;
+        return !newlineChar && isPreComment;
     }
 
     public static boolean isValidChange(Editor editor, Document document, int newOffset, int previousOffset) {
@@ -58,13 +62,14 @@ public class CompletionUtils {
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
         int currentLine = editor.getCaretModel().getLogicalPosition().line;
         String currentLineText = currentLine < 0 ? null : document.getText(
-                new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
+            new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
         return
-                isValidMidlinePosition(document, newOffset) &&
-                        isValidNonEmptyChange(addedText.length(), addedText) &&
-                        isSingleCharNonWhitespaceChange(addedText) &&
-                        !ignoreTrigger(addedText, currentLineText);
+            isValidMidlinePosition(document, newOffset) &&
+                isValidNonEmptyChange(addedText.length(), addedText) &&
+                isSingleCharNonWhitespaceChange(addedText) &&
+                !ignoreTrigger(addedText, currentLineText);
     }
+
 }
 
 
