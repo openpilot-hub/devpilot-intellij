@@ -223,6 +223,20 @@ public class DevPilotChatToolWindow {
 
                     return new JBCefJSQuery.Response("success");
                 }
+                case "OpenFile": {
+                    var payload = jsCallModel.getPayload();
+                    var codeActionModel = JsonUtils.fromJson(JsonUtils.toJson(payload), CodeActionModel.class);
+
+                    if (codeActionModel == null || codeActionModel.getContent() == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    String relativePath = codeActionModel.getContent();
+                    ApplicationManager.getApplication().invokeLater(
+                            () -> EditorUtils.openFileByRelativePath(project, relativePath));
+
+                    return new JBCefJSQuery.Response("success");
+                }
                 case "Login": {
                     LoginUtils.gotoLogin();
                     return new JBCefJSQuery.Response("success");
