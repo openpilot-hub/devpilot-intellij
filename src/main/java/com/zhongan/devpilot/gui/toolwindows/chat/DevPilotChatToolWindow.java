@@ -232,8 +232,9 @@ public class DevPilotChatToolWindow {
                     }
 
                     String relativePath = codeActionModel.getContent();
+                    String repo = codeActionModel.getRepo();
                     ApplicationManager.getApplication().invokeLater(
-                            () -> EditorUtils.openFileByRelativePath(project, relativePath));
+                            () -> EditorUtils.openFileByRelativePath(repo, project, relativePath));
 
                     return new JBCefJSQuery.Response("success");
                 }

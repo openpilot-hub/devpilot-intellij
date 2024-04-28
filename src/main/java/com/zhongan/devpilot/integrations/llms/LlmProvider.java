@@ -70,11 +70,12 @@ public interface LlmProvider {
                 if (null != response.getRag()) {
                     var ragResp = response.getRag();
                     var files = ragResp.getFiles();
-                    result.append("<div class=\"rag-files\">");
+                    var app = ragResp.getApp();
+                    result.append("\n\n<div class=\"rag-files\" data-repo=\"").append(app).append("\">");
                     for (DevPilotSuccessStreamingResponse.RagFile file : files) {
                         result.append("<div class=\"rag-files-item\">").append(file.getFile()).append("</div>");
                     }
-                    result.append("</div>");
+                    result.append("</div>\n\n");
                 } else {
                     var choice = response.getChoices().get(0);
                     var finishReason = choice.getFinishReason();
