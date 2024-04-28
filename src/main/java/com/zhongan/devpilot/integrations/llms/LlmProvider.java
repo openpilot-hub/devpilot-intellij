@@ -64,15 +64,26 @@ public interface LlmProvider {
                     interruptSend();
                     return;
                 }
+                
+                boolean streaming = Boolean.TRUE;
 
-                var choice = response.getChoices().get(0);
-                var finishReason = choice.getFinishReason();
+                if (null != response.getRag()) {
+                    var ragResp = response.getRag();
+                    var files = ragResp.getFiles();
+                    result.append("<div class=\"rag-files\">");
+                    for (DevPilotSuccessStreamingResponse.RagFile file : files) {
+                        result.append("<div class=\"rag-files-item\">").append(file.getFile()).append("</div>");
+                    }
+                    result.append("</div>");
+                } else {
+                    var choice = response.getChoices().get(0);
+                    var finishReason = choice.getFinishReason();
 
-                if (choice.getDelta().getContent() != null) {
-                    result.append(choice.getDelta().getContent());
+                    if (choice.getDelta().getContent() != null) {
+                        result.append(choice.getDelta().getContent());
+                    }
+                    streaming = !"stop".equals(finishReason);
                 }
-
-                var streaming = !"stop".equals(finishReason);
 
                 var assistantMessage = MessageModel
                         .buildAssistantMessage(response.getId(), time, result.toString(), streaming);

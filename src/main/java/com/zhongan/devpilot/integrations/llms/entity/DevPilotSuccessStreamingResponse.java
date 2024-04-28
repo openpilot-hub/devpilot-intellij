@@ -20,6 +20,8 @@ public class DevPilotSuccessStreamingResponse {
 
     private Usage usage;
 
+    private RagResp rag;
+
     public String getId() {
         return id;
     }
@@ -66,6 +68,14 @@ public class DevPilotSuccessStreamingResponse {
 
     public void setUsage(Usage usage) {
         this.usage = usage;
+    }
+
+    public RagResp getRag() {
+        return rag;
+    }
+
+    public void setRag(RagResp rag) {
+        this.rag = rag;
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -164,6 +174,45 @@ public class DevPilotSuccessStreamingResponse {
             this.content = content;
         }
 
+    }
+
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class RagResp {
+
+        private String app;
+
+        private List<RagFile> files;
+
+        public String getApp() {
+            return app;
+        }
+
+        public void setApp(String app) {
+            this.app = app;
+        }
+
+        public List<RagFile> getFiles() {
+            return files;
+        }
+
+        public void setFiles(List<RagFile> files) {
+            this.files = files;
+        }
+    }
+
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    public static class RagFile {
+
+        private String file;
+
+        public String getFile() {
+            return file;
+        }
+
+        public void setFile(String file) {
+            this.file = file;
+        }
     }
 
 }
