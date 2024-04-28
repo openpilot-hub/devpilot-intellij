@@ -15,7 +15,13 @@ import com.intellij.openapi.vfs.VirtualFile;
 
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class EditorUtils {
+
+    // repo和根目录的映射关系，用于打开文件时快速定位到根目录
+    private static final Map<String, VirtualFile> repoMapping = new HashMap<>();
 
     public static void openFileAndSelectLines(@NotNull Project project, String fileUrl, int startLine, int endLine) {
 
@@ -40,20 +46,15 @@ public class EditorUtils {
     public static String getCurrentEditorRepositoryName(Project project) {
         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
         VirtualFile currentFile = fileEditorManager.getSelectedFiles()[0];
-        return GitUtil.getRepoNameFromFile(project, currentFile);
+        String repoName = GitUtil.getRepoNameFromFile(project, currentFile);
+        VirtualFile baseDir = ProjectRootManager
+                .getInstance(project).getFileIndex().getContentRootForFile(currentFile);
+        repoMapping.putIfAbsent(repoName, baseDir);
+        return repoName;
     }
 
-    public static void openFileByRelativePath(@NotNull Project project, String relativePath) {
-        VirtualFile baseDir;
-        var fileEditorManager = FileEditorManager.getInstance(project);
-        var fileList = fileEditorManager.getSelectedFiles();
-
-        if (fileList.length > 0) {
-            var selectedFile = fileList[0];
-            baseDir = ProjectRootManager.getInstance(project).getFileIndex().getContentRootForFile(selectedFile);
-        } else {
-            baseDir = project.getBaseDir();
-        }
+    public static void openFileByRelativePath(String repo, @NotNull Project project, String relativePath) {
+        VirtualFile baseDir = repoMapping.get(repo);
 
         if (baseDir == null) {
             BalloonAlertUtils.showErrorAlert(DevPilotMessageBundle.get("devpilot.alter.file.not.exist"), 0, -10, Balloon.Position.above);

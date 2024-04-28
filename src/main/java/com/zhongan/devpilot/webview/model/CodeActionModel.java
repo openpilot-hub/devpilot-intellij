@@ -10,6 +10,8 @@ public class CodeActionModel {
 
     private String lang;
 
+    private String repo;
+
     public String getContent() {
         return content;
     }
@@ -32,5 +34,13 @@ public class CodeActionModel {
 
     public void setLang(String lang) {
         this.lang = lang;
+    }
+
+    public String getRepo() {
+        return repo;
+    }
+
+    public void setRepo(String repo) {
+        this.repo = repo;
     }
 }
