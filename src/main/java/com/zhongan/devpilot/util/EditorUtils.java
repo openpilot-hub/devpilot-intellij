@@ -8,15 +8,14 @@ import com.intellij.openapi.editor.SelectionModel;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.HashMap;
 import java.util.Map;
+
+import org.jetbrains.annotations.NotNull;
 
 public class EditorUtils {
 
@@ -47,9 +46,13 @@ public class EditorUtils {
         FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
         VirtualFile currentFile = fileEditorManager.getSelectedFiles()[0];
         String repoName = GitUtil.getRepoNameFromFile(project, currentFile);
-        VirtualFile baseDir = ProjectRootManager
-                .getInstance(project).getFileIndex().getContentRootForFile(currentFile);
-        repoMapping.putIfAbsent(repoName, baseDir);
+        String basePath = project.getBasePath();
+
+        if (basePath != null) {
+            VirtualFile baseDir = LocalFileSystem.getInstance().refreshAndFindFileByPath(basePath);
+            repoMapping.putIfAbsent(repoName, baseDir);
+        }
+
         return repoName;
     }
 

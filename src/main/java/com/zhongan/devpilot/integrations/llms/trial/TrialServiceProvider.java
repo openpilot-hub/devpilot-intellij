@@ -36,13 +36,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
-import okhttp3.Call;
-import okhttp3.Response;
 import org.apache.commons.lang3.StringUtils;
 
+import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;

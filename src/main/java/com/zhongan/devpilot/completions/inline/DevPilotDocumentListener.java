@@ -35,9 +35,9 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         DataContext dataContext = DataManager.getInstance().getDataContext(focusOwner);
         // ignore caret placing when exiting
         Editor activeEditor =
-            ApplicationManager.getApplication().isDisposed()
-                ? null
-                : CommonDataKeys.EDITOR.getData(dataContext);
+                ApplicationManager.getApplication().isDisposed()
+                        ? null
+                        : CommonDataKeys.EDITOR.getData(dataContext);
 
         if (activeEditor != null && activeEditor.getDocument() != document) {
             activeEditor = null;
@@ -60,22 +60,25 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         CompletionPreview.clear(editor);
         int offset = event.getOffset() + event.getNewLength();
 
-        if (shouldIgnoreChange(event, editor, offset, lastShownCompletion)) {
+        CompletionUtils.VerifyResult result = shouldIgnoreChange(event, editor, offset, lastShownCompletion);
+
+        if (result.isValid()) {
             InlineCompletionCache.INSTANCE.clear(editor);
             return;
         }
 
         handler.retrieveAndShowCompletion(
-            editor,
-            offset,
-            lastShownCompletion,
-            event.getNewFragment().toString(),
-            new DefaultCompletionAdjustment());
+                editor,
+                offset,
+                lastShownCompletion,
+                event.getNewFragment().toString(),
+                new DefaultCompletionAdjustment(),
+                result.getCompletionType());
 
     }
 
-    private boolean shouldIgnoreChange(
-        DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
+    private CompletionUtils.VerifyResult shouldIgnoreChange(
+            DocumentEvent event, Editor editor, int offset, DevPilotCompletion lastShownCompletion) {
         Document document = event.getDocument();
 
 //        if (!suggestionsModeService.getSuggestionMode().isInlineEnabled()) {
@@ -83,21 +86,25 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
 //        }
 
         if (event.getNewLength() < 1) {
-            return true;
+            return CompletionUtils.VerifyResult.create(true);
         }
 
         if (!editor.getEditorKind().equals(EditorKind.MAIN_EDITOR)
-            && !ApplicationManager.getApplication().isUnitTestMode()) {
-            return true;
+                && !ApplicationManager.getApplication().isUnitTestMode()) {
+            return CompletionUtils.VerifyResult.create(true);
         }
 
         if (!checkModificationAllowed(editor) || document.getRangeGuard(offset, offset) != null) {
             document.fireReadOnlyModificationAttempt();
-            return true;
+            return CompletionUtils.VerifyResult.create(true);
         }
 
 //        return !CompletionUtils.isValidDocumentChange(document, offset, event.getOffset());
-        return !CompletionUtils.isValidChange(editor, document, offset, event.getOffset());
+
+        CompletionUtils.VerifyResult result = CompletionUtils
+                .isValidChange(editor, document, offset, event.getOffset());
+
+        return CompletionUtils.VerifyResult.create(!result.isValid(), result.getCompletionType());
     }
 
 }

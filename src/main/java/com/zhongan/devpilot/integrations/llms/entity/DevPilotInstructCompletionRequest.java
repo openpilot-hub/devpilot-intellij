@@ -22,6 +22,8 @@ public class DevPilotInstructCompletionRequest {
 
     String suffix = "";
 
+    String completionType = "inline";
+
     public Editor getEditor() {
         return editor;
     }
@@ -84,5 +86,13 @@ public class DevPilotInstructCompletionRequest {
 
     public void setSuffix(String suffix) {
         this.suffix = suffix;
+    }
+
+    public String getCompletionType() {
+        return completionType;
+    }
+
+    public void setCompletionType(String completionType) {
+        this.completionType = completionType;
     }
 }

@@ -24,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -48,11 +49,12 @@ public class CompletionFacade {
         @NotNull Editor editor,
         int offset,
         @Nullable Integer tabSize,
-        @Nullable CompletionAdjustment completionAdjustment) {
+        @Nullable CompletionAdjustment completionAdjustment,
+        String completionType) {
         try {
             String filename =
                 getFilename(FileDocumentManager.getInstance().getFile(editor.getDocument()));
-            return retrieveCompletions(editor, offset, filename, tabSize, completionAdjustment);
+            return retrieveCompletions(editor, offset, filename, tabSize, completionAdjustment, completionType);
         } catch (Exception e) {
             DevPilotStatusBarBaseWidget.update(editor.getProject(), LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
             return null;
@@ -65,7 +67,8 @@ public class CompletionFacade {
         int offset,
         @Nullable String filename,
         @Nullable Integer tabSize,
-        @Nullable CompletionAdjustment completionAdjustment) {
+        @Nullable CompletionAdjustment completionAdjustment,
+        String completionType) {
         Document document = editor.getDocument();
 
         int begin = Integer.max(0, offset - PREFIX_MAX_OFFSET);
@@ -105,6 +108,9 @@ public class CompletionFacade {
         DevPilotStatusBarBaseWidget.update(editor.getProject(), DevPilotStatusEnum.InCompletion);
         request.setOffset(offset);
         request.setEditor(editor);
+        if (!StringUtils.isEmpty(completionType)) {
+            request.setCompletionType(completionType);
+        }
         final var response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
         DevPilotStatusBarBaseWidget.update(editor.getProject(), LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
         if (response == null) {
