@@ -176,7 +176,6 @@ public class DevPilotSuccessStreamingResponse {
 
     }
 
-
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class RagResp {
 

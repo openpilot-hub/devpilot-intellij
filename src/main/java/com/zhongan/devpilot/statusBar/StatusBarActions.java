@@ -90,7 +90,7 @@ public class StatusBarActions {
     }
 
     private static DumbAwareAction createAccountShowAction() {
-        String Account = DevPilotMessageBundle.get("devpilot.status.account");
+        String account = DevPilotMessageBundle.get("devpilot.status.account");
         String userName;
         if ("wx".equals(LoginUtils.getLoginType())) {
             String prefix = DevPilotMessageBundle.get("devpilot.status.account.wx");
@@ -101,7 +101,7 @@ public class StatusBarActions {
             userName = ZaSsoUtils.getSsoUserName();
         }
         return createActionWithIcon(
-                Account + userName,
+                account + userName,
                 ThemeUtils.isDarkTheme() ? DevPilotIcons.ACCOUNT_DARK : DevPilotIcons.ACCOUNT,
                 null, false);
     }

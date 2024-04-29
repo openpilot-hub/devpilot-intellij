@@ -46,7 +46,8 @@ public class InlineCompletionHandler {
         int offset,
         @Nullable DevPilotCompletion lastShownSuggestion,
         @NotNull String userInput,
-        @NotNull CompletionAdjustment completionAdjustment) {
+        @NotNull CompletionAdjustment completionAdjustment,
+        String completionType) {
         Integer tabSize = GraphicsUtils.getTabSize(editor);
 
         ObjectUtils.doIfNotNull(lastFetchInBackgroundTask, task -> task.cancel(false));
@@ -56,7 +57,7 @@ public class InlineCompletionHandler {
         List<DevPilotCompletion> cachedCompletions =
             InlineCompletionCache.INSTANCE.retrieveAdjustedCompletions(editor, userInput);
         if (!cachedCompletions.isEmpty()) {
-            renderCachedCompletions(editor, offset, tabSize, cachedCompletions, completionAdjustment);
+            renderCachedCompletions(editor, offset, tabSize, cachedCompletions, completionAdjustment, completionType);
             return;
         }
 
@@ -68,7 +69,8 @@ public class InlineCompletionHandler {
                         tabSize,
                         getCurrentEditorOffset(editor, userInput),
                         editor.getDocument().getModificationStamp(),
-                        completionAdjustment));
+                        completionAdjustment,
+                        completionType));
     }
 
     private void renderCachedCompletions(
@@ -76,11 +78,12 @@ public class InlineCompletionHandler {
         int offset,
         Integer tabSize,
         @NotNull List<DevPilotCompletion> cachedCompletions,
-        @NotNull CompletionAdjustment completionAdjustment) {
+        @NotNull CompletionAdjustment completionAdjustment,
+        String completionType) {
         showInlineCompletion(editor, cachedCompletions, offset, null);
         lastFetchInBackgroundTask =
             Utils.executeThread(
-                () -> retrieveInlineCompletion(editor, offset, tabSize, completionAdjustment));
+                () -> retrieveInlineCompletion(editor, offset, tabSize, completionAdjustment, completionType));
     }
 
     private int getCurrentEditorOffset(@NotNull Editor editor, @NotNull String userInput) {
@@ -93,7 +96,8 @@ public class InlineCompletionHandler {
         Integer tabSize,
         int offset,
         long modificationStamp,
-        @NotNull CompletionAdjustment completionAdjustment) {
+        @NotNull CompletionAdjustment completionAdjustment,
+        String completionType) {
         lastFetchAndRenderTask =
             Utils.executeThread(
                 () -> {
@@ -103,7 +107,7 @@ public class InlineCompletionHandler {
                         debounceTimeMs = logAndGetEmptySuggestionsDebounceMillis();
                     }
                     refetchCompletionsAfterDebounce(
-                        editor, tabSize, offset, modificationStamp, completionAdjustment, debounceTimeMs);
+                        editor, tabSize, offset, modificationStamp, completionAdjustment, debounceTimeMs, completionType);
                 });
     }
 
@@ -122,14 +126,15 @@ public class InlineCompletionHandler {
         int offset,
         long modificationStamp,
         @NotNull CompletionAdjustment completionAdjustment,
-        long debounceTime) {
+        long debounceTime,
+        String completionType) {
         lastDebounceRenderTask =
             Utils.executeThread(
                 () -> {
                     CompletionAdjustment cachedOnlyCompletionAdjustment =
                         completionAdjustment.withCachedOnly();
                     List<DevPilotCompletion> completions =
-                        retrieveInlineCompletion(editor, offset, tabSize, cachedOnlyCompletionAdjustment);
+                        retrieveInlineCompletion(editor, offset, tabSize, cachedOnlyCompletionAdjustment, completionType);
                     rerenderCompletion(
                         editor, completions, offset, modificationStamp, cachedOnlyCompletionAdjustment);
                 },
@@ -175,9 +180,10 @@ public class InlineCompletionHandler {
         @NotNull Editor editor,
         int offset,
         Integer tabSize,
-        @NotNull CompletionAdjustment completionAdjustment) {
+        @NotNull CompletionAdjustment completionAdjustment,
+        String completionType) {
         AutocompleteResponse completionsResponse =
-            this.completionFacade.retrieveCompletions(editor, offset, tabSize, completionAdjustment);
+            this.completionFacade.retrieveCompletions(editor, offset, tabSize, completionAdjustment, completionType);
 
         if (completionsResponse == null || completionsResponse.results.length == 0) {
             return Collections.emptyList();

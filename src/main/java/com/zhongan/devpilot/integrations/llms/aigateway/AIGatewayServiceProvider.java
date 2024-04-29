@@ -40,13 +40,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.StringUtils;
+
 import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
-import org.apache.commons.lang3.StringUtils;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
 import static com.zhongan.devpilot.util.VirtualFileUtil.getRelativeFilePath;
@@ -246,6 +247,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         map.put("position", String.valueOf(offset));
         map.put("language", language[0].getID());
         map.put("filePath", relativePath);
+        map.put("completionType", instructCompletionRequest.getCompletionType());
         ObjectMapper objectMapper = new ObjectMapper();
 
         okhttp3.Response response;

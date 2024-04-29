@@ -17,9 +17,9 @@ public class CompletionUtils {
 
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
         return
-            isValidMidlinePosition(document, newOffset) &&
-                isValidNonEmptyChange(addedText.length(), addedText) &&
-                isSingleCharNonWhitespaceChange(addedText);
+                isValidMidlinePosition(document, newOffset) &&
+                        isValidNonEmptyChange(addedText.length(), addedText) &&
+                        isSingleCharNonWhitespaceChange(addedText);
     }
 
     public static boolean isValidMidlinePosition(Document document, int offset) {
@@ -39,37 +39,89 @@ public class CompletionUtils {
     }
 
     // 代码-单行仅空字符或者仅换行忽略请求，注释-单行除换行全部忽略请求
-    public static boolean ignoreTrigger(String newText, String currentLineText) {
+    public static VerifyResult ignoreTrigger(String newText, String currentLineText) {
         boolean isPreComment = CommentUtil.containsComment(currentLineText);
 
         // only contains empty and tab
         boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
         boolean currentLineEmpty = StringUtils.isEmpty(StringUtils.trim(currentLineText));
         if (emptyAndTabChar && currentLineEmpty) {
-            return true;
+            return VerifyResult.create(true);
         }
 
         boolean newlineChar = StringUtils.startsWith(newText, "\n");
-        if (newlineChar && !isPreComment) {
-            return true;
+        if (newlineChar && isPreComment) {
+            return VerifyResult.createComment(false);
         }
 
-        return !newlineChar && isPreComment;
+        if (newlineChar || isPreComment) {
+            return VerifyResult.create(true);
+        }
+
+        return VerifyResult.create(false);
     }
 
-    public static boolean isValidChange(Editor editor, Document document, int newOffset, int previousOffset) {
-        if (newOffset < 0 || previousOffset > newOffset) return false;
+    public static VerifyResult isValidChange(Editor editor, Document document, int newOffset, int previousOffset) {
+        if (newOffset < 0 || previousOffset > newOffset) return VerifyResult.create(false);
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
         int currentLine = editor.getCaretModel().getLogicalPosition().line;
         String currentLineText = currentLine < 0 ? null : document.getText(
-            new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
-        return
-            isValidMidlinePosition(document, newOffset) &&
+                new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
+
+        VerifyResult result = ignoreTrigger(addedText, currentLineText);
+
+        boolean valid = isValidMidlinePosition(document, newOffset) &&
                 isValidNonEmptyChange(addedText.length(), addedText) &&
                 isSingleCharNonWhitespaceChange(addedText) &&
-                !ignoreTrigger(addedText, currentLineText);
+                !result.isValid();
+
+        return VerifyResult.create(valid, result.getCompletionType());
     }
 
+    public static class VerifyResult {
+        private boolean valid;
+
+        // default is inline
+        // type: comment, inline
+        private String completionType = "inline";
+
+        public VerifyResult(boolean valid) {
+            this.valid = valid;
+        }
+
+        public VerifyResult(boolean valid, String completionType) {
+            this.valid = valid;
+            this.completionType = completionType;
+        }
+
+        public boolean isValid() {
+            return valid;
+        }
+
+        public void setValid(boolean valid) {
+            this.valid = valid;
+        }
+
+        public String getCompletionType() {
+            return completionType;
+        }
+
+        public void setCompletionType(String completionType) {
+            this.completionType = completionType;
+        }
+
+        public static VerifyResult create(boolean valid) {
+            return new VerifyResult(valid);
+        }
+
+        public static VerifyResult create(boolean valid, String completionType) {
+            return new VerifyResult(valid, completionType);
+        }
+
+        public static VerifyResult createComment(boolean valid) {
+            return new VerifyResult(valid, "comment");
+        }
+    }
 }
 
 
