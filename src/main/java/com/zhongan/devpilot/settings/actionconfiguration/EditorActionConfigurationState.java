@@ -22,14 +22,17 @@ import static com.zhongan.devpilot.enums.EditorActionEnum.REVIEW_CODE;
 )
 public class EditorActionConfigurationState implements PersistentStateComponent<EditorActionConfigurationState> {
 
-    private final Map<String, String> defaultActions = new LinkedHashMap<>(Map.of(
-        PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt(),
-        GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt(),
-        GENERATE_TESTS.getLabel(), GENERATE_TESTS.getPrompt(),
-        FIX_THIS.getLabel(), FIX_THIS.getPrompt(),
-        EXPLAIN_THIS.getLabel(), EXPLAIN_THIS.getPrompt(),
-        REVIEW_CODE.getLabel(), REVIEW_CODE.getPrompt()
-    ));
+    private final Map<String, String> defaultActions;
+
+    {
+        defaultActions = new LinkedHashMap<>();
+        defaultActions.put(EXPLAIN_THIS.getLabel(), EXPLAIN_THIS.getPrompt());
+        defaultActions.put(FIX_THIS.getLabel(), FIX_THIS.getPrompt());
+        defaultActions.put(PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt());
+        defaultActions.put(GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt());
+        defaultActions.put(GENERATE_TESTS.getLabel(), GENERATE_TESTS.getPrompt());
+        defaultActions.put(REVIEW_CODE.getLabel(), REVIEW_CODE.getPrompt());
+    }
 
     public static EditorActionConfigurationState getInstance() {
         return ApplicationManager.getApplication().getService(EditorActionConfigurationState.class);

@@ -53,12 +53,12 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             inlayHintsSink.addBlockElement(getAnchorOffset(psiElement), true, true, 1000,
                     factory.seq(factory.textSpacePlaceholder(computeInitialWhitespace(editor, psiElement), false),
                             factory.icon(DevPilotIcons.SYSTEM_ICON_INLAY),
-                            buildClickableTextChatShortcutEntry(" " + DevPilotMessageBundle.get("devpilot.inlay.shortcut.inlineComment")
-                                    + " | ", EditorActionEnum.GENERATE_COMMENTS, psiElement),
-                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.explain")
+                            buildClickableTextChatShortcutEntry(" " + DevPilotMessageBundle.get("devpilot.inlay.shortcut.explain")
                                     + " | ", EditorActionEnum.EXPLAIN_THIS, psiElement),
                             buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.fix")
                                     + " | ", EditorActionEnum.FIX_THIS, psiElement),
+                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.inlineComment")
+                                    + " | ", EditorActionEnum.GENERATE_COMMENTS, psiElement),
                             buildClickableMethodCommentsShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.methodComments") +
                                     " | ", psiElement),
                             buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.test"),
