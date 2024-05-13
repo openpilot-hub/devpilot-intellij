@@ -6,7 +6,10 @@ import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.actionSystem.AnActionEvent;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
+import com.zhongan.devpilot.update.DevPilotUpdate;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import org.apache.commons.lang3.StringUtils;
@@ -84,5 +87,21 @@ public class DevPilotNotification {
                 NotificationType.ERROR);
             Notifications.Bus.notify(notification);
         }
+    }
+
+    public static void updateNotification(Project project) {
+        var notification = new Notification(
+                "DevPilot Notification Group",
+                DevPilotMessageBundle.get("notification.group.devpilot"),
+                DevPilotMessageBundle.get("devpilot.notification.update.message"),
+                NotificationType.IDE_UPDATE);
+        notification.addAction(NotificationAction
+                .createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.installButton"), () -> {
+            ApplicationManager.getApplication()
+                    .executeOnPooledThread(() -> DevPilotUpdate.installUpdate(project));
+        }));
+        notification.addAction(NotificationAction
+                .createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {}));
+        Notifications.Bus.notify(notification);
     }
 }
