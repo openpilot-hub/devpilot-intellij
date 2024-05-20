@@ -96,6 +96,7 @@
         <editorActionHandler action="EditorEscape" implementationClass="com.zhongan.devpilot.completions.inline.EscapeHandler"
                              id="previewEscape" order="before hide-hints"/>
         <statusBarWidgetFactory id="com.zhongan.devpilot.status.widget" implementation="com.zhongan.devpilot.statusBar.DevPilotStatusBarWidgetFactory"/>
+        <errorHandler implementation="com.zhongan.devpilot.exception.DevPilotErrorReporter" />
     </extensions>
 
     <resource-bundle>messages.devpilot</resource-bundle>
