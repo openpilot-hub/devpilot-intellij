@@ -275,10 +275,11 @@ public class DevPilotChatToolWindow {
                         0
                 );
 
-                var format = "window.intellijConfig = {theme: '%s', locale: '%s', username: '%s', loggedIn: %s};";
+                var format = "window.intellijConfig = {theme: '%s', locale: '%s', username: '%s', loggedIn: %s, env: '%s', version: '%s', platform: '%s'};";
                 var configModel = ConfigChangeUtils.configInit();
                 var code = String.format(format, configModel.getTheme(),
-                        configModel.getLocale(), configModel.getUsername(), configModel.isLoggedIn());
+                        configModel.getLocale(), configModel.getUsername(), configModel.isLoggedIn(),
+                        configModel.getEnv(), configModel.getVersion(), configModel.getPlatform());
 
                 browser.executeJavaScript(code, null, 0);
             }

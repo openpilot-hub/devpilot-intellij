@@ -2,6 +2,7 @@ package com.zhongan.devpilot.util;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -13,8 +14,11 @@ public class ConfigChangeUtils {
         var locale = (language == 1) ? "cn" : "en";
         var username = DevPilotLlmSettingsState.getInstance().getFullName();
         var loggedIn = LoginUtils.isLogin();
+        var env = System.getProperty("devpilot.env") == null ? "prd" : System.getProperty("devpilot.env");
+        var version = DevPilotVersion.getDevPilotVersion();
+        var platform = DevPilotVersion.getVersionName();
 
-        return new ConfigModel(ThemeUtils.themeType(), locale, username, loggedIn);
+        return new ConfigModel(ThemeUtils.themeType(), locale, username, loggedIn, env, version, platform);
     }
 
     public static void themeChanged(Project project) {
