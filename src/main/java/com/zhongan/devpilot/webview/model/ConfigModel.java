@@ -12,11 +12,21 @@ public class ConfigModel {
 
     private boolean loggedIn;
 
-    public ConfigModel(String theme, String locale, String username, boolean loggedIn) {
+    private String env;
+
+    private String version;
+
+    private String platform;
+
+    public ConfigModel(String theme, String locale, String username,
+                       boolean loggedIn, String env, String version, String platform) {
         this.theme = theme;
         this.locale = locale;
         this.username = username;
         this.loggedIn = loggedIn;
+        this.env = env;
+        this.version = version;
+        this.platform = platform;
     }
 
     public String getTheme() {
@@ -49,5 +59,29 @@ public class ConfigModel {
 
     public void setLoggedIn(boolean loggedIn) {
         this.loggedIn = loggedIn;
+    }
+
+    public String getEnv() {
+        return env;
+    }
+
+    public void setEnv(String env) {
+        this.env = env;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getPlatform() {
+        return platform;
+    }
+
+    public void setPlatform(String platform) {
+        this.platform = platform;
     }
 }

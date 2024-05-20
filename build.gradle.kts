@@ -56,6 +56,10 @@ tasks {
         token.set(System.getenv("PUBLISH_TOKEN"))
     }
 
+    runIde {
+        jvmArgs("-Ddevpilot.env=test")
+    }
+
     checkstyle {
         configFile = rootProject.file("checkstyle.xml")
         maxWarnings = 0
