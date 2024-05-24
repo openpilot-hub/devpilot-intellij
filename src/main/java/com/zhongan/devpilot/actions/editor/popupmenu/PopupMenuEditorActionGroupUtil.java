@@ -25,6 +25,7 @@ import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.PromptTemplate;
 import com.zhongan.devpilot.util.PsiFileUtil;
+import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -68,7 +69,7 @@ public class PopupMenuEditorActionGroupUtil {
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
-                        if (isInputExceedLimit(selectedText, prompt)) {
+                        if (TokenUtils.isInputExceedLimit(selectedText, prompt)) {
                             DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.input.tooLong"));
                             return;
                         }
@@ -145,23 +146,7 @@ public class PopupMenuEditorActionGroupUtil {
      * @return
      */
     public static boolean validateResult(String content) {
-        return content.contains(DefaultConst.MAX_TOKEN_EXCEPTION_MSG);
-    }
-
-    /**
-     * check length of input rather than max limit
-     * 1 token = 3 english character()
-     *
-     * @param content
-     * @return
-     */
-    private static boolean isInputExceedLimit(String content, String prompt) {
-        // text too long, openai server always timeout
-        if (content.length() + prompt.length() > DefaultConst.TOKEN_MAX_LENGTH) {
-            return true;
-        }
-        // valid chinese and english character length
-        return DocumentUtil.experienceEstimatedTokens(content + prompt) > DefaultConst.TOKEN_MAX_LENGTH;
+        return content.contains(DefaultConst.GPT_35_MAX_TOKEN_EXCEPTION_MSG);
     }
 
 }

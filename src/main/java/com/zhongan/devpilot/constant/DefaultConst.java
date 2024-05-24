@@ -7,9 +7,11 @@ public class DefaultConst {
     private DefaultConst() {
     }
 
-    public static final String MAX_TOKEN_EXCEPTION_MSG = DevPilotMessageBundle.get("devpilot.chatWindow.context.overflow");
+    public static final String GPT_35_MAX_TOKEN_EXCEPTION_MSG = DevPilotMessageBundle.get("devpilot.chatWindow.context.overflow");
 
-    public static final int TOKEN_MAX_LENGTH = 16384;
+    public static final int GPT_35_TOKEN_MAX_LENGTH = 16384;
+
+    public static final int CONVERSATION_WINDOW_LENGTH = 8;
 
     public static final int ENGLISH_CONTENT_MAX_LENGTH = 12288;
 

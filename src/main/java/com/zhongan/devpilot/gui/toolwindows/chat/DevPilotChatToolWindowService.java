@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
+import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
@@ -20,6 +21,7 @@ import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
+import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.EmbeddedModel;
 import com.zhongan.devpilot.webview.model.JavaCallModel;
 import com.zhongan.devpilot.webview.model.LocaleModel;
@@ -28,6 +30,7 @@ import com.zhongan.devpilot.webview.model.MessageModel;
 import com.zhongan.devpilot.webview.model.ThemeModel;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -64,8 +67,8 @@ public final class DevPilotChatToolWindowService {
         var sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
         if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
             // independent message can not update, just readonly
-            devPilotChatCompletionRequest.getMessages().add(userMessage);
             devPilotChatCompletionRequest.getMessages().add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
+            devPilotChatCompletionRequest.getMessages().add(userMessage);
         } else {
             if (historyRequestMessageList.isEmpty()) {
                 historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
@@ -76,6 +79,7 @@ public final class DevPilotChatToolWindowService {
                 historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
             }
             historyRequestMessageList.add(userMessage);
+            buildConversationWindowMemory();
             devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         }
 
@@ -229,6 +233,32 @@ public final class DevPilotChatToolWindowService {
         }
 
         return userMessage;
+    }
+
+    private void buildConversationWindowMemory() {
+        // 先确保内容不超过 输入token限制
+        List<Integer> tokenCounts = TokenUtils.ComputeTokensFromMessagesUsingGPT35Enc(historyRequestMessageList);
+        int totalTokenCount = tokenCounts.get(0);
+        Collections.reverse(tokenCounts);
+        int keepCount = 1;
+        for (int i = 0; i < tokenCounts.size() - 1; i++) {
+            Integer tokenCount = tokenCounts.get(i);
+            if (totalTokenCount + tokenCount > DefaultConst.GPT_35_TOKEN_MAX_LENGTH) {
+                break;
+            }
+            totalTokenCount += tokenCount;
+            keepCount++;
+        }
+        int removeCount = historyRequestMessageList.size() - keepCount;
+        for (int i = 0; i < removeCount; i++) {
+            historyRequestMessageList.remove(1);
+        }
+
+        // 再检查window size
+        removeCount = historyRequestMessageList.size() - DefaultConst.CONVERSATION_WINDOW_LENGTH;
+        for (int i = 0; i < removeCount; i++) {
+            historyRequestMessageList.remove(1);
+        }
     }
 
     private int getMessageIndex(String id) {

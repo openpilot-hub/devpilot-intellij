@@ -70,7 +70,7 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
     private InlayPresentation buildClickableTextChatShortcutEntry(String text, EditorActionEnum actionEnum, PsiElement psiElement) {
         return factory.seq(factory.referenceOnHover(factory.smallText(text), (mouseEvent, point) -> {
             TextRange textRange = psiElement.getTextRange();
-            editor.getSelectionModel().setSelection(getAnchorOffset(psiElement), textRange.getEndOffset());
+            editor.getSelectionModel().setSelection(textRange.getStartOffset(), textRange.getEndOffset());
 
             service.handleActions(actionEnum);
         }));
@@ -79,7 +79,7 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
     private InlayPresentation buildClickableMethodCommentsShortcutEntry(String text, PsiElement psiElement) {
         return factory.seq(factory.referenceOnHover(factory.smallText(text), (mouseEvent, point) -> {
             TextRange textRange = psiElement.getTextRange();
-            editor.getSelectionModel().setSelection(getAnchorOffset(psiElement), textRange.getEndOffset());
+            editor.getSelectionModel().setSelection(textRange.getStartOffset(), textRange.getEndOffset());
 
             ApplicationManager.getApplication().invokeLater(() -> {
                 AnAction action = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.generate.method.comments");
