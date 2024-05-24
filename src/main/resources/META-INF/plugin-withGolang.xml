@@ -4,7 +4,7 @@
     <depends>com.intellij.modules.lang</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <codeInsight.inlayProvider language="Python" implementationClass="com.zhongan.devpilot.actions.editor.inlay.languages.PythonChatShortcutHintProvider"/>
+        <codeInsight.inlayProvider language="go" implementationClass="com.zhongan.devpilot.actions.editor.inlay.languages.GoChatShortcutHintProvider"/>
     </extensions>
 
 </idea-plugin>

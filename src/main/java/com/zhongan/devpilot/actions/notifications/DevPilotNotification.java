@@ -97,11 +97,12 @@ public class DevPilotNotification {
                 NotificationType.IDE_UPDATE);
         notification.addAction(NotificationAction
                 .createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.installButton"), () -> {
-            ApplicationManager.getApplication()
-                    .executeOnPooledThread(() -> DevPilotUpdate.installUpdate(project));
-        }));
+                    ApplicationManager.getApplication()
+                            .executeOnPooledThread(() -> DevPilotUpdate.installUpdate(project));
+                }));
         notification.addAction(NotificationAction
-                .createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {}));
+                .createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
+                }));
         Notifications.Bus.notify(notification);
     }
 }

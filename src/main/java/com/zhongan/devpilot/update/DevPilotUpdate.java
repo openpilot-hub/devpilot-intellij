@@ -10,12 +10,13 @@ import com.intellij.openapi.updateSettings.impl.UpdateChecker;
 import com.intellij.openapi.updateSettings.impl.UpdateSettings;
 import com.intellij.openapi.util.BuildNumber;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
-import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.Collection;
 
-public class DevPilotUpdate  {
+import org.jetbrains.annotations.NotNull;
+
+public class DevPilotUpdate {
 
     public static void installUpdate(Project project) {
         UpdateSettings settingsCopy = new UpdateSettings();

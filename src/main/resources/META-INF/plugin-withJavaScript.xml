@@ -1,0 +1,11 @@
+<idea-plugin>
+    <vendor email="pilot_group@zhongan.com" url="https://www.zhongan.com">Zhongan Online</vendor>
+
+    <depends>com.intellij.modules.lang</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <codeInsight.inlayProvider language="JavaScript" implementationClass="com.zhongan.devpilot.actions.editor.inlay.languages.JavaScriptChatShortcutHintProvider"/>
+        <codeInsight.inlayProvider language="TypeScript" implementationClass="com.zhongan.devpilot.actions.editor.inlay.languages.TypeScriptChatShortcutHintProvider"/>
+    </extensions>
+
+</idea-plugin>
