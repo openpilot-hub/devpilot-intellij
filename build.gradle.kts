@@ -27,6 +27,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp-sse:4.10.0")
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
     implementation("org.apache.commons:commons-text:1.10.0")
+    implementation("com.knuddels:jtokkit:1.0.0")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
     testImplementation("org.mockito:mockito-core:5.7.0")
 }
