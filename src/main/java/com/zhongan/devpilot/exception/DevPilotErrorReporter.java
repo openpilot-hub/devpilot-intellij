@@ -9,7 +9,7 @@ import com.intellij.openapi.extensions.PluginId;
 import com.intellij.util.Consumer;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
-import java.awt.*;
+import java.awt.Component;
 import java.util.Objects;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,8 +22,11 @@ import org.jetbrains.annotations.Nullable;
 public class DevPilotErrorReporter extends ITNReporter {
 
     private static final String DEPRECATED_DEFAULT_PREFIX = "The default implementation of method";
+
     private static final String DEPRECATED_DEFAULT_SUFFIX = "is deprecated, you need to override it in";
+
     private static final String DEPRECATED_USAGE = "is deprecated and going to be removed soon.";
+
     private final PluginId devpilotPluginId = PluginId.getId("com.zhongan.devPilot");
 
 
