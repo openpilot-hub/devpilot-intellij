@@ -14,7 +14,7 @@ import java.awt.font.TextAttribute;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.apache.batik.svggen.SVGFont.POSTURE_OBLIQUE;
+import static java.awt.font.TextAttribute.POSTURE_OBLIQUE;
 
 public class GraphicsUtils {
     public static Font getFont(Editor editor, boolean deprecated) {

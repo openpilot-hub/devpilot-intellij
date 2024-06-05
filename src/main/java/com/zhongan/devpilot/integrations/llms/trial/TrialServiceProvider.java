@@ -133,9 +133,6 @@ public final class TrialServiceProvider implements LlmProvider {
             return null;
         }
 
-        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
-        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
-
         if (StringUtils.isEmpty(host)) {
             Logger.getInstance(getClass()).warn("Instruct completion failed: host is empty");
             return null;
@@ -161,6 +158,7 @@ public final class TrialServiceProvider implements LlmProvider {
         map.put("position", String.valueOf(offset));
         map.put("language", language[0].getID());
         map.put("filePath", relativePath);
+        map.put("completionType", instructCompletionRequest.getCompletionType());
         ObjectMapper objectMapper = new ObjectMapper();
 
         okhttp3.Response response;
