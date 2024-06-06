@@ -11,7 +11,11 @@ import com.intellij.openapi.actionSystem.DataContext;
 import com.intellij.openapi.actionSystem.Presentation;
 import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.editor.CaretModel;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileEditorManager;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiComment;
 import com.intellij.psi.PsiElement;
@@ -82,6 +86,7 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             editor.getSelectionModel().setSelection(textRange.getStartOffset(), textRange.getEndOffset());
 
             ApplicationManager.getApplication().invokeLater(() -> {
+                moveCareToPreviousLineStart(editor, textRange.getStartOffset());
                 AnAction action = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.generate.method.comments");
                 DataContext context = SimpleDataContext.getProjectContext(editor.getProject());
                 action.actionPerformed(new AnActionEvent(null, context, "", new Presentation(), ActionManager.getInstance(), 0));
@@ -116,5 +121,28 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
         }
 
         return whitespaceCounter;
+    }
+
+    public void moveCareToPreviousLineStart(Editor editor, int offset) {
+        Project project = editor.getProject();
+        int previousLineNumber = getPreviousLineNumber(project, offset);
+        if (previousLineNumber == -1) {
+            return;
+        }
+        int lineStartOffset = editor.getDocument().getLineStartOffset(previousLineNumber);
+        CaretModel caretModel = editor.getCaretModel();
+        caretModel.moveToOffset(lineStartOffset);
+    }
+
+    public int getPreviousLineNumber(Project project, int offset) {
+        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+
+        if (editor != null) {
+            Document document = editor.getDocument();
+            int lineNumber = document.getLineNumber(offset);
+            return lineNumber > 0 ? lineNumber - 1 : -1;
+        }
+
+        return -1;
     }
 }
