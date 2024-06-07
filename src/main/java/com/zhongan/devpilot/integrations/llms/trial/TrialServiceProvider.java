@@ -22,7 +22,6 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
-import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.LoginUtils;
