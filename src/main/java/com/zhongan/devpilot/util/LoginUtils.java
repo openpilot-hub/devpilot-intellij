@@ -7,6 +7,7 @@ import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.enums.ZaSsoEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
+import com.zhongan.devpilot.settings.state.TrialServiceSettingsState;
 import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
 
@@ -14,14 +15,14 @@ import java.util.Locale;
 
 import org.jetbrains.ide.BuiltInServerManager;
 
+import static com.zhongan.devpilot.constant.DefaultConst.AUTH_ON;
+import static com.zhongan.devpilot.constant.DefaultConst.LOGIN_AUTH_URL;
+import static com.zhongan.devpilot.constant.DefaultConst.LOGIN_CALLBACK_URL;
+
 public class LoginUtils {
-    private static final String loginAuthUrl = "https://devpilot-h5.zhongan.com/login?backUrl=%s&source=%s";
-
-    private static final String loginCallback = "http://127.0.0.1:%s/login/auth/callback";
-
     public static String loginUrl() {
-        var callback = String.format(loginCallback, BuiltInServerManager.getInstance().getPort());
-        return String.format(loginAuthUrl, callback, DefaultConst.DEFAULT_SOURCE_STRING);
+        var callback = String.format(LOGIN_CALLBACK_URL, BuiltInServerManager.getInstance().getPort());
+        return String.format(LOGIN_AUTH_URL, callback, DefaultConst.DEFAULT_SOURCE_STRING);
     }
 
     public static void gotoLogin() {
@@ -29,6 +30,10 @@ public class LoginUtils {
     }
 
     public static String getLoginType() {
+        if (!isAuthOn()) {
+            return "";
+        }
+
         var setting = DevPilotLlmSettingsState.getInstance();
         return setting.getLoginType().toLowerCase(Locale.ROOT);
     }
@@ -44,6 +49,10 @@ public class LoginUtils {
     }
 
     public static boolean isLogin() {
+        if (!isAuthOn()) {
+            return true;
+        }
+
         var setting = DevPilotLlmSettingsState.getInstance();
         var loginType = LoginTypeEnum.getLoginTypeEnum(setting.getLoginType());
 
@@ -60,6 +69,10 @@ public class LoginUtils {
     }
 
     public static void logout() {
+        if (!isAuthOn()) {
+            return;
+        }
+
         var setting = DevPilotLlmSettingsState.getInstance();
         var loginType = LoginTypeEnum.getLoginTypeEnum(setting.getLoginType());
 
@@ -76,5 +89,25 @@ public class LoginUtils {
         }
 
         changeLoginStatus(false);
+    }
+
+    public static String getUsername() {
+        if (!isAuthOn()) {
+            return "user";
+        }
+
+        if ("wx".equals(LoginUtils.getLoginType())) {
+            String prefix = DevPilotMessageBundle.get("devpilot.status.account.wx");
+            String wxUserId = TrialServiceSettingsState.getInstance().getWxUserId();
+            return prefix + wxUserId.substring(wxUserId.length() - 4);
+
+        } else {
+            return ZaSsoUtils.getSsoUserName();
+        }
+    }
+
+    // is auth turn on
+    public static boolean isAuthOn() {
+        return AUTH_ON;
     }
 }

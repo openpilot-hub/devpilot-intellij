@@ -3,7 +3,7 @@ package com.zhongan.devpilot.webview.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 /**
- * 前端登录完成后回调的对象
+ * Login Callback
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CallbackUserInfo {

@@ -58,7 +58,7 @@ tasks {
     }
 
     runIde {
-        jvmArgs("-Ddevpilot.env=test")
+        systemProperty("devpilot.env", "test")
     }
 
     checkstyle {
