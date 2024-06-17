@@ -11,6 +11,8 @@ import com.zhongan.devpilot.enums.ZaSsoEnum;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_DEFAULT_HOST;
+
 @State(name = "DevPilot_AIGatewaySettings", storages = @Storage("DevPilot_AIGatewaySettings.xml"))
 public class AIGatewaySettingsState implements PersistentStateComponent<AIGatewaySettingsState> {
     private String selectedModel = ModelTypeEnum.GPT3_5.getName();
@@ -43,7 +45,7 @@ public class AIGatewaySettingsState implements PersistentStateComponent<AIGatewa
     }
 
     public String getModelBaseHost(String selectedModel) {
-        return "http://openapi-cloud-pub.zhonganinfo.com";
+        return AI_GATEWAY_DEFAULT_HOST;
     }
 
     public void setModelBaseHost(String model, String host) {

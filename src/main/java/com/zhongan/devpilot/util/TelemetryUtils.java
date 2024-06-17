@@ -13,18 +13,19 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 
+import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_CHAT_ACCEPT_PATH;
+import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_COMPLETION_ACCEPT_PATH;
+import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_HOST;
+import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_LIKE_PATH;
+import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_ON;
+
 public class TelemetryUtils {
-    private static final String host = "https://devpilot.zhongan.com/hub";
-
-//    private static final String host = "http://openpilot-hub-foundation.test.za.biz";
-
-    private static final String likePath = "/devpilot/v1/conversation-messages/%s";
-
-    private static final String chatAcceptPath = "/devpilot/v1/conversation-messages/%s/accepted";
-
-    private static final String completionAcceptPath = "/devpilot/v1/completion-messages/%s";
 
     public static void messageFeedback(String id, boolean action) {
+        if (!isTelemetryTurnOn()) {
+            return;
+        }
+
         var feedbackRequest = new FeedbackRequest(action);
         var requestJson = JsonUtils.toJson(feedbackRequest);
 
@@ -32,13 +33,17 @@ public class TelemetryUtils {
             return;
         }
 
-        var path = String.format(likePath, id);
-        var url = host + path;
+        var path = String.format(TELEMETRY_LIKE_PATH, id);
+        var url = TELEMETRY_HOST + path;
 
         sendMessage(url, requestJson);
     }
 
     public static void chatAccept(CodeActionModel codeActionModel, ChatActionTypeEnum actionType) {
+        if (!isTelemetryTurnOn()) {
+            return;
+        }
+
         chatAccept(codeActionModel.getMessageId(), codeActionModel.getContent(), codeActionModel.getLang(), actionType);
     }
 
@@ -56,13 +61,17 @@ public class TelemetryUtils {
             return;
         }
 
-        var path = String.format(chatAcceptPath, id);
-        var url = host + path;
+        var path = String.format(TELEMETRY_CHAT_ACCEPT_PATH, id);
+        var url = TELEMETRY_HOST + path;
 
         sendMessage(url, requestJson);
     }
 
     public static void completionAccept(String id, PsiFile file) {
+        if (!isTelemetryTurnOn()) {
+            return;
+        }
+
         var name = file.getName();
         var fileExtension = name.substring(name.lastIndexOf(".") + 1);
 
@@ -78,6 +87,10 @@ public class TelemetryUtils {
     }
 
     public static void completionAccept(String id, String language) {
+        if (!isTelemetryTurnOn()) {
+            return;
+        }
+
         // if language is null return text
         if (StringUtils.isEmpty(language)) {
             language = "text";
@@ -90,8 +103,8 @@ public class TelemetryUtils {
             return;
         }
 
-        var path = String.format(completionAcceptPath, id);
-        var url = host + path;
+        var path = String.format(TELEMETRY_COMPLETION_ACCEPT_PATH, id);
+        var url = TELEMETRY_HOST + path;
 
         sendMessage(url, requestJson);
     }
@@ -118,6 +131,10 @@ public class TelemetryUtils {
                 response.close();
             }
         }
+    }
+
+    public static boolean isTelemetryTurnOn() {
+        return TELEMETRY_ON;
     }
 
     static class FeedbackRequest {

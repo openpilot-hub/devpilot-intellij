@@ -45,14 +45,12 @@ import okhttp3.Response;
 import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_HOST;
+import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_MODEL;
 import static com.zhongan.devpilot.util.VirtualFileUtil.getRelativeFilePath;
 
 @Service(Service.Level.PROJECT)
 public final class TrialServiceProvider implements LlmProvider {
-    private static final String host = "https://devpilot.zhongan.com/aigc";
-
-    private static final String model = "azure/gpt-3.5-turbo";
-
     private final ObjectMapper objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
@@ -73,13 +71,11 @@ public final class TrialServiceProvider implements LlmProvider {
             return "";
         }
 
-        chatCompletionRequest.setModel(model);
-
-        okhttp3.Response response;
+        chatCompletionRequest.setModel(TRIAL_DEFAULT_MODEL);
 
         try {
             var request = new Request.Builder()
-                    .url(host + "/v1/chat/completions")
+                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
@@ -100,13 +96,13 @@ public final class TrialServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + LoginUtils.loginUrl() + "\">Wechat Login</a>");
         }
 
-        chatCompletionRequest.setModel(model);
+        chatCompletionRequest.setModel(TRIAL_DEFAULT_MODEL);
 
         okhttp3.Response response;
 
         try {
             var request = new Request.Builder()
-                    .url(host + "/v1/chat/completions")
+                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
                     .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
@@ -129,11 +125,6 @@ public final class TrialServiceProvider implements LlmProvider {
     public DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest) {
         if (!LoginUtils.isLogin()) {
             DevPilotNotification.infoAndAction("Instruct completion failed: please login", "", LoginUtils.loginUrl());
-            return null;
-        }
-
-        if (StringUtils.isEmpty(host)) {
-            Logger.getInstance(getClass()).warn("Instruct completion failed: host is empty");
             return null;
         }
 
@@ -165,7 +156,7 @@ public final class TrialServiceProvider implements LlmProvider {
         try {
             json = objectMapper.writeValueAsString(map);
             var request = new Request.Builder()
-                    .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
+                    .url(TRIAL_DEFAULT_HOST + AI_GATEWAY_INSTRUCT_COMPLETION)
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", LoginUtils.getLoginType())
                     .header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US")

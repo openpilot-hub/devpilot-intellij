@@ -31,7 +31,7 @@ public class DevPilotErrorReporter extends ITNReporter {
 
 
     /**
-     * 忽略废弃方法的使用异常提醒，在开发插件过程中(internal model), 还是可以收到相应的提示或警告,提醒开发人员关注和修改
+     * Ignore deprecated method error, in internal model, still receiver warning
      * @param event
      * @return
      */

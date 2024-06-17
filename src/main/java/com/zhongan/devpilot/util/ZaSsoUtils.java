@@ -1,29 +1,13 @@
 package com.zhongan.devpilot.util;
 
-import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.ZaSsoEnum;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
-import org.jetbrains.ide.BuiltInServerManager;
 
 public class ZaSsoUtils {
-    private static final String ssoAuthUrl = "https://devpilot-h5.zhongan.com/login?scope=%s&backUrl=%s&source=%s";
-
-    private static final String ssoCallbackUrl = "http://127.0.0.1:%s/za/sso/callback";
-
-    @Deprecated
-    public static String getZaSsoAuthUrl(ZaSsoEnum ssoEnum) {
-        var port = BuiltInServerManager.getInstance().getPort();
-        var scope = ssoEnum == ZaSsoEnum.ZA_TI ? "zati" : "za";
-
-        var backUrl = String.format(ssoCallbackUrl, port);
-
-        return String.format(ssoAuthUrl, scope, backUrl, DefaultConst.DEFAULT_SOURCE_STRING);
-    }
-
     public static boolean isLogin(ZaSsoEnum zaSsoEnum) {
         var settings = AIGatewaySettingsState.getInstance();
         switch (zaSsoEnum) {

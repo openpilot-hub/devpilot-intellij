@@ -13,6 +13,8 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
+import static com.zhongan.devpilot.constant.DefaultConst.RAG_DEFAULT_HOST;
+
 public class GitUtil {
 
     private static final String ORIGIN = "origin";
@@ -25,7 +27,7 @@ public class GitUtil {
 
     private static final long syncTimeInterval = 6 * 60 * 60 * 1000;
 
-    private static final String queryAppCodeEmbeddedStateUrl = "http://openapi-cloud-pub.zhonganinfo.com/devpilot/v1/rag/git_repo/embedding_info/";
+    private static final String queryAppCodeEmbeddedStateUrl = RAG_DEFAULT_HOST;
 
     public static String getRepoNameFromFile(Project project, VirtualFile virtualFile) {
         GitRepository repository = git4idea.GitUtil.getRepositoryManager(project).getRepositoryForFile(virtualFile);

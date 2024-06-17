@@ -10,11 +10,9 @@ import com.zhongan.devpilot.DevPilotIcons;
 import com.zhongan.devpilot.settings.DevPilotSettingsConfigurable;
 import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
-import com.zhongan.devpilot.settings.state.TrialServiceSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.ThemeUtils;
-import com.zhongan.devpilot.util.ZaSsoUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,15 +89,7 @@ public class StatusBarActions {
 
     private static DumbAwareAction createAccountShowAction() {
         String account = DevPilotMessageBundle.get("devpilot.status.account");
-        String userName;
-        if ("wx".equals(LoginUtils.getLoginType())) {
-            String prefix = DevPilotMessageBundle.get("devpilot.status.account.wx");
-            String wxUserId = TrialServiceSettingsState.getInstance().getWxUserId();
-            userName = prefix + wxUserId.substring(wxUserId.length() - 4);
-
-        } else {
-            userName = ZaSsoUtils.getSsoUserName();
-        }
+        String userName = LoginUtils.getUsername();
         return createActionWithIcon(
                 account + userName,
                 ThemeUtils.isDarkTheme() ? DevPilotIcons.ACCOUNT_DARK : DevPilotIcons.ACCOUNT,
