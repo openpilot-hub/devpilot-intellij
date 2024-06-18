@@ -53,8 +53,4 @@ public class DevpilotKotlinReferenceImporter extends DevpilotReferenceImporter {
     @Override
     protected void manualImportReference() {
     }
-
-
-
-
 }

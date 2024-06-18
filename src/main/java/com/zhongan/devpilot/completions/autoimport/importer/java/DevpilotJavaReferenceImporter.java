@@ -29,11 +29,6 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
     @Override
     public void computeReferences() {
         this.manualImportReference();
-//        for (ReferenceImporter referenceImporter : ReferenceImporter.EP_NAME.getExtensionList()) {
-//            if(referenceImporter instanceof JavaReferenceImporter){
-//                return;
-//            }
-//        }
     }
 
     protected void manualImportReference() {
@@ -111,7 +106,6 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
         }
     }
 
-
     /**
      * 这个函数是触发idea的自动导包方法，目前的触发方式触发不了
      * @param referenceImporter
@@ -144,19 +138,3 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

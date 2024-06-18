@@ -26,5 +26,4 @@ public class DevpilotReferenceImporter {
     protected void callComputeReferences(ReferenceImporter referenceImporter,Method method) {}
 
     protected void manualImportReference(){}
-
 }
