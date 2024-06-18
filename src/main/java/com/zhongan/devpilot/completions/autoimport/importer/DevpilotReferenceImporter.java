@@ -2,7 +2,6 @@ package com.zhongan.devpilot.completions.autoimport.importer;
 
 import com.intellij.codeInsight.daemon.ReferenceImporter;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.*;
 
 import java.lang.reflect.Method;

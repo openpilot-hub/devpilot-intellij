@@ -1,14 +1,11 @@
 package com.zhongan.devpilot.completions.autoimport.handler;
 
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiFile;
 import com.zhongan.devpilot.completions.autoimport.importer.DevpilotReferenceImporter;
 import com.zhongan.devpilot.completions.autoimport.importer.java.DevpilotJavaReferenceImporter;
-import com.zhongan.devpilot.completions.autoimport.importer.kotlin.DevpilotKotlinReferenceImporter;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class AutoImportHandler {
 

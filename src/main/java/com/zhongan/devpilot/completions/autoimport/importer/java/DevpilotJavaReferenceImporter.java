@@ -1,20 +1,14 @@
 package com.zhongan.devpilot.completions.autoimport.importer.java;
 
-import com.intellij.codeInsight.daemon.ReferenceImporter;
 import com.intellij.codeInsight.daemon.impl.CollectHighlightsUtil;
-import com.intellij.codeInsight.daemon.impl.JavaReferenceImporter;
 import com.intellij.codeInsight.daemon.impl.quickfix.ImportClassFix;
 import com.intellij.codeInsight.daemon.impl.quickfix.ImportClassFixBase;
 import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.application.ex.ApplicationManagerEx;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.progress.ProgressIndicatorProvider;
-import com.intellij.openapi.progress.ProgressManager;
 import com.intellij.psi.*;
 import com.zhongan.devpilot.completions.autoimport.importer.DevpilotReferenceImporter;
 
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -60,7 +54,7 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
                 return fix.doFix(myEditor, false, true, true);
             } catch (Exception e) {
                 e.printStackTrace();
-                throw new RuntimeException(e);
+                return ImportClassFixBase.Result.POPUP_NOT_SHOWN;
             }
         });
         ApplicationManager.getApplication().invokeLater(() -> {
@@ -68,9 +62,7 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
         });
         try {
             return writetask.get();
-        } catch (InterruptedException e) {
-            return ImportClassFixBase.Result.POPUP_NOT_SHOWN;
-        } catch (ExecutionException e) {
+        } catch (InterruptedException | ExecutionException e) {
             return ImportClassFixBase.Result.POPUP_NOT_SHOWN;
         }
     }
@@ -106,35 +98,4 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
         }
     }
 
-    /**
-     * 这个函数是触发idea的自动导包方法，目前的触发方式触发不了
-     * @param referenceImporter
-     * @param importMethod
-     */
-    @Override
-    protected void callComputeReferences(ReferenceImporter referenceImporter,Method importMethod) {
-        Document document = myEditor.getDocument();
-        int startLineNumber = document.getLineNumber(startOffset);
-        int endLineNumber = document.getLineNumber(endOffset);
-        for (int i = startLineNumber; i <= endLineNumber; i++) {
-            int lineStartOffset = document.getLineStartOffset(i);
-
-            FutureTask<Boolean> writeTask = new FutureTask<>(() ->{
-                try {
-                    importMethod.invoke(referenceImporter, myEditor, myFile, lineStartOffset, false);
-                    return true;
-                }
-                catch (Exception e) {
-                    e.printStackTrace();
-                    return false;
-                }
-            });
-
-            final Runnable command = () -> ApplicationManager.getApplication().runWriteAction(writeTask);
-            ProgressManager.getInstance().executeProcessUnderProgress(() -> {
-                ApplicationManagerEx.getApplicationEx().tryRunReadAction(command);
-            },ProgressIndicatorProvider.getGlobalProgressIndicator());
-
-        }
-    }
 }
