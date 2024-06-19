@@ -6,7 +6,9 @@ import com.intellij.codeInsight.daemon.impl.quickfix.ImportClassFixBase;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.zhongan.devpilot.completions.autoimport.importer.DevpilotReferenceImporter;
 
 import java.util.ArrayList;
@@ -53,7 +55,6 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
             try {
                 return fix.doFix(myEditor, false, true, true);
             } catch (Exception e) {
-                e.printStackTrace();
                 return ImportClassFixBase.Result.POPUP_NOT_SHOWN;
             }
         });
