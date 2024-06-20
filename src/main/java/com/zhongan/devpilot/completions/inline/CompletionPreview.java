@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.completions.inline;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Editor;
@@ -12,6 +13,7 @@ import com.intellij.openapi.util.Key;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
+import com.zhongan.devpilot.completions.autoimport.handler.AutoImportHandler;
 import com.zhongan.devpilot.completions.inline.listeners.InlineCaretListener;
 import com.zhongan.devpilot.completions.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
@@ -164,6 +166,18 @@ public class CompletionPreview implements Disposable {
         editor.getDocument().insertString(cursorOffset, suffix);
         editor.getCaretModel().moveToOffset(startOffset + completion.newPrefix.length());
 
+        PsiDocumentManager.getInstance(project).commitAllDocuments();
+
+        PsiFile fileAfterCompletion = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            getAutoImportHandler(editor, fileAfterCompletion, startOffset, endOffset).invoke();
+        });
+
         TelemetryUtils.completionAccept(completion.id, file);
+    }
+
+    private static AutoImportHandler getAutoImportHandler(Editor editor, PsiFile file, int startOffset, int endOffset) {
+        return new AutoImportHandler(startOffset, endOffset, editor, file);
     }
 }
