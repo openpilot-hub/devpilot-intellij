@@ -18,31 +18,26 @@ public class AutoImportHandler {
     private PsiFile myFile;
 
 
-    public AutoImportHandler(int startOffset, int endOffset, Editor editor,PsiFile file) {
+    public AutoImportHandler(int startOffset, int endOffset, Editor editor, PsiFile file) {
         this.startOffset = startOffset;
         this.endOffset = endOffset;
         this.myEditor = editor;
         this.myFile = file;
     }
 
-    public void invoke(){
+    public void invoke() {
         if (myEditor.isDisposed() || myFile.getProject().isDisposed()) return;
         VirtualFile virtualFile = myFile.getVirtualFile();
         DevpilotReferenceImporter importer = null;
-        if(isJavaFile(virtualFile)){
+        if (isJavaFile(virtualFile)) {
             importer = new DevpilotJavaReferenceImporter(myEditor, myFile, startOffset, endOffset);
-        }else if(isKotlinFile(virtualFile)){
-            return;
-        }else return;
-        if(importer != null)importer.computeReferences();
+        }
+        if (importer != null) {
+            importer.computeReferences();
+        }
     }
-
 
     public static boolean isJavaFile(VirtualFile file) {
         return file != null && file.getName().toLowerCase().endsWith(".java");
-    }
-
-    public static boolean isKotlinFile(VirtualFile file) {
-        return file != null && file.getName().toLowerCase().endsWith(".kt");
     }
 }

@@ -13,7 +13,7 @@ public class DevpilotReferenceImporter {
     protected int startOffset;
     protected int endOffset;
 
-    protected DevpilotReferenceImporter(Editor editor, PsiFile file, int startOffset, int endOffset){
+    protected DevpilotReferenceImporter(Editor editor, PsiFile file, int startOffset, int endOffset) {
         myEditor = editor;
         myFile = file;
         this.startOffset = startOffset;
@@ -22,7 +22,7 @@ public class DevpilotReferenceImporter {
 
     public void computeReferences(){}
 
-    protected void callComputeReferences(ReferenceImporter referenceImporter,Method method) {}
+    protected void callComputeReferences(ReferenceImporter referenceImporter, Method method) {}
 
-    protected void manualImportReference(){}
+    protected void manualImportReference() {}
 }

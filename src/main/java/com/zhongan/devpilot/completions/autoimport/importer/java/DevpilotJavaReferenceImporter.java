@@ -30,25 +30,26 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
     protected void manualImportReference() {
         Document document = myEditor.getDocument();
         int importLineNumber = document.getLineNumber(startOffset);
-        while(importLineNumber < document.getLineCount()){
+        while (importLineNumber < document.getLineCount()) {
             List<ImportClassFix> fixes = computeImportFix(myFile, document.getLineStartOffset(importLineNumber), document.getLineEndOffset(importLineNumber));
-            if(fixes != null &&!fixes.isEmpty() ) {
+            if (fixes != null && !fixes.isEmpty()) {
                 boolean alreadyImported = false;
-                for(ImportClassFix fix: fixes) {
+                for (ImportClassFix fix : fixes) {
                     ImportClassFixBase.Result result = loopManualImportReference(fix);
-                    if(result == ImportClassFixBase.Result.CLASS_AUTO_IMPORTED) {
+                    if (result == ImportClassFixBase.Result.CLASS_AUTO_IMPORTED) {
                         alreadyImported = true;
                         break;
                     }
                 }
-                if(!alreadyImported)importLineNumber++;
+                if (!alreadyImported) {
+                    importLineNumber++;
+                }
             }
-            else{
+            else {
                 importLineNumber++;
             }
         }
     }
-
 
     protected ImportClassFixBase.Result loopManualImportReference(ImportClassFix fix) {
         FutureTask<ImportClassFixBase.Result> writetask = new FutureTask(() -> {
@@ -68,10 +69,10 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
         }
     }
 
-    private List<ImportClassFix> computeImportFix(PsiFile file,int startOffset,int endOffset){
+    private List<ImportClassFix> computeImportFix(PsiFile file, int startOffset, int endOffset) {
         FutureTask<List<PsiElement>> readElementTask = new FutureTask<>(() ->CollectHighlightsUtil.getElementsInRange(file, startOffset, endOffset) );
         ApplicationManager.getApplication().runReadAction(readElementTask);
-        List<PsiElement> elements = null;
+        List<PsiElement> elements;
         try {
             elements = readElementTask.get();
         } catch (Exception e){
@@ -98,5 +99,4 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
             return null;
         }
     }
-
 }

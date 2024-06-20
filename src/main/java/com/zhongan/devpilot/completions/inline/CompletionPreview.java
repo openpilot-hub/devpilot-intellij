@@ -178,6 +178,6 @@ public class CompletionPreview implements Disposable {
     }
 
     private static AutoImportHandler getAutoImportHandler(Editor editor, PsiFile file, int startOffset, int endOffset) {
-        return new AutoImportHandler(startOffset,endOffset,editor,file);
+        return new AutoImportHandler(startOffset, endOffset, editor, file);
     }
 }
