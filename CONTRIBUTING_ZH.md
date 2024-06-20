@@ -11,14 +11,18 @@
 ### 项目构建
 
 1. 将项目克隆到本地。
-
     `git clone https://github.com/openpilot-hub/devpilot-intellij.git`
 2. 运行如下指令构建项目。
-
     `./gradlew runIde`
 3. 如果你使用的是 windows，运行如下指令构建项目。
-
     `gradlew.bat runIde`
+
+### 更新 Webview 页面
+
+1. 克隆前端webview项目
+   `https://github.com/openpilot-hub/devpilot-h5`
+2. 执行 `pnpm install` 和 `pnpm run build`
+3. 执行`cp dist/ext.html ../devpilot-intellij/src/main/resources/webview/index.html`
 
 ### 测试和检查
 
