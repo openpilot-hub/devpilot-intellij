@@ -2,7 +2,7 @@ package com.zhongan.devpilot.completions.autoimport.importer;
 
 import com.intellij.codeInsight.daemon.ReferenceImporter;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.psi.*;
+import com.intellij.psi.PsiFile;
 
 import java.lang.reflect.Method;
 
