@@ -98,7 +98,7 @@ public final class TrialServiceProvider implements LlmProvider {
 
         chatCompletionRequest.setModel(TRIAL_DEFAULT_MODEL);
 
-        okhttp3.Response response;
+        Response response;
 
         try {
             var request = new Request.Builder()
@@ -151,7 +151,7 @@ public final class TrialServiceProvider implements LlmProvider {
         map.put("completionType", instructCompletionRequest.getCompletionType());
         ObjectMapper objectMapper = new ObjectMapper();
 
-        okhttp3.Response response;
+        Response response;
         String json;
         try {
             json = objectMapper.writeValueAsString(map);
@@ -212,7 +212,7 @@ public final class TrialServiceProvider implements LlmProvider {
         DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
     }
 
-    private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, okhttp3.Response response) throws IOException {
+    private DevPilotChatCompletionResponse parseResult(DevPilotChatCompletionRequest chatCompletionRequest, Response response) throws IOException {
 
         if (response == null) {
             return DevPilotChatCompletionResponse.failed(DevPilotMessageBundle.get("devpilot.chatWindow.response.null"));
