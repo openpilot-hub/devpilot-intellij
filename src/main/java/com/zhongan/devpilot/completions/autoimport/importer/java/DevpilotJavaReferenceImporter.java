@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.FutureTask;
 
-
 public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
     public DevpilotJavaReferenceImporter(Editor editor, PsiFile file, int startOffset, int endOffset) {
         super(editor, file, startOffset, endOffset);
@@ -44,8 +43,7 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
                 if (!alreadyImported) {
                     importLineNumber++;
                 }
-            }
-            else {
+            } else {
                 importLineNumber++;
             }
         }
@@ -70,12 +68,12 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
     }
 
     private List<ImportClassFix> computeImportFix(PsiFile file, int startOffset, int endOffset) {
-        FutureTask<List<PsiElement>> readElementTask = new FutureTask<>(() ->CollectHighlightsUtil.getElementsInRange(file, startOffset, endOffset) );
+        FutureTask<List<PsiElement>> readElementTask = new FutureTask<>(() -> CollectHighlightsUtil.getElementsInRange(file, startOffset, endOffset));
         ApplicationManager.getApplication().runReadAction(readElementTask);
         List<PsiElement> elements;
         try {
             elements = readElementTask.get();
-        } catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
         List<PsiElement> finalElements = elements;
@@ -83,7 +81,7 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
             List<ImportClassFix> importFixes = new ArrayList<>();
             for (PsiElement element : finalElements) {
                 if (element instanceof PsiJavaCodeReferenceElement) {
-                    PsiJavaCodeReferenceElement ref = (PsiJavaCodeReferenceElement)element;
+                    PsiJavaCodeReferenceElement ref = (PsiJavaCodeReferenceElement) element;
                     ImportClassFix fix = new ImportClassFix(ref);
                     if (fix.isAvailable(file.getProject(), null, file)) {
                         importFixes.add(fix);
@@ -95,7 +93,7 @@ public class DevpilotJavaReferenceImporter extends DevpilotReferenceImporter {
         ApplicationManager.getApplication().runReadAction(readFixTask);
         try {
             return readFixTask.get();
-        } catch (Exception e){
+        } catch (Exception e) {
             return null;
         }
     }

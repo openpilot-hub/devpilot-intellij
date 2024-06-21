@@ -6,17 +6,15 @@ import com.intellij.psi.PsiFile;
 import com.zhongan.devpilot.completions.autoimport.importer.DevpilotReferenceImporter;
 import com.zhongan.devpilot.completions.autoimport.importer.java.DevpilotJavaReferenceImporter;
 
-
 public class AutoImportHandler {
 
-    private  int startOffset;
+    private int startOffset;
 
-    private  int endOffset;
+    private int endOffset;
 
     private Editor myEditor;
 
     private PsiFile myFile;
-
 
     public AutoImportHandler(int startOffset, int endOffset, Editor editor, PsiFile file) {
         this.startOffset = startOffset;
