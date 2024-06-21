@@ -60,8 +60,6 @@ public final class LlamaServiceProvider implements LlmProvider {
             return "";
         }
 
-        chatCompletionRequest.setModel(modelName);
-
         try {
             var request = new Request.Builder()
                 .url(host + "/v1/chat/completions")
@@ -117,8 +115,6 @@ public final class LlamaServiceProvider implements LlmProvider {
         if (StringUtils.isEmpty(modelName)) {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: code llama model name is empty");
         }
-
-        chatCompletionRequest.setModel(modelName);
 
         okhttp3.Response response;
 

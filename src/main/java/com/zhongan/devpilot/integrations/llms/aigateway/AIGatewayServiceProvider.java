@@ -14,7 +14,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
-import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -83,9 +82,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return "";
         }
 
-        var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
-        chatCompletionRequest.setModel(modelTypeEnum.getCode());
-
         try {
             var requestBuilder = new Request.Builder()
                     .url(host + "/devpilot/v1/chat/completions")
@@ -97,7 +93,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 if (repoName != null && GitUtil.isRepoEmbedded(repoName)) {
                     requestBuilder.header("Embedded-Repos-V2", repoName);
                     requestBuilder.header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US");
-                    chatCompletionRequest.setModel(null);
                 }
             }
             var request = requestBuilder
@@ -152,9 +147,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         if (StringUtils.isEmpty(host)) {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
         }
-
-        var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
-        chatCompletionRequest.setModel(modelTypeEnum.getCode());
 
         Response response;
 
@@ -306,7 +298,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setId(id);
             devPilotMessage.setRole("assistant");
-            devPilotMessage.setContent(content);
             return devPilotMessage;
         }
         DevPilotNotification.debug("SSO Type:" + LoginUtils.getLoginType() + ", Status Code:" + response.code() + ".");
@@ -324,7 +315,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         for (int i = messages.size() - 1; i >= 0; i--) {
             if (messages.get(i).getRole().equals("user")) {
                 String content = messages.get(i).getContent();
-                if (content.startsWith("@repo")) {
+                if (!StringUtils.isEmpty(content) && content.startsWith("@repo")) {
                     messages.get(i).setContent(content.substring(5));
                     return Boolean.TRUE;
                 }

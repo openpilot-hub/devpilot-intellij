@@ -66,7 +66,6 @@ public final class OpenAIServiceProvider implements LlmProvider {
             return "";
         }
 
-        chatCompletionRequest.setModel(modelName);
 
         try {
             var request = new Request.Builder()
@@ -125,7 +124,7 @@ public final class OpenAIServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: openai model name is empty");
         }
 
-        chatCompletionRequest.setModel(modelName);
+//        chatCompletionRequest.setModel(modelName);
 
         okhttp3.Response response;
 

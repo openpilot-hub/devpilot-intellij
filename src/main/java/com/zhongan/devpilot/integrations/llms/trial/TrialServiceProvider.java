@@ -73,8 +73,6 @@ public final class TrialServiceProvider implements LlmProvider {
             return "";
         }
 
-        chatCompletionRequest.setModel(model);
-
         okhttp3.Response response;
 
         try {
@@ -99,8 +97,6 @@ public final class TrialServiceProvider implements LlmProvider {
         if (!LoginUtils.isLogin()) {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + LoginUtils.loginUrl() + "\">Wechat Login</a>");
         }
-
-        chatCompletionRequest.setModel(model);
 
         okhttp3.Response response;
 
