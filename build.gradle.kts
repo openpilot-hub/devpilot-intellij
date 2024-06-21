@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.zhongan"
-version = "1.2.0"
+version = "2.4.2"
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ intellij {
     version.set("2022.1.4")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("com.intellij.java"))
+    plugins.set(listOf("com.intellij.java","Git4Idea"))
 }
 
 dependencies {
@@ -27,6 +27,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp-sse:4.10.0")
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
     implementation("org.apache.commons:commons-text:1.10.0")
+    implementation("com.knuddels:jtokkit:1.0.0")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
     testImplementation("org.mockito:mockito-core:5.7.0")
 }
@@ -36,11 +37,12 @@ tasks {
     withType<JavaCompile> {
         sourceCompatibility = "11"
         targetCompatibility = "11"
+        options.encoding = "UTF-8"
     }
 
     patchPluginXml {
         sinceBuild.set("212")
-        untilBuild.set("233.*")
+        untilBuild.set("241.*")
 
         pluginDescription.set(provider { file("description.html").readText() })
     }
@@ -53,6 +55,10 @@ tasks {
 
     publishPlugin {
         token.set(System.getenv("PUBLISH_TOKEN"))
+    }
+
+    runIde {
+        systemProperty("devpilot.env", "test")
     }
 
     checkstyle {

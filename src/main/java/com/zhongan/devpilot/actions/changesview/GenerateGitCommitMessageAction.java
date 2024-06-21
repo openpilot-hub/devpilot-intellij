@@ -51,7 +51,7 @@ public class GenerateGitCommitMessageAction extends AnAction {
         try {
             String gitDiff = getGitDiff(project, getReferencedFilePaths(e));
 
-            if (DocumentUtil.experienceEstimatedTokens(gitDiff) + DocumentUtil.experienceEstimatedTokens(PromptConst.GENERATE_COMMIT) > DefaultConst.TOKEN_MAX_LENGTH) {
+            if (DocumentUtil.experienceEstimatedTokens(gitDiff) + DocumentUtil.experienceEstimatedTokens(PromptConst.GENERATE_COMMIT) > DefaultConst.GPT_35_TOKEN_MAX_LENGTH) {
                 DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.changesview.tokens.estimation.overflow"));
             }
 

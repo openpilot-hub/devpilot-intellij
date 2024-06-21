@@ -1,8 +1,10 @@
 package com.zhongan.devpilot.webview.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeReferenceModel {
     private String fileUrl;
 

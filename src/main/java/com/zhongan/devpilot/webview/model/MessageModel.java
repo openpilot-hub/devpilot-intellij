@@ -40,7 +40,7 @@ public class MessageModel {
         return buildCodeMessage(id, time, content, username, null);
     }
 
-    public static MessageModel buildErrorMessage(String content) {
+    public static MessageModel buildInfoMessage(String content) {
         return buildAssistantMessage(UUID.randomUUID().toString(), System.currentTimeMillis(), content, false);
     }
 

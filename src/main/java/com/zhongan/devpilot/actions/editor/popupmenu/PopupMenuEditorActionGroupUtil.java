@@ -23,9 +23,9 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
-import com.zhongan.devpilot.util.PerformanceCheckUtils;
 import com.zhongan.devpilot.util.PromptTemplate;
 import com.zhongan.devpilot.util.PsiFileUtil;
+import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -47,12 +47,12 @@ import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 public class PopupMenuEditorActionGroupUtil {
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
-            EditorActionEnum.PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
-            EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
-            EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
-            EditorActionEnum.FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
-            EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
-            EditorActionEnum.EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
+        EditorActionEnum.PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
+        EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
+        EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
+        EditorActionEnum.FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
+        EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
+        EditorActionEnum.EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction");
@@ -69,7 +69,7 @@ public class PopupMenuEditorActionGroupUtil {
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
-                        if (isInputExceedLimit(selectedText, prompt)) {
+                        if (TokenUtils.isInputExceedLimit(selectedText, prompt)) {
                             DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.input.tooLong"));
                             return;
                         }
@@ -80,21 +80,14 @@ public class PopupMenuEditorActionGroupUtil {
                         }
 
                         Consumer<String> callback = result -> {
+                            DevPilotNotification.debug("result is -> [." + result + "].");
                             if (validateResult(result)) {
                                 DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.input.tooLong"));
                                 return;
                             }
 
-                            switch (editorActionEnum) {
-                                case PERFORMANCE_CHECK:
-                                    // display result, and open diff window
-                                    PerformanceCheckUtils.showDiffWindow(selectedText, project, editor);
-                                    break;
-                                case GENERATE_COMMENTS:
-                                    DocumentUtil.diffCommentAndFormatWindow(project, editor, result);
-                                    break;
-                                default:
-                                    break;
+                            if (editorActionEnum == EditorActionEnum.GENERATE_COMMENTS) {
+                                DocumentUtil.diffCommentAndFormatWindow(project, editor, result);
                             }
                         };
 
@@ -113,7 +106,8 @@ public class PopupMenuEditorActionGroupUtil {
                                         }
                                     });
                         }
-                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
+                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
+                                && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
                             promptTemplate.appendLast(PromptConst.ANSWER_IN_CHINESE);
                         }
 
@@ -122,11 +116,11 @@ public class PopupMenuEditorActionGroupUtil {
                         service.clearRequestSession();
 
                         var showText = DevPilotMessageBundle.get(label);
-                        var codeReference = new CodeReferenceModel(editorInfo.getFileUrl(),
-                                editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
+                        var codeReference = new CodeReferenceModel(editorInfo.getFilePresentableUrl(),
+                            editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
 
                         var codeMessage = MessageModel.buildCodeMessage(
-                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
+                            UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
                         service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), promptTemplate.getPrompt(), callback, codeMessage);
                     }
@@ -151,24 +145,8 @@ public class PopupMenuEditorActionGroupUtil {
      *
      * @return
      */
-    private static boolean validateResult(String content) {
-        return content.contains(DefaultConst.MAX_TOKEN_EXCEPTION_MSG);
-    }
-
-    /**
-     * check length of input rather than max limit
-     * 1 token = 3 english character()
-     *
-     * @param content
-     * @return
-     */
-    private static boolean isInputExceedLimit(String content, String prompt) {
-        // text too long, openai server always timeout
-        if (content.length() + prompt.length() > DefaultConst.TOKEN_MAX_LENGTH) {
-            return true;
-        }
-        // valid chinese and english character length
-        return DocumentUtil.experienceEstimatedTokens(content + prompt) > DefaultConst.TOKEN_MAX_LENGTH;
+    public static boolean validateResult(String content) {
+        return content.contains(DefaultConst.GPT_35_MAX_TOKEN_EXCEPTION_MSG);
     }
 
 }
