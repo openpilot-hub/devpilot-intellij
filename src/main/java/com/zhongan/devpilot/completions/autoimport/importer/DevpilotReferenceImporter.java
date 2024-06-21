@@ -9,8 +9,11 @@ import java.lang.reflect.Method;
 public class DevpilotReferenceImporter {
 
     protected Editor myEditor;
+
     protected PsiFile myFile;
+
     protected int startOffset;
+
     protected int endOffset;
 
     protected DevpilotReferenceImporter(Editor editor, PsiFile file, int startOffset, int endOffset) {

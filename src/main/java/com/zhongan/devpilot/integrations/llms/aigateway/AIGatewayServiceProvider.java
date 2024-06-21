@@ -250,7 +250,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         map.put("completionType", instructCompletionRequest.getCompletionType());
         ObjectMapper objectMapper = new ObjectMapper();
 
-        okhttp3.Response response;
+        Response response;
         String json;
         try {
             json = objectMapper.writeValueAsString(map);
