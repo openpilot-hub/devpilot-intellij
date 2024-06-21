@@ -42,3 +42,5 @@ bin/
 .DS_Store
 
 .idea
+
+src/main/resources/config/local.properties

@@ -6,6 +6,60 @@
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>DevPilot</name>
+    <version>2.4.2</version>
+
+    <change-notes><![CDATA[
+        <h1>Release 2.4.2</h1>
+        <h2>New Features</h2>
+            <ul>
+              <li>Support shortcut on methods for go | js | ts | py</li>
+              <li>Add intelligent handling of chat context</li>
+            </ul>
+        <h2>Enhancements</h2>
+        <ul>
+          <li>Optimize method comment insertion operation</li>
+        </ul>
+        <h2>Bug fixes</h2>
+        <ul>
+          <li>Fix autocompletion failure due to missing fonts in some ide versions</li>
+        </ul>
+        <h1>Release 2.4.1</h1>
+        <h2>New Features</h2>
+            <ul>
+              <li>Interactive optimization</li>
+              <li>Add inlay hint for Comments | Summary</li>
+              <li>Optimize status bar action behavior</li>
+            </ul>
+        <h2>Enhancements</h2>
+        <ul>
+          <li>Updated prompts for code explanation, code fixes, performance checks, and code reviews</li>
+          <li>Optimized autocompletion performance</li>
+        </ul>
+        <h1>Release 2.4.0</h1>
+        <h2>New Features</h2>
+         <ul>
+          <li>Interactive optimization</li>
+          <li>Add inlay hint for Explain | Fix | Test</li>
+          <li>Optimize status bar action behavior</li>
+        </ul>
+        <h1>Release 2.3.0</h1>
+        <h2>Enhancements</h2>
+        <ul>
+          <li>Enhance the plugin compatibility with LLM responses</li>
+        </ul>
+        <h1>Release 2.2.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Supports free trial for users who follow our Weixin Official Account by scanning QR code</li>
+          <li>Supports streaming response conversations</li>
+          <li>Supports generating commit logs based on change records</li>
+          <li>Supports single-round dialogue removal</li>
+          <li>Optimize dialogue interaction style</li>
+          <li>Supports Command Line mode</li>
+          <li>Some models support user feedback on likes and dislikes of results</li>
+          <li>Some models support line-level completion of code</li>
+        </ul>
+    ]]></change-notes>
 
     <!-- A displayed Vendor name or Organization ID displayed on the Plugins Page. -->
     <vendor email="pilot_group@zhongan.com" url="https://www.zhongan.com">Zhongan Online</vendor>
@@ -20,7 +74,13 @@
     <!-- Product and plugin compatibility requirements.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
-    <depends>com.intellij.modules.java</depends>
+    <depends>Git4Idea</depends>
+    <depends optional="true" config-file="plugin-withJava.xml">com.intellij.modules.java</depends>
+    <depends optional="true" config-file="plugin-withPython.xml">com.intellij.modules.python</depends>
+    <depends optional="true" config-file="plugin-withGolang.xml">com.intellij.modules.go-capable</depends>
+    <depends optional="true" config-file="plugin-withJavaScript.xml">com.intellij.modules.webstorm</depends>
+<!--    <depends optional="true" config-file="plugin-withPython.xml">com.intellij.modules.python</depends>-->
+    <!--    <depends>com.intellij.modules.java</depends>-->
 
     <!-- Extension points defined by the plugin.
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-extension-points.html -->
@@ -30,19 +90,30 @@
         <applicationConfigurable id="settings.devpilot" parentId="tools" displayName="DevPilot"
                                  instance="com.zhongan.devpilot.settings.DevPilotSettingsConfigurable"/>
 
+        <httpRequestHandler implementation="com.zhongan.devpilot.rest.LoginAuthCallbackRestService"/>
+
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LanguageSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CodeLlamaSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AIGatewaySettingsState"/>
-        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OllamaSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.ChatShortcutSettingState"/>
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
-
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CompletionSettingsState"/>
+        <actionPromoter implementation="com.zhongan.devpilot.completions.inline.InlineActionsPromoter"/>
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
         <projectService id="DevPilotChatToolWindowService" serviceImplementation="com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService"/>
 
         <notificationGroup id="DevPilot Notification Group" displayType="BALLOON" key="notification.group.devpilot"/>
+
+        <editorFactoryDocumentListener
+                implementation="com.zhongan.devpilot.completions.inline.DevPilotDocumentListener"/>
+        <editorActionHandler action="EditorEscape" implementationClass="com.zhongan.devpilot.completions.inline.EscapeHandler"
+                             id="previewEscape" order="before hide-hints"/>
+        <statusBarWidgetFactory id="com.zhongan.devpilot.status.widget" implementation="com.zhongan.devpilot.statusBar.DevPilotStatusBarWidgetFactory"/>
+        <errorHandler implementation="com.zhongan.devpilot.exception.DevPilotErrorReporter" />
     </extensions>
 
     <resource-bundle>messages.devpilot</resource-bundle>
@@ -56,12 +127,27 @@
             </action>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
+
+        <action class="com.zhongan.devpilot.completions.inline.AcceptDevPilotInlineCompletionAction"
+                id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
+            <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
+        </action>
+        <!--support alt + B-->
+        <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
+                id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
+            <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>
+        </action>
+
         <group id="DevPilot.GenerateGitCommitMessageGroup">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
             <action
                     id="DevPilot.GenerateGitCommitMessage"
                     class="com.zhongan.devpilot.actions.changesview.GenerateGitCommitMessageAction" />
         </group>
+
+        <action class="com.zhongan.devpilot.actions.editor.GenerateMethodCommentAction"
+                id="com.zhongan.devpilot.actions.editor.generate.method.comments" text="Generate Method Comments">
+        </action>
     </actions>
 
     <applicationListeners>

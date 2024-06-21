@@ -19,4 +19,8 @@ public class DevPilotVersion {
     public static String getIdeaVersion() {
         return ApplicationInfo.getInstance().getFullVersion();
     }
+
+    public static String getVersionName() {
+        return ApplicationInfo.getInstance().getVersionName();
+    }
 }

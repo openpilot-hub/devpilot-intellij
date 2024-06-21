@@ -4,14 +4,13 @@ import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -30,10 +29,20 @@ public interface LlmProvider {
 
     DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest);
 
+    DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest);
+
     void interruptSend();
 
     default void restoreMessage(MessageModel messageModel) {
         // default not restore message
+    }
+
+    default void handleNoAuth(DevPilotChatToolWindowService service) {
+        var content = "Chat completion failed: Auth Failed";
+        var assistantMessage = MessageModel.buildInfoMessage(content);
+
+        service.callWebView(assistantMessage);
+        service.addMessage(assistantMessage);
     }
 
     default EventSource buildEventSource(Request request,
@@ -45,7 +54,7 @@ public interface LlmProvider {
         return EventSources.createFactory(client).newEventSource(request, new EventSourceListener() {
             @Override
             public void onEvent(@NotNull EventSource eventSource, @Nullable String id, @Nullable String type, @NotNull String data) {
-                if ("[DONE]".equals(data)) {
+                if (data.equals("[DONE]")) {
                     return;
                 }
 
@@ -55,15 +64,27 @@ public interface LlmProvider {
                     interruptSend();
                     return;
                 }
+                
+                boolean streaming = Boolean.TRUE;
 
-                var choice = response.getChoices().get(0);
-                var finishReason = choice.getFinishReason();
+                if (null != response.getRag()) {
+                    var ragResp = response.getRag();
+                    var files = ragResp.getFiles();
+                    var app = ragResp.getApp();
+                    result.append("\n\n<div class=\"rag-files\" data-repo=\"").append(app).append("\">");
+                    for (DevPilotSuccessStreamingResponse.RagFile file : files) {
+                        result.append("<div class=\"rag-files-item\">").append(file.getFile()).append("</div>");
+                    }
+                    result.append("</div>\n\n");
+                } else {
+                    var choice = response.getChoices().get(0);
+                    var finishReason = choice.getFinishReason();
 
-                if (choice.getDelta().getContent() != null) {
-                    result.append(choice.getDelta().getContent());
+                    if (choice.getDelta().getContent() != null) {
+                        result.append(choice.getDelta().getContent());
+                    }
+                    streaming = !"stop".equals(finishReason);
                 }
-
-                var streaming = !"stop".equals(finishReason);
 
                 var assistantMessage = MessageModel
                         .buildAssistantMessage(response.getId(), time, result.toString(), streaming);
@@ -89,7 +110,8 @@ public interface LlmProvider {
                 var message = "Chat completion failed";
 
                 if (response != null && response.code() == 401) {
-                    message = "Chat completion failed: Unauthorized";
+                    handleNoAuth(service);
+                    return;
                 }
 
                 if (t != null) {
@@ -107,9 +129,5 @@ public interface LlmProvider {
                 service.addMessage(assistantMessage);
             }
         });
-    }
-
-    default List<String> listModels(String host, String apiKey) {
-        return new ArrayList<>();
     }
 }

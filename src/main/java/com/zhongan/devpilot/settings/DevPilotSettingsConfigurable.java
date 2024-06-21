@@ -5,13 +5,12 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
-import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
-import com.zhongan.devpilot.settings.state.CodeLlamaSettingsState;
+import com.zhongan.devpilot.enums.LoginTypeEnum;
+import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
-import com.zhongan.devpilot.settings.state.OllamaSettingsState;
-import com.zhongan.devpilot.settings.state.OpenAISettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
+import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JComponent;
@@ -33,34 +32,20 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
     public @Nullable JComponent createComponent() {
         var settings = DevPilotLlmSettingsState.getInstance();
         settingsComponent = new DevPilotSettingsComponent(this, settings);
+        ConfigurableUtils.setConfigurableCache(settingsComponent);
         return settingsComponent.getPanel();
     }
 
     @Override
     public boolean isModified() {
         var settings = DevPilotLlmSettingsState.getInstance();
-        var openAISettings = OpenAISettingsState.getInstance();
-        var aiGatewaySettings = AIGatewaySettingsState.getInstance();
         var languageSettings = LanguageSettingsState.getInstance();
-        var codeLlamaSettings = CodeLlamaSettingsState.getInstance();
-        var ollamaSettings = OllamaSettingsState.getInstance();
-        var serviceForm = settingsComponent.getDevPilotConfigForm();
-        var selectedModel = serviceForm.getSelectedModel();
-        var selectedModelType = serviceForm.getAIGatewayModel();
+        var languageIndex = settingsComponent.getLanguageIndex();
+        var completionEnable = CompletionSettingsState.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
-                || !selectedModel.getName().equals(settings.getSelectedModel())
-                || !selectedModelType.getName().equals(aiGatewaySettings.getSelectedModel())
-                || !serviceForm.getOpenAIBaseHost().equals(openAISettings.getModelHost())
-                || !serviceForm.getOpenAIModelName().equals(openAISettings.getModelName())
-                || !serviceForm.getOpenAICustomModelName().equals(openAISettings.getCustomModelName())
-                || !serviceForm.getAIGatewayBaseHost().equals(aiGatewaySettings.getModelBaseHost(selectedModelType.getName()))
-                || !serviceForm.getOpenAIKey().equals(openAISettings.getPrivateKey())
-                || !serviceForm.getCodeLlamaBaseHost().equals(codeLlamaSettings.getModelHost())
-                || !serviceForm.getCodeLlamaModelName().equals(codeLlamaSettings.getModelName())
-                || !serviceForm.getOllamaModelName().equals(ollamaSettings.getModelName())
-                || !serviceForm.getOllamaBaseHost().equals(ollamaSettings.getModelHost())
-                || !serviceForm.getLanguageIndex().equals(languageSettings.getLanguageIndex());
+                || !languageIndex.equals(languageSettings.getLanguageIndex())
+                || !settingsComponent.getCompletionEnabled() == (completionEnable);
     }
 
     @Override
@@ -80,32 +65,21 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         PopupMenuEditorActionGroupUtil.refreshActions(null);
 
-        var openAISettings = OpenAISettingsState.getInstance();
-        var aiGatewaySettings = AIGatewaySettingsState.getInstance();
-        var codeLlamaSettings = CodeLlamaSettingsState.getInstance();
-        var ollamaSettings = OllamaSettingsState.getInstance();
-        var serviceForm = settingsComponent.getDevPilotConfigForm();
-        var selectedModel = serviceForm.getSelectedModel();
-        var selectedModelType = serviceForm.getAIGatewayModel();
-        var openAIModelName = serviceForm.getOpenAIModelName();
-        String ollamaBaseHost = serviceForm.getOllamaBaseHost();
-        String ollamaModelName = serviceForm.getOllamaModelName();
-
-        settings.setSelectedModel(selectedModel.getName());
-        openAISettings.setModelHost(serviceForm.getOpenAIBaseHost());
-        openAISettings.setPrivateKey(serviceForm.getOpenAIKey());
-        openAISettings.setModelName(openAIModelName);
-        openAISettings.setCustomModelName(serviceForm.getOpenAICustomModelName());
-        codeLlamaSettings.setModelHost(serviceForm.getCodeLlamaBaseHost());
-        codeLlamaSettings.setModelName(serviceForm.getCodeLlamaModelName());
-        aiGatewaySettings.setModelBaseHost(selectedModelType.getName(), serviceForm.getAIGatewayBaseHost());
-        aiGatewaySettings.setSelectedModel(selectedModelType.getName());
-        ollamaSettings.setModelHost(ollamaBaseHost);
-        ollamaSettings.setModelName(ollamaModelName);
+        CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
+        completionSettings.setEnable(settingsComponent.getCompletionEnabled());
+        
+        checkCodeCompletionConfig(LoginTypeEnum.getLoginTypeEnum(settings.getLoginType()));
     }
 
     @Override
     public void dispose() {
+    }
+
+    private void checkCodeCompletionConfig(LoginTypeEnum loginType) {
+        if (!(LoginTypeEnum.ZA.equals(loginType) || LoginTypeEnum.ZA_TI.equals(loginType))
+                && CompletionSettingsState.getInstance().getEnable()) {
+            CompletionSettingsState.getInstance().setEnable(false);
+        }
     }
 
 }

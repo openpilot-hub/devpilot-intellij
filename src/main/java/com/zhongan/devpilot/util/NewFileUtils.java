@@ -26,20 +26,22 @@ import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class NewFileUtils {
-    public static void createNewFile(Project project, String generatedText, CodeReferenceModel codeReferenceModel) {
-        if (codeReferenceModel == null) {
+    public static void createNewFile(Project project, String generatedText, CodeReferenceModel codeReferenceModel, String lang) {
+        // if lang is null, set default language to java
+        if (StringUtils.isEmpty(lang)) {
             handleDefaultAction(project, generatedText, ".java");
-            return;
         }
 
-        var fileUrl = codeReferenceModel.getFileUrl();
-        var fileName = codeReferenceModel.getFileName();
+        String fileExtension = MarkdownUtil.getFileExtensionFromLanguage(lang);
 
-        String fileExtension = fileName.substring(fileName.lastIndexOf("."));
-        if (".java".equals(fileExtension) && codeReferenceModel.getType() == EditorActionEnum.GENERATE_TESTS) {
+        if (codeReferenceModel != null && ".java".equals(fileExtension)
+                && codeReferenceModel.getType() == EditorActionEnum.GENERATE_TESTS) {
+            var fileUrl = codeReferenceModel.getFileUrl();
+            var fileName = codeReferenceModel.getFileName();
             // java test will goto special logic
             handleGenerateTestsAction(project, generatedText, fileExtension, fileName, fileUrl);
         } else {
