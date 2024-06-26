@@ -6,9 +6,12 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.jcef.JBCefApp;
+import com.zhongan.devpilot.actions.toolbar.ToolbarFeedbackAction;
+import com.zhongan.devpilot.actions.toolbar.ToolbarUserProfileAction;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 
 import java.awt.BorderLayout;
+import java.util.List;
 
 import javax.swing.JPanel;
 
@@ -31,6 +34,7 @@ public class DevPilotChatToolWindowFactory implements ToolWindowFactory {
             webPanel.add(devPilotChatToolWindow.getDevPilotChatToolWindowPanel());
             Content content = contentFactory.createContent(webPanel, "", false);
             toolWindow.getContentManager().addContent(content);
+            toolWindow.setTitleActions(List.of(new ToolbarFeedbackAction(), new ToolbarUserProfileAction()));
         }
     }
 }

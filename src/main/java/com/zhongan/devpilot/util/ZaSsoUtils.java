@@ -7,6 +7,8 @@ import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
 
+import static com.zhongan.devpilot.constant.DefaultConst.AUTH_INFO_BUILD_TEMPLATE;
+
 public class ZaSsoUtils {
     public static boolean isLogin(ZaSsoEnum zaSsoEnum) {
         var settings = AIGatewaySettingsState.getInstance();
@@ -73,5 +75,31 @@ public class ZaSsoUtils {
 
     public static String getSsoUserName() {
         return zaSsoUsername(getSsoEnum());
+    }
+
+    public static String buildAuthInfo(ZaSsoEnum zaSsoEnum) {
+        if (!isLogin(zaSsoEnum)) {
+            return null;
+        }
+
+        var settings = AIGatewaySettingsState.getInstance();
+
+        switch (zaSsoEnum) {
+            case ZA_TI:
+                return String.format(
+                        AUTH_INFO_BUILD_TEMPLATE,
+                        zaSsoEnum.getName().toLowerCase(Locale.ROOT),
+                        settings.getTiSsoToken(),
+                        settings.getTiSsoUsername(),
+                        System.currentTimeMillis());
+            case ZA:
+            default:
+                return String.format(
+                        AUTH_INFO_BUILD_TEMPLATE,
+                        zaSsoEnum.getName().toLowerCase(Locale.ROOT),
+                        settings.getSsoToken(),
+                        settings.getSsoUsername(),
+                        System.currentTimeMillis());
+        }
     }
 }
