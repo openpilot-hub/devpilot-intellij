@@ -17,7 +17,6 @@ import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
-import java.util.Collections;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
@@ -63,7 +62,7 @@ public abstract class SelectedCodeGenerateBaseAction extends AnAction {
         var codeMessage = MessageModel.buildCodeMessage(
                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
-        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), GENERATE_METHOD_COMMENTS.name(), Map.of("selectedCode", selectedText), null, callback, codeMessage, Collections.emptyList());
+        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), GENERATE_METHOD_COMMENTS.name(), Map.of("selectedCode", selectedText), null, callback, codeMessage);
     }
 
     protected abstract String getPrompt();

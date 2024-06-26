@@ -60,9 +60,9 @@ public class GenerateGitCommitMessageAction extends AnAction {
             var editor = commitMessage != null ? commitMessage.getEditorField().getEditor() : null;
             if (editor != null) {
                 ((EditorEx) editor).setCaretVisible(false);
-                DevPilotMessage userMessage = MessageUtil.createUserMessage(gitDiff, "GENERATE_COMMIT", "-1", null);
+                DevPilotMessage userMessage = MessageUtil.createUserMessage(gitDiff, "GENERATE_COMMIT", "-1");
                 DevPilotChatCompletionRequest devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-                devPilotChatCompletionRequest.setSessionType(INDEPENDENT.name());
+                devPilotChatCompletionRequest.setStream(false);
                 devPilotChatCompletionRequest.getMessages().add(userMessage);
 
                 var llmProvider = new LlmProviderFactory().getLlmProvider(project);

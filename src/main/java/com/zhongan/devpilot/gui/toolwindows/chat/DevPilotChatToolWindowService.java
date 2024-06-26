@@ -31,7 +31,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
@@ -61,26 +60,26 @@ public final class DevPilotChatToolWindowService {
         return this.project;
     }
 
-    public String sendMessage(Integer sessionType, String msgType, Map<String, String> data, String message, Consumer<String> callback, MessageModel messageModel, List<String> additional) {
+    public String sendMessage(Integer sessionType, String msgType, Map<String, String> data, String message, Consumer<String> callback, MessageModel messageModel) {
         DevPilotMessage userMessage;
         if (data == null || data.isEmpty()) {
-            userMessage = MessageUtil.createUserMessage(message, msgType, messageModel.getId(), additional);
+            userMessage = MessageUtil.createUserMessage(message, msgType, messageModel.getId());
         } else {
-            userMessage = MessageUtil.createPromptMessage(messageModel.getId(), msgType, data, additional);
+            userMessage = MessageUtil.createPromptMessage(messageModel.getId(), msgType, data);
         }
 
         // check session type,default multi session
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         var sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
-        devPilotChatCompletionRequest.setSessionType(sessionTypeEnum.name());
         if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
             // independent message can not update, just readonly
+            devPilotChatCompletionRequest.setStream(false);
             devPilotChatCompletionRequest.getMessages().add(userMessage);
         } else {
             if (message != null && message.startsWith("@repo")) {
                 clearRequestSession();
             }
-
+            devPilotChatCompletionRequest.setStream(true);
             historyRequestMessageList.add(userMessage);
             devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         }
@@ -104,7 +103,7 @@ public final class DevPilotChatToolWindowService {
     public String sendMessage(Consumer<String> callback) {
         // check session type,default multi session
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        devPilotChatCompletionRequest.setSessionType(MULTI_TURN.name());
+        devPilotChatCompletionRequest.setStream(true);
         devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
 
         callWebView(MessageModel.buildLoadingMessage());
@@ -280,7 +279,6 @@ public final class DevPilotChatToolWindowService {
             copiedMessage.setContent(message.getContent());
             copiedMessage.setCommandType(message.getCommandType());
             copiedMessage.setId(message.getId());
-            copiedMessage.setAdditional(message.getAdditional());
             copiedList.add(copiedMessage);
         }
         return copiedList;

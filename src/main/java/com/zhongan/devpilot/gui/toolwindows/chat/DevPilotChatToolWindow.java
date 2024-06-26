@@ -31,7 +31,6 @@ import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
-import java.util.Collections;
 import java.util.UUID;
 
 import javax.swing.JComponent;
@@ -109,7 +108,7 @@ public class DevPilotChatToolWindow {
                     var message = messageModel.getContent();
 
                     var userMessageModel = MessageModel.buildUserMessage(uuid, time, message, username);
-                    service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message, null, userMessageModel, Collections.emptyList());
+                    service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message, null, userMessageModel);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "InterruptChatStream": {

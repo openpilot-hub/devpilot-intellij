@@ -1,5 +1,15 @@
 package com.zhongan.devpilot.actions.editor.popupmenu;
 
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Consumer;
+
+import javax.swing.*;
+
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -27,18 +37,8 @@ import com.zhongan.devpilot.util.PsiFileUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Consumer;
-
-import javax.swing.*;
 import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
+import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.MOCK_FRAMEWORK;
 import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
@@ -87,7 +87,6 @@ public class PopupMenuEditorActionGroupUtil {
                         };
                         Map<String, String> data = new HashMap<>();
                         data.put(SELECTED_CODE, selectedText);
-                        List<String> additional = new ArrayList<>();
                         EditorInfo editorInfo = new EditorInfo(editor);
                         if (editorActionEnum == EditorActionEnum.GENERATE_TESTS) {
                             Optional.ofNullable(FileDocumentManager.getInstance().getFile(editor.getDocument()))
@@ -103,7 +102,8 @@ public class PopupMenuEditorActionGroupUtil {
                         }
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
                                 && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
-                            additional.add(PromptConst.ANSWER_IN_CHINESE);
+                            // todo 拿到用户真正希望回答的语言
+                            data.put(ANSWER_LANGUAGE, String.valueOf(LanguageSettingsState.getInstance().getLanguageIndex()));
                         }
 
                         var service = project.getService(DevPilotChatToolWindowService.class);
@@ -117,7 +117,7 @@ public class PopupMenuEditorActionGroupUtil {
                         var codeMessage = MessageModel.buildCodeMessage(
                             UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
-                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage, additional);
+                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }
                 };
                 group.add(action);

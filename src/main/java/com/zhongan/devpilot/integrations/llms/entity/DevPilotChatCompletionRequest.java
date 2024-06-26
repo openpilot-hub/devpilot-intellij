@@ -5,18 +5,19 @@ import java.util.List;
 
 public class DevPilotChatCompletionRequest {
 
-    // 用于gateway 判断是否是stream
-    String sessionType;
+    String version = "V1";
+
+    boolean stream = true;
 
     List<DevPilotMessage> messages = new ArrayList<>();
 
 
-    public String getSessionType() {
-        return sessionType;
+    public boolean getStream() {
+        return stream;
     }
 
-    public void setSessionType(String sessionType) {
-        this.sessionType = sessionType;
+    public void setStream(boolean stream) {
+        this.stream = stream;
     }
 
     public List<DevPilotMessage> getMessages() {
@@ -25,6 +26,14 @@ public class DevPilotChatCompletionRequest {
 
     public void setMessages(List<DevPilotMessage> messages) {
         this.messages = messages;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
     }
 
 }
