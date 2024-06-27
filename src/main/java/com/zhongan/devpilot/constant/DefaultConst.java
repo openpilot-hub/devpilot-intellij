@@ -38,6 +38,14 @@ public class DefaultConst {
 
     public static final String RAG_DEFAULT_HOST = ConfigBundleUtils.getConfig("devpilot.rag.host", "http://localhost:8085") + "/devpilot/v1/rag/git_repo/embedding_info/";
 
+    public static final String OFFICIAL_WEBSITE_URL = ConfigBundleUtils.getConfig("devpilot.official.website.host", "http://localhost:8085");
+
+    public static final String FEEDBACK_URL = OFFICIAL_WEBSITE_URL + "/feedback";
+
+    public static final String PROFILE_URL = OFFICIAL_WEBSITE_URL + "/profile";
+
+    public static final String AUTH_INFO_BUILD_TEMPLATE = "authType=%s&token=%s&userId=%s&timestamp=%s";
+
     public static final boolean AUTH_ON = true;
 
     public static final boolean TELEMETRY_ON = true;

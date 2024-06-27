@@ -11,6 +11,7 @@ import com.zhongan.devpilot.settings.state.TrialServiceSettingsState;
 import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
 
+import java.util.Base64;
 import java.util.Locale;
 
 import org.jetbrains.ide.BuiltInServerManager;
@@ -104,6 +105,37 @@ public class LoginUtils {
         } else {
             return ZaSsoUtils.getSsoUserName();
         }
+    }
+
+    public static String buildAuthInfo() {
+        if (!isAuthOn()) {
+            return null;
+        }
+
+        var setting = DevPilotLlmSettingsState.getInstance();
+        var loginType = LoginTypeEnum.getLoginTypeEnum(setting.getLoginType());
+
+        switch (loginType) {
+            case WX:
+                return WxAuthUtils.buildAuthInfo();
+            case ZA:
+                return ZaSsoUtils.buildAuthInfo(ZaSsoEnum.ZA);
+            case ZA_TI:
+                return ZaSsoUtils.buildAuthInfo(ZaSsoEnum.ZA_TI);
+        }
+
+        return null;
+    }
+
+    public static String buildAuthUrl(String baseUrl) {
+        String encodedString = "";
+        var paramString = buildAuthInfo();
+
+        if (paramString != null) {
+            encodedString = "?token=" + Base64.getEncoder().encodeToString(paramString.getBytes());
+        }
+
+        return baseUrl + encodedString;
     }
 
     // is auth turn on
