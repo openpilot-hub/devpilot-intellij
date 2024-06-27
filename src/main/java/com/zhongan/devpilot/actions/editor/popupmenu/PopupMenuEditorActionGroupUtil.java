@@ -103,7 +103,7 @@ public class PopupMenuEditorActionGroupUtil {
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
                                 && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
                             // todo 拿到用户真正希望回答的语言
-                            data.put(ANSWER_LANGUAGE, String.valueOf(LanguageSettingsState.getInstance().getLanguageIndex()));
+                            data.put(ANSWER_LANGUAGE, "zh_CN");
                         }
 
                         var service = project.getService(DevPilotChatToolWindowService.class);
