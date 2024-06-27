@@ -38,7 +38,7 @@ public class DefaultConst {
 
     public static final String RAG_DEFAULT_HOST = ConfigBundleUtils.getConfig("devpilot.rag.host", "http://localhost:8085") + "/devpilot/v1/rag/git_repo/embedding_info/";
 
-    public static final String OFFICIAL_WEBSITE_URL = ConfigBundleUtils.getConfig("devpilot.official.website.host", "http://localhost:8080");
+    public static final String OFFICIAL_WEBSITE_URL = ConfigBundleUtils.getConfig("devpilot.official.website.host", "http://localhost:8085");
 
     public static final String FEEDBACK_URL = OFFICIAL_WEBSITE_URL + "/feedback";
 
