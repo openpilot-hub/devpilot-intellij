@@ -25,7 +25,7 @@ public class DevPilotChatToolWindowFactory implements ToolWindowFactory {
     @Override
     public void createToolWindowContent(@NotNull Project project, @NotNull ToolWindow toolWindow) {
         var devPilotChatToolWindowService = project.getService(DevPilotChatToolWindowService.class);
-        var contentFactory = ContentFactory.SERVICE.getInstance();
+        var contentFactory = ContentFactory.getInstance();
         var webPanel = new JPanel(new BorderLayout());
 
         var devPilotChatToolWindow = devPilotChatToolWindowService.getDevPilotChatToolWindow();

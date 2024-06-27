@@ -9,6 +9,7 @@ import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.StatusCheckSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
@@ -42,10 +43,12 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var languageSettings = LanguageSettingsState.getInstance();
         var languageIndex = settingsComponent.getLanguageIndex();
         var completionEnable = CompletionSettingsState.getInstance().getEnable();
+        Boolean enable = StatusCheckSettingsState.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !languageIndex.equals(languageSettings.getLanguageIndex())
-                || !settingsComponent.getCompletionEnabled() == (completionEnable);
+                || !settingsComponent.getCompletionEnabled() == (completionEnable)
+                || !settingsComponent.getStatusCheckEnabled() == (enable);
     }
 
     @Override
@@ -67,7 +70,10 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
-        
+
+        StatusCheckSettingsState statusCheckSettingsState = StatusCheckSettingsState.getInstance();
+        statusCheckSettingsState.setEnable(settingsComponent.getStatusCheckEnabled());
+
         checkCodeCompletionConfig(LoginTypeEnum.getLoginTypeEnum(settings.getLoginType()));
     }
 

@@ -11,7 +11,8 @@ import org.jetbrains.annotations.NotNull;
 public enum DevPilotStatusEnum {
     LoggedIn,
     NotLoggedIn,
-    InCompletion;
+    InCompletion,
+    DISCONNECT_DARK;
 
     public @NotNull Icon getIcon() {
         switch (this) {
