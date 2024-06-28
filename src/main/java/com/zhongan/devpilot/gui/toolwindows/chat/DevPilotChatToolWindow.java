@@ -197,7 +197,7 @@ public class DevPilotChatToolWindow {
                     return new JBCefJSQuery.Response("success");
                 }
                 case "FixCode": {
-                    service.handleActions(EditorActionEnum.FIX_THIS);
+                    service.handleActions(EditorActionEnum.FIX_CODE);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CommentCode": {
@@ -205,7 +205,7 @@ public class DevPilotChatToolWindow {
                     return new JBCefJSQuery.Response("success");
                 }
                 case "ExplainCode": {
-                    service.handleActions(EditorActionEnum.EXPLAIN_THIS);
+                    service.handleActions(EditorActionEnum.EXPLAIN_CODE);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CopyCode": {

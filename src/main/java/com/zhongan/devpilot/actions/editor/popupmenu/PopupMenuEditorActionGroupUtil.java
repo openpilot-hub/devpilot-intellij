@@ -47,12 +47,12 @@ import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 public class PopupMenuEditorActionGroupUtil {
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
-        EditorActionEnum.PERFORMANCE_CHECK.getLabel(), AllIcons.Plugins.Updated,
+        EditorActionEnum.CHECK_PERFORMANCE.getLabel(), AllIcons.Plugins.Updated,
         EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
         EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
-        EditorActionEnum.FIX_THIS.getLabel(), AllIcons.Actions.QuickfixBulb,
+        EditorActionEnum.FIX_CODE.getLabel(), AllIcons.Actions.QuickfixBulb,
         EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
-        EditorActionEnum.EXPLAIN_THIS.getLabel(), AllIcons.Actions.Preview));
+        EditorActionEnum.EXPLAIN_CODE.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction");
@@ -63,7 +63,7 @@ public class PopupMenuEditorActionGroupUtil {
             group.addSeparator();
 
             var defaultActions = EditorActionConfigurationState.getInstance().getDefaultActions();
-            defaultActions.forEach((label, prompt) -> {
+            defaultActions.forEach((label) -> {
                 var action = new BasicEditorAction(DevPilotMessageBundle.get(label), DevPilotMessageBundle.get(label), ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
                     protected void actionPerformed(Project project, Editor editor, String selectedText) {

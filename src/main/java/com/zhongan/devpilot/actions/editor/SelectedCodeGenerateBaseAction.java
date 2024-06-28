@@ -1,5 +1,9 @@
 package com.zhongan.devpilot.actions.editor;
 
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.editor.Editor;
@@ -16,15 +20,10 @@ import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
-
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Consumer;
-
 import org.jetbrains.annotations.NotNull;
 
 import static com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil.validateResult;
-import static com.zhongan.devpilot.enums.EditorActionEnum.GENERATE_METHOD_COMMENTS;
+import static com.zhongan.devpilot.enums.EditorActionEnum.COMMENT_METHOD;
 
 public abstract class SelectedCodeGenerateBaseAction extends AnAction {
 
@@ -62,10 +61,8 @@ public abstract class SelectedCodeGenerateBaseAction extends AnAction {
         var codeMessage = MessageModel.buildCodeMessage(
                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
-        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), GENERATE_METHOD_COMMENTS.name(), Map.of("selectedCode", selectedText), null, callback, codeMessage);
+        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), COMMENT_METHOD.name(), Map.of("selectedCode", selectedText), null, callback, codeMessage);
     }
-
-    protected abstract String getPrompt();
 
     protected abstract EditorActionEnum getEditorActionEnum();
 
