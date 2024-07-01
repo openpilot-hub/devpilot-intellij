@@ -1,9 +1,5 @@
 package com.zhongan.devpilot.network;
 
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
@@ -12,9 +8,15 @@ import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import org.jetbrains.annotations.NotNull;
+
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
-import org.jetbrains.annotations.NotNull;
 
 public class DevPilotStatusChecker implements Runnable {
 
@@ -25,7 +27,6 @@ public class DevPilotStatusChecker implements Runnable {
     public DevPilotStatusChecker(@NotNull Project project) {
         this.project = project;
     }
-
 
     private void checkAndNotify() {
         String modelBaseHost = AIGatewaySettingsState.getInstance().getModelBaseHost(null);

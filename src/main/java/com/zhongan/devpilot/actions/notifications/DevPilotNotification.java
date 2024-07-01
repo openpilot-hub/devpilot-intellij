@@ -20,8 +20,6 @@ import com.zhongan.devpilot.util.LoginUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
-import static com.zhongan.devpilot.DevPilotIcons.DISCONNECT_DARK;
-
 public class DevPilotNotification {
 
     public static void info(String content) {
@@ -122,7 +120,9 @@ public class DevPilotNotification {
         DevPilotStatusBarBaseWidget.update(project, DevPilotStatusEnum.DISCONNECT_DARK);
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.network.setting"),
                         () -> ShowSettingsUtil.getInstance().showSettingsDialog(project, DevPilotSettingsConfigurable.class)));
-        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {}));
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
+
+        }));
         Notifications.Bus.notify(notification);
     }
 
@@ -135,7 +135,9 @@ public class DevPilotNotification {
         DevPilotStatusBarBaseWidget.update(project, DevPilotStatusEnum.NotLoggedIn);
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.settings.service.statusbar.login.desc"),
                 () -> ApplicationManager.getApplication().executeOnPooledThread(LoginUtils::gotoLogin)));
-        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {}));
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
+
+        }));
         Notifications.Bus.notify(notification);
     }
 
