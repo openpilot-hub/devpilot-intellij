@@ -31,6 +31,8 @@ public enum DevPilotStatusEnum {
                 return DevPilotMessageBundle.get("devpilot.status.loggedIn");
             case InCompletion:
                 return DevPilotMessageBundle.get("devpilot.status.inCompletion");
+            case DISCONNECT_DARK:
+                return DevPilotMessageBundle.get("devpilot.notification.network.message");
             default:
                 return DevPilotMessageBundle.get("devpilot.status.notLoggedIn");
         }
