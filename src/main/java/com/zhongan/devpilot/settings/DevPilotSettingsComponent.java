@@ -10,6 +10,7 @@ import com.intellij.util.ui.UI;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.StatusCheckSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JPanel;
@@ -21,6 +22,8 @@ public class DevPilotSettingsComponent {
     private final JBTextField fullNameField;
 
     private final JBRadioButton autoCompletionRadio;
+
+    private final JBRadioButton statusCheckRadio;
 
     private Integer index;
 
@@ -35,6 +38,8 @@ public class DevPilotSettingsComponent {
         autoCompletionRadio = new JBRadioButton(
                 DevPilotMessageBundle.get("devpilot.settings.service.code.completion.desc"),
                 CompletionSettingsState.getInstance().getEnable());
+        statusCheckRadio = new JBRadioButton(DevPilotMessageBundle.get("devpilot.settings.service.status.check.enable.desc"),
+                StatusCheckSettingsState.getInstance().getEnable());
 
         mainPanel = FormBuilder.createFormBuilder()
             .addComponent(UI.PanelFactory.panel(fullNameField)
@@ -46,6 +51,10 @@ public class DevPilotSettingsComponent {
                     DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
             .addComponent(autoCompletionRadio)
             .addVerticalGap(8)
+
+            .addComponent(new TitledSeparator(
+                    DevPilotMessageBundle.get("devpilot.settings.service.status.check.title")))
+            .addComponent(statusCheckRadio)
             .addComponentFillVertically(new JPanel(), 0)
             .getPanel();
     }
@@ -86,4 +95,9 @@ public class DevPilotSettingsComponent {
     public boolean getCompletionEnabled() {
         return autoCompletionRadio.isSelected();
     }
+
+    public boolean getStatusCheckEnabled() {
+        return statusCheckRadio.isSelected();
+    }
+
 }
