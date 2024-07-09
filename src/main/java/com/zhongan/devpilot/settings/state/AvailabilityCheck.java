@@ -6,13 +6,13 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 
-@State(name = "DevPilot_StatusCheckSettings", storages = @Storage("DevPilot_StatusCheckSettings.xml"))
-public class StatusCheckSettingsState implements PersistentStateComponent<StatusCheckSettingsState> {
+@State(name = "DevPilot_AvailabilityCheckSettings", storages = @Storage("DevPilot_AvailabilityCheckSettings.xml"))
+public class AvailabilityCheck implements PersistentStateComponent<AvailabilityCheck> {
 
     private Boolean enable = true;
 
-    public static StatusCheckSettingsState getInstance() {
-        return ApplicationManager.getApplication().getService(StatusCheckSettingsState.class);
+    public static AvailabilityCheck getInstance() {
+        return ApplicationManager.getApplication().getService(AvailabilityCheck.class);
     }
 
     public Boolean getEnable() {
@@ -24,12 +24,12 @@ public class StatusCheckSettingsState implements PersistentStateComponent<Status
     }
 
     @Override
-    public StatusCheckSettingsState getState() {
+    public AvailabilityCheck getState() {
         return this;
     }
 
     @Override
-    public void loadState(StatusCheckSettingsState state) {
+    public void loadState(AvailabilityCheck state) {
         XmlSerializerUtil.copyBean(state, this);
     }
 

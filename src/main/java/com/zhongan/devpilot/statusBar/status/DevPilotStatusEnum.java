@@ -12,7 +12,7 @@ public enum DevPilotStatusEnum {
     LoggedIn,
     NotLoggedIn,
     InCompletion,
-    DISCONNECT_DARK;
+    Disconnected;
 
     public @NotNull Icon getIcon() {
         switch (this) {
@@ -31,7 +31,7 @@ public enum DevPilotStatusEnum {
                 return DevPilotMessageBundle.get("devpilot.status.loggedIn");
             case InCompletion:
                 return DevPilotMessageBundle.get("devpilot.status.inCompletion");
-            case DISCONNECT_DARK:
+            case Disconnected:
                 return DevPilotMessageBundle.get("devpilot.notification.network.message");
             default:
                 return DevPilotMessageBundle.get("devpilot.status.notLoggedIn");

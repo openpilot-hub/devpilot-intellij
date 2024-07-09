@@ -117,7 +117,7 @@ public class DevPilotNotification {
                 DevPilotMessageBundle.get("notification.group.devpilot"),
                 DevPilotMessageBundle.get("devpilot.notification.network.message"),
                 NotificationType.ERROR);
-        DevPilotStatusBarBaseWidget.update(project, DevPilotStatusEnum.DISCONNECT_DARK);
+        DevPilotStatusBarBaseWidget.update(project, DevPilotStatusEnum.Disconnected);
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.network.setting"),
                         () -> ShowSettingsUtil.getInstance().showSettingsDialog(project, DevPilotSettingsConfigurable.class)));
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {

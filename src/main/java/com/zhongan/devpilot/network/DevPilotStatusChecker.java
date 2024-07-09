@@ -3,7 +3,7 @@ package com.zhongan.devpilot.network;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
-import com.zhongan.devpilot.settings.state.StatusCheckSettingsState;
+import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
 import com.zhongan.devpilot.util.LoginUtils;
@@ -52,13 +52,13 @@ public class DevPilotStatusChecker implements Runnable {
 
     @Override
     public void run() {
-        if (StatusCheckSettingsState.getInstance().getEnable()) {
+        if (AvailabilityCheck.getInstance().getEnable()) {
             checkAndNotify();
         }
     }
 
     public void checkNetworkAndLogStatus() {
-        if (StatusCheckSettingsState.getInstance().getEnable()) {
+        if (AvailabilityCheck.getInstance().getEnable()) {
             executor.scheduleAtFixedRate(this, 0, 2, TimeUnit.HOURS);
         }
     }

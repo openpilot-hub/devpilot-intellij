@@ -10,7 +10,7 @@ import com.intellij.util.ui.UI;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
-import com.zhongan.devpilot.settings.state.StatusCheckSettingsState;
+import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JPanel;
@@ -39,7 +39,7 @@ public class DevPilotSettingsComponent {
                 DevPilotMessageBundle.get("devpilot.settings.service.code.completion.desc"),
                 CompletionSettingsState.getInstance().getEnable());
         statusCheckRadio = new JBRadioButton(DevPilotMessageBundle.get("devpilot.settings.service.status.check.enable.desc"),
-                StatusCheckSettingsState.getInstance().getEnable());
+                AvailabilityCheck.getInstance().getEnable());
 
         mainPanel = FormBuilder.createFormBuilder()
             .addComponent(UI.PanelFactory.panel(fullNameField)
