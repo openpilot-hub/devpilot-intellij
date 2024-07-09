@@ -9,7 +9,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
-import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
@@ -31,7 +30,10 @@ import com.zhongan.devpilot.webview.model.ThemeModel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
+
+import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
 @Service
 public final class DevPilotChatToolWindowService {
@@ -58,26 +60,27 @@ public final class DevPilotChatToolWindowService {
         return this.project;
     }
 
-    public String sendMessage(Integer sessionType, String message, Consumer<String> callback, MessageModel messageModel) {
-        var userMessage = MessageUtil.createUserMessage(message, messageModel.getId());
+    public String sendMessage(Integer sessionType, String msgType, Map<String, String> data, String message, Consumer<String> callback, MessageModel messageModel) {
+        DevPilotMessage userMessage;
+        if (data == null || data.isEmpty()) {
+            userMessage = MessageUtil.createUserMessage(message, msgType, messageModel.getId());
+        } else {
+            userMessage = MessageUtil.createPromptMessage(messageModel.getId(), msgType, data);
+        }
+
         // check session type,default multi session
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         var sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
         if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
             // independent message can not update, just readonly
-            devPilotChatCompletionRequest.getMessages().add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
+            devPilotChatCompletionRequest.setStream(false);
             devPilotChatCompletionRequest.getMessages().add(userMessage);
         } else {
-            if (historyRequestMessageList.isEmpty()) {
-                historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
-            }
-            devPilotChatCompletionRequest.setStream(Boolean.TRUE);
-            if (message.startsWith("@repo")) {
+            if (message != null && message.startsWith("@repo")) {
                 clearRequestSession();
-                historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
             }
+            devPilotChatCompletionRequest.setStream(true);
             historyRequestMessageList.add(userMessage);
-            buildConversationWindowMemory();
             devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         }
 
@@ -86,9 +89,8 @@ public final class DevPilotChatToolWindowService {
         callWebView(MessageModel.buildLoadingMessage());
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
-
         var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback);
-        if (SessionTypeEnum.MULTI_TURN.equals(sessionTypeEnum) &&
+        if (MULTI_TURN.equals(sessionTypeEnum) &&
                 devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
             historyRequestMessageList.add(
@@ -101,10 +103,7 @@ public final class DevPilotChatToolWindowService {
     public String sendMessage(Consumer<String> callback) {
         // check session type,default multi session
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        if (historyRequestMessageList.isEmpty()) {
-            historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
-        }
-        devPilotChatCompletionRequest.setStream(Boolean.TRUE);
+        devPilotChatCompletionRequest.setStream(true);
         devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
 
         callWebView(MessageModel.buildLoadingMessage());
@@ -275,8 +274,10 @@ public final class DevPilotChatToolWindowService {
         List<DevPilotMessage> copiedList = new ArrayList<>();
         for (DevPilotMessage message : historyRequestMessageList) {
             DevPilotMessage copiedMessage = new DevPilotMessage();
-            copiedMessage.setContent(message.getContent());
             copiedMessage.setRole(message.getRole());
+            copiedMessage.setPromptData(message.getPromptData());
+            copiedMessage.setContent(message.getContent());
+            copiedMessage.setCommandType(message.getCommandType());
             copiedMessage.setId(message.getId());
             copiedList.add(copiedMessage);
         }

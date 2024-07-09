@@ -32,6 +32,7 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.util.ObjectUtils.tryCast;
+import static com.zhongan.devpilot.enums.SessionTypeEnum.INDEPENDENT;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -59,12 +60,10 @@ public class GenerateGitCommitMessageAction extends AnAction {
             var editor = commitMessage != null ? commitMessage.getEditorField().getEditor() : null;
             if (editor != null) {
                 ((EditorEx) editor).setCaretVisible(false);
-
-                DevPilotMessage userMessage = MessageUtil.createUserMessage(gitDiff, "-1");
+                DevPilotMessage userMessage = MessageUtil.createUserMessage(gitDiff, "GENERATE_COMMIT", "-1");
                 DevPilotChatCompletionRequest devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-                devPilotChatCompletionRequest.getMessages().add(MessageUtil.createSystemMessage(PromptConst.GENERATE_COMMIT));
+                devPilotChatCompletionRequest.setStream(false);
                 devPilotChatCompletionRequest.getMessages().add(userMessage);
-                devPilotChatCompletionRequest.setStream(Boolean.FALSE);
 
                 var llmProvider = new LlmProviderFactory().getLlmProvider(project);
                 DevPilotChatCompletionResponse result = llmProvider.chatCompletionSync(devPilotChatCompletionRequest);

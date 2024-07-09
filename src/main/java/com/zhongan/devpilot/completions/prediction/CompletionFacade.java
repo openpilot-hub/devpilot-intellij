@@ -12,10 +12,8 @@ import com.zhongan.devpilot.completions.inline.CompletionAdjustment;
 import com.zhongan.devpilot.completions.requests.AutocompleteRequest;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.requests.ResultEntry;
-import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
 import com.zhongan.devpilot.util.LoginUtils;
@@ -30,7 +28,6 @@ import org.jetbrains.annotations.Nullable;
 
 import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_COMPLETIONS;
 import static com.zhongan.devpilot.completions.general.StaticConfig.MAX_INSTRUCT_COMPLETION_TOKENS;
-import static com.zhongan.devpilot.completions.general.StaticConfig.MIN_CHAT_COMPLETION_MESSAGE_LENGTH;
 import static com.zhongan.devpilot.completions.general.StaticConfig.PREFIX_MAX_OFFSET;
 import static com.zhongan.devpilot.completions.general.StaticConfig.SUFFIX_MAX_OFFSET;
 
@@ -90,16 +87,6 @@ public class CompletionFacade {
             completionAdjustment.adjustRequest(req);
         }
 
-        //Simulating request response. Calling OpenAI or returning a value.
-        DevPilotMessage devPilotMessage = new DevPilotMessage();
-        devPilotMessage.setRole("user");
-        String content = EditorActionEnum.CODE_COMPLETIONS.getPrompt()
-            .replace("{{offsetCode}}", document.getText(new TextRange(req.before.lastIndexOf("\n"), offset)))
-            .replace("{{selectedCode}}", getFileExtension(editor) + " " + req.before)
-            .replace("{{maxCompletionLength}}", MIN_CHAT_COMPLETION_MESSAGE_LENGTH);
-        devPilotMessage.setContent(content);
-
-        devPilotMessage.setContent(req.before);
         DevPilotInstructCompletionRequest request = new DevPilotInstructCompletionRequest();
         request.setPrompt(req.before);
         request.setSuffix(req.after);

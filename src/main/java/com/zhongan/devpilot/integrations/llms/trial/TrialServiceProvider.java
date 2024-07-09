@@ -46,7 +46,6 @@ import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
 import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_HOST;
-import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_MODEL;
 import static com.zhongan.devpilot.util.VirtualFileUtil.getRelativeFilePath;
 
 @Service(Service.Level.PROJECT)
@@ -71,8 +70,6 @@ public final class TrialServiceProvider implements LlmProvider {
             return "";
         }
 
-        chatCompletionRequest.setModel(TRIAL_DEFAULT_MODEL);
-
         try {
             var request = new Request.Builder()
                     .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
@@ -95,8 +92,6 @@ public final class TrialServiceProvider implements LlmProvider {
         if (!LoginUtils.isLogin()) {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + LoginUtils.loginUrl() + "\">Wechat Login</a>");
         }
-
-        chatCompletionRequest.setModel(TRIAL_DEFAULT_MODEL);
 
         Response response;
 
