@@ -1,40 +1,36 @@
 
 package com.zhongan.devpilot.util;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import com.intellij.lang.Commenter;
+import com.intellij.lang.Language;
+import com.intellij.lang.LanguageCommenters;
 
 public class CommentUtil {
+    public static boolean isMultiLineComment(String text, Language language) {
+        final Commenter commenter = LanguageCommenters.INSTANCE.forLanguage(language);
 
-    private static final String MULTI_LINE_REGEX = "/\\*(.|\\n)*?\\*/";
-
-    private static final String SINGLE_LINE_REGEX = "//.*";
-
-    private static final Pattern MULTI_LINE_PATTERN = Pattern.compile(MULTI_LINE_REGEX);
-
-    private static final Pattern SINGLE_LINE_PATTERN = Pattern.compile(SINGLE_LINE_REGEX);
-
-    public static boolean isMultiLineComment(String text) {
-        Matcher multiLineCommentMatcher = MULTI_LINE_PATTERN.matcher(text);
-
-        while (multiLineCommentMatcher.find()) {
-            return true;
+        if (commenter == null) {
+            return false;
         }
-        return false;
+
+        var blockSuffix = commenter.getBlockCommentSuffix();
+        return blockSuffix != null && text.endsWith(blockSuffix);
     }
 
-    public static boolean isSingleLineComment(String text) {
-        Matcher singleLineCommentMatcher = SINGLE_LINE_PATTERN.matcher(text);
+    public static boolean isSingleLineComment(String text, Language language) {
+        final Commenter commenter = LanguageCommenters.INSTANCE.forLanguage(language);
 
-        while (singleLineCommentMatcher.find()) {
-            return true;
+        if (commenter == null) {
+            return false;
         }
-        return false;
+
+        var linePrefix = commenter.getLineCommentPrefix();
+        return linePrefix != null && text.startsWith(linePrefix);
     }
 
-    public static boolean containsComment(String text) {
+    public static boolean containsComment(String text, Language language) {
         if (text == null) return false;
-        return isMultiLineComment(text) || isSingleLineComment(text);
+        return isMultiLineComment(text, language) || isSingleLineComment(text, language);
     }
 
 }
