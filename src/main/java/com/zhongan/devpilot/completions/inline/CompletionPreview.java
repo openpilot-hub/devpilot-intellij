@@ -17,6 +17,7 @@ import com.zhongan.devpilot.completions.autoimport.handler.AutoImportHandler;
 import com.zhongan.devpilot.completions.inline.listeners.InlineCaretListener;
 import com.zhongan.devpilot.completions.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
+import com.zhongan.devpilot.treesitter.TreeSitterParser;
 import com.zhongan.devpilot.util.TelemetryUtils;
 
 import java.util.List;
@@ -162,9 +163,13 @@ public class CompletionPreview implements Disposable {
             editor.getDocument().deleteString(cursorOffset, cursorOffset + completion.oldSuffix.length());
         }
 
-        //TODO 代码自动格式化
+        var name = file.getName();
+        var fileExtension = name.substring(name.lastIndexOf(".") + 1);
+        suffix = TreeSitterParser.getInstance(fileExtension)
+                .parse(editor.getDocument().getText(), cursorOffset, suffix);
+
         editor.getDocument().insertString(cursorOffset, suffix);
-        editor.getCaretModel().moveToOffset(startOffset + completion.newPrefix.length());
+        editor.getCaretModel().moveToOffset(startOffset + suffix.length());
 
         PsiDocumentManager.getInstance(project).commitAllDocuments();
 
