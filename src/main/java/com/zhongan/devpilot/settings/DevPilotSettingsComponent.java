@@ -7,10 +7,10 @@ import com.intellij.ui.components.JBTextField;
 import com.intellij.util.ui.FormBuilder;
 import com.intellij.util.ui.JBUI;
 import com.intellij.util.ui.UI;
+import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
-import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JPanel;
