@@ -41,11 +41,12 @@ public class CompletionUtils {
         return newText.trim().length() <= 1;
     }
 
-    // 代码-单行仅空字符或者仅换行忽略请求，注释-单行除换行全部忽略请求
+    // Limit trigger condition, avoid too much unnecessary request
     public static VerifyResult ignoreTrigger(String newText, String currentLineText, Language language) {
         boolean isPreComment = CommentUtil.containsComment(StringUtils.trim(currentLineText), language);
 
         // only contains empty and tab
+        boolean endWithBrace = StringUtils.endsWith(StringUtils.trim(currentLineText), "{");
         boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
         boolean currentLineEmpty = StringUtils.isEmpty(StringUtils.trim(currentLineText));
         if (emptyAndTabChar && currentLineEmpty) {
@@ -53,12 +54,13 @@ public class CompletionUtils {
         }
 
         boolean newlineChar = StringUtils.startsWith(newText, "\n");
-        if (newlineChar && isPreComment) {
-            return VerifyResult.createComment(false);
-        }
 
-        if (newlineChar || isPreComment) {
-            return VerifyResult.create(true);
+        if (newlineChar) {
+            if (endWithBrace || isPreComment) {
+                return VerifyResult.createComment(false);
+            } else {
+                return VerifyResult.create(true);
+            }
         }
 
         return VerifyResult.create(false);
