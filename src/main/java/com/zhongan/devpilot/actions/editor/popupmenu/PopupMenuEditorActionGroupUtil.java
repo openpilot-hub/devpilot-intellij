@@ -1,15 +1,5 @@
 package com.zhongan.devpilot.actions.editor.popupmenu;
 
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Consumer;
-
-import javax.swing.*;
-
 import com.intellij.icons.AllIcons;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
@@ -33,9 +23,20 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
+import com.zhongan.devpilot.util.PerformanceCheckUtils;
 import com.zhongan.devpilot.util.PsiFileUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Consumer;
+
+import javax.swing.Icon;
 
 import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
 import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
@@ -47,12 +48,12 @@ import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 public class PopupMenuEditorActionGroupUtil {
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
-        EditorActionEnum.CHECK_PERFORMANCE.getLabel(), AllIcons.Plugins.Updated,
-        EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
-        EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
-        EditorActionEnum.FIX_CODE.getLabel(), AllIcons.Actions.QuickfixBulb,
-        EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
-        EditorActionEnum.EXPLAIN_CODE.getLabel(), AllIcons.Actions.Preview));
+            EditorActionEnum.CHECK_PERFORMANCE.getLabel(), AllIcons.Plugins.Updated,
+            EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
+            EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
+            EditorActionEnum.FIX_CODE.getLabel(), AllIcons.Actions.QuickfixBulb,
+            EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
+            EditorActionEnum.EXPLAIN_CODE.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
         AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction");
@@ -82,7 +83,7 @@ public class PopupMenuEditorActionGroupUtil {
                             }
 
                             switch (editorActionEnum) {
-                                case PERFORMANCE_CHECK:
+                                case CHECK_PERFORMANCE:
                                     // display result, and open diff window
                                     PerformanceCheckUtils.showDiffWindow(selectedText, project, editor);
                                     break;
@@ -120,10 +121,10 @@ public class PopupMenuEditorActionGroupUtil {
 
                         var showText = DevPilotMessageBundle.get(label);
                         var codeReference = new CodeReferenceModel(editorInfo.getFilePresentableUrl(),
-                            editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
+                                editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
 
                         var codeMessage = MessageModel.buildCodeMessage(
-                            UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
+                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
                         service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }

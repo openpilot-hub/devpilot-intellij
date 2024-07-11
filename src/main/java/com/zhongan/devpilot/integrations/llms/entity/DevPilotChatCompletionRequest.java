@@ -11,7 +11,6 @@ public class DevPilotChatCompletionRequest {
 
     List<DevPilotMessage> messages = new ArrayList<>();
 
-
     public boolean getStream() {
         return stream;
     }

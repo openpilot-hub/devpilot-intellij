@@ -1,13 +1,13 @@
 package com.zhongan.devpilot.settings.actionconfiguration;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.PersistentStateComponent;
 import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static com.zhongan.devpilot.enums.EditorActionEnum.CHECK_PERFORMANCE;
 import static com.zhongan.devpilot.enums.EditorActionEnum.EXPLAIN_CODE;

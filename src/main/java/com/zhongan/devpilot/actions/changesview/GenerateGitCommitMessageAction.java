@@ -32,7 +32,6 @@ import java.util.List;
 import org.jetbrains.annotations.NotNull;
 
 import static com.intellij.util.ObjectUtils.tryCast;
-import static com.zhongan.devpilot.enums.SessionTypeEnum.INDEPENDENT;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
@@ -71,9 +70,9 @@ public class GenerateGitCommitMessageAction extends AnAction {
                 if (result.isSuccessful()) {
                     var application = ApplicationManager.getApplication();
                     application.invokeLater(() ->
-                        application.runWriteAction(() ->
-                            WriteCommandAction.runWriteCommandAction(project, () ->
-                                editor.getDocument().setText(result.getContent()))));
+                            application.runWriteAction(() ->
+                                    WriteCommandAction.runWriteCommandAction(project, () ->
+                                            editor.getDocument().setText(result.getContent()))));
                 } else {
                     DevPilotNotification.warn(result.getContent());
                 }
@@ -92,9 +91,9 @@ public class GenerateGitCommitMessageAction extends AnAction {
 
         var includedChanges = ((CommitDialogChangesBrowser) changesBrowserBase).getIncludedChanges();
         return includedChanges.stream()
-            .filter(item -> item.getVirtualFile() != null)
-            .map(item -> item.getVirtualFile().getPath())
-            .collect(toList());
+                .filter(item -> item.getVirtualFile() != null)
+                .map(item -> item.getVirtualFile().getPath())
+                .collect(toList());
     }
 
     private Process createGitDiffProcess(String projectPath, List<String> filePaths) throws IOException {

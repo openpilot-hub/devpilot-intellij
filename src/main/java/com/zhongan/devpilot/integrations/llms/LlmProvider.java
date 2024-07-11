@@ -1,7 +1,6 @@
 package com.zhongan.devpilot.integrations.llms;
 
 import com.intellij.openapi.project.Project;
-import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
@@ -124,18 +123,18 @@ public interface LlmProvider {
                     return;
                 }
                 if (response != null && response.code() == 400) {
-                   if (response.body() != null) {
-                       String responseBody = null;
-                       try {
-                           responseBody = response.body().string();
-                       } catch (IOException e) {
+                    if (response.body() != null) {
+                        String responseBody = null;
+                        try {
+                            responseBody = response.body().string();
+                        } catch (IOException e) {
 
-                       }
-                       if ("context length is too long".equals(responseBody)) {
-                           handleContextTooLong(service);
-                           return;
-                       }
-                   }
+                        }
+                        if ("context length is too long".equals(responseBody)) {
+                            handleContextTooLong(service);
+                            return;
+                        }
+                    }
                 }
 
                 if (t != null) {

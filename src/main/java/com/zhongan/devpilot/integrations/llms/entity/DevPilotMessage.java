@@ -2,18 +2,15 @@ package com.zhongan.devpilot.integrations.llms.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import java.util.List;
 import java.util.Map;
 
 public class DevPilotMessage {
-
 
     @JsonIgnore
     private String id;
 
     // user, assistant, system
     private String role;
-
 
     /**
      * 提示词类型
@@ -23,7 +20,6 @@ public class DevPilotMessage {
      * ......
      */
     private String commandType;
-
 
     /**
      *  提示词元数据
@@ -38,8 +34,6 @@ public class DevPilotMessage {
      * 用户输入聊天对话信息
      */
     private String content;
-
-
 
     public String getId() {
         return id;

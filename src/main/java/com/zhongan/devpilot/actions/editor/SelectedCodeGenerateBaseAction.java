@@ -1,9 +1,5 @@
 package com.zhongan.devpilot.actions.editor;
 
-import java.util.Map;
-import java.util.UUID;
-import java.util.function.Consumer;
-
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.editor.Editor;
@@ -20,6 +16,11 @@ import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+
+import java.util.Map;
+import java.util.UUID;
+import java.util.function.Consumer;
+
 import org.jetbrains.annotations.NotNull;
 
 import static com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil.validateResult;

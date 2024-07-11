@@ -24,7 +24,6 @@ public enum EditorActionEnum {
 
     private final String userMessage;
 
-
     EditorActionEnum(String label, String userMessage) {
         this.label = label;
         this.userMessage = userMessage;
