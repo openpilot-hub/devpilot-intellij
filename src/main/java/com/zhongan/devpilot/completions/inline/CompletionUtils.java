@@ -45,8 +45,9 @@ public class CompletionUtils {
     public static VerifyResult ignoreTrigger(String newText, String currentLineText, Language language) {
         boolean isPreComment = CommentUtil.containsComment(StringUtils.trim(currentLineText), language);
 
-        // only contains empty and tab
+        // code end with "{"
         boolean endWithBrace = StringUtils.endsWith(StringUtils.trim(currentLineText), "{");
+        // only contains empty and tab
         boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
         boolean currentLineEmpty = StringUtils.isEmpty(StringUtils.trim(currentLineText));
         if (emptyAndTabChar && currentLineEmpty) {
