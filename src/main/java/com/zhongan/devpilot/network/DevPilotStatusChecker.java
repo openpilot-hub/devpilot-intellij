@@ -15,6 +15,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import okhttp3.OkHttpClient;
@@ -42,6 +43,9 @@ public class DevPilotStatusChecker implements Runnable {
 
     private boolean isNetWorkAvailable() {
         String url = getCheckUrl();
+        if (StringUtils.isBlank(url)) {
+            return false;
+        }
         OkHttpClient client = OkhttpUtils.getClient();
         Request request = new Request.Builder().url(url).build();
         try {
