@@ -2,8 +2,10 @@ package com.zhongan.devpilot.network;
 
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
+import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.AvailabilityCheck;
+import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
 import com.zhongan.devpilot.util.LoginUtils;
@@ -29,17 +31,17 @@ public class DevPilotStatusChecker implements Runnable {
     }
 
     private void checkAndNotify() {
-        String modelBaseHost = AIGatewaySettingsState.getInstance().getModelBaseHost(null);
-        if (!isUrlReachable(modelBaseHost)) {
-            DevPilotNotification.netWorkDownNotification(project);
-        } else if (!LoginUtils.isLogin()) {
+        if (!LoginUtils.isLogin()) {
             DevPilotNotification.notLoginNotification(project);
+        } else if (!isNetWorkAvailable()) {
+            DevPilotNotification.netWorkDownNotification(project);
         } else {
             DevPilotStatusBarBaseWidget.update(project, LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
         }
     }
 
-    private boolean isUrlReachable(String url) {
+    private boolean isNetWorkAvailable() {
+        String url = getCheckUrl();
         OkHttpClient client = OkhttpUtils.getClient();
         Request request = new Request.Builder().url(url).build();
         try {
@@ -47,6 +49,20 @@ public class DevPilotStatusChecker implements Runnable {
             return true;
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    private String getCheckUrl() {
+        var setting = DevPilotLlmSettingsState.getInstance();
+        var loginType = LoginTypeEnum.getLoginTypeEnum(setting.getLoginType());
+        switch (loginType) {
+            case WX:
+                return "https://devpilot.zhongan.com";
+            case ZA:
+            case ZA_TI:
+                return AIGatewaySettingsState.getInstance().getModelBaseHost(null);
+            default:
+                return "";
         }
     }
 
