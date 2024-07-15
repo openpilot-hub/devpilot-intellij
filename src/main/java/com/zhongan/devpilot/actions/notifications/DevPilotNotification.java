@@ -111,7 +111,7 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
-    public static void netWorkDownNotification(Project project) {
+    public static void networkDownNotification(Project project) {
         var notification = new Notification(
                 "DevPilot Notification Group",
                 DevPilotMessageBundle.get("notification.group.devpilot"),

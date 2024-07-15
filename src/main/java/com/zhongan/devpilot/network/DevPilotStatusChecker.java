@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
+import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_HOST;
+
 public class DevPilotStatusChecker implements Runnable {
 
     private final Project project;
@@ -35,7 +37,7 @@ public class DevPilotStatusChecker implements Runnable {
         if (!LoginUtils.isLogin()) {
             DevPilotNotification.notLoginNotification(project);
         } else if (!isNetWorkAvailable()) {
-            DevPilotNotification.netWorkDownNotification(project);
+            DevPilotNotification.networkDownNotification(project);
         } else {
             DevPilotStatusBarBaseWidget.update(project, LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
         }
@@ -61,7 +63,7 @@ public class DevPilotStatusChecker implements Runnable {
         var loginType = LoginTypeEnum.getLoginTypeEnum(setting.getLoginType());
         switch (loginType) {
             case WX:
-                return "https://devpilot.zhongan.com";
+                return TRIAL_DEFAULT_HOST;
             case ZA:
             case ZA_TI:
                 return AIGatewaySettingsState.getInstance().getModelBaseHost(null);
