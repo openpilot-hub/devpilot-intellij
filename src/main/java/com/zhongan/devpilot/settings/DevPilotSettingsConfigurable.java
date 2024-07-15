@@ -6,6 +6,7 @@ import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
 import com.zhongan.devpilot.enums.LoginTypeEnum;
+import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -42,10 +43,12 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var languageSettings = LanguageSettingsState.getInstance();
         var languageIndex = settingsComponent.getLanguageIndex();
         var completionEnable = CompletionSettingsState.getInstance().getEnable();
+        Boolean enable = AvailabilityCheck.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !languageIndex.equals(languageSettings.getLanguageIndex())
-                || !settingsComponent.getCompletionEnabled() == (completionEnable);
+                || !settingsComponent.getCompletionEnabled() == (completionEnable)
+                || !settingsComponent.getStatusCheckEnabled() == (enable);
     }
 
     @Override
@@ -67,7 +70,10 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
-        
+
+        AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
+        availabilityCheck.setEnable(settingsComponent.getStatusCheckEnabled());
+
         checkCodeCompletionConfig(LoginTypeEnum.getLoginTypeEnum(settings.getLoginType()));
     }
 
