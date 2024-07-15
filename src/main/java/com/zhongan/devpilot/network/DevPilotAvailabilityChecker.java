@@ -23,13 +23,13 @@ import okhttp3.Request;
 
 import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_HOST;
 
-public class DevPilotStatusChecker implements Runnable {
+public class DevPilotAvailabilityChecker implements Runnable {
 
     private final Project project;
 
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-    public DevPilotStatusChecker(@NotNull Project project) {
+    public DevPilotAvailabilityChecker(@NotNull Project project) {
         this.project = project;
     }
 
