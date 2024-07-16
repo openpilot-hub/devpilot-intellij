@@ -102,6 +102,7 @@
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CompletionSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AvailabilityCheck"/>
         <actionPromoter implementation="com.zhongan.devpilot.completions.inline.InlineActionsPromoter"/>
         <toolWindow id="DevPilot" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" anchor="right" doNotActivateOnStart="true" factoryClass="com.zhongan.devpilot.gui.toolwindows.DevPilotChatToolWindowFactory"/>
         <projectService id="DevPilotChatToolWindowService" serviceImplementation="com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService"/>

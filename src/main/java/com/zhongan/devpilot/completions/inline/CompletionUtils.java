@@ -1,7 +1,10 @@
 package com.zhongan.devpilot.completions.inline;
 
+import com.intellij.lang.Language;
+import com.intellij.lang.LanguageUtil;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.TextRange;
 import com.zhongan.devpilot.util.CommentUtil;
 
@@ -38,10 +41,12 @@ public class CompletionUtils {
         return newText.trim().length() <= 1;
     }
 
-    // 代码-单行仅空字符或者仅换行忽略请求，注释-单行除换行全部忽略请求
-    public static VerifyResult ignoreTrigger(String newText, String currentLineText) {
-        boolean isPreComment = CommentUtil.containsComment(currentLineText);
+    // Limit trigger condition, avoid too much unnecessary request
+    public static VerifyResult ignoreTrigger(String newText, String currentLineText, Language language) {
+        boolean isPreComment = CommentUtil.containsComment(StringUtils.trim(currentLineText), language);
 
+        // code end with "{"
+        boolean endWithBrace = StringUtils.endsWith(StringUtils.trim(currentLineText), "{");
         // only contains empty and tab
         boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
         boolean currentLineEmpty = StringUtils.isEmpty(StringUtils.trim(currentLineText));
@@ -50,12 +55,13 @@ public class CompletionUtils {
         }
 
         boolean newlineChar = StringUtils.startsWith(newText, "\n");
-        if (newlineChar && isPreComment) {
-            return VerifyResult.createComment(false);
-        }
 
-        if (newlineChar || isPreComment) {
-            return VerifyResult.create(true);
+        if (newlineChar) {
+            if (endWithBrace || isPreComment) {
+                return VerifyResult.createComment(false);
+            } else {
+                return VerifyResult.create(true);
+            }
         }
 
         return VerifyResult.create(false);
@@ -68,7 +74,8 @@ public class CompletionUtils {
         String currentLineText = currentLine < 0 ? null : document.getText(
                 new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
 
-        VerifyResult result = ignoreTrigger(addedText, currentLineText);
+        var language = LanguageUtil.getFileLanguage(FileDocumentManager.getInstance().getFile(document));
+        VerifyResult result = ignoreTrigger(addedText, currentLineText, language);
 
         boolean valid = isValidMidlinePosition(document, newOffset) &&
                 isValidNonEmptyChange(addedText.length(), addedText) &&
