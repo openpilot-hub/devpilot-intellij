@@ -5,18 +5,18 @@ import java.util.List;
 
 public class DevPilotChatCompletionRequest {
 
-    String model;
+    String version = "V1";
+
+    boolean stream = true;
 
     List<DevPilotMessage> messages = new ArrayList<>();
 
-    boolean stream = Boolean.FALSE;
-
-    public String getModel() {
-        return model;
+    public boolean getStream() {
+        return stream;
     }
 
-    public void setModel(String model) {
-        this.model = model;
+    public void setStream(boolean stream) {
+        this.stream = stream;
     }
 
     public List<DevPilotMessage> getMessages() {
@@ -27,12 +27,12 @@ public class DevPilotChatCompletionRequest {
         this.messages = messages;
     }
 
-    public boolean isStream() {
-        return stream;
+    public String getVersion() {
+        return version;
     }
 
-    public void setStream(boolean stream) {
-        this.stream = stream;
+    public void setVersion(String version) {
+        this.version = version;
     }
 
 }

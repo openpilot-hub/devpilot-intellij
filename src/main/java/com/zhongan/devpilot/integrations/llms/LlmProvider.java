@@ -7,10 +7,12 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRespo
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
+import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
+import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -45,6 +47,13 @@ public interface LlmProvider {
         service.addMessage(assistantMessage);
     }
 
+    default void handleContextTooLong(DevPilotChatToolWindowService service) {
+        var content = DevPilotMessageBundle.get("devpilot.notification.input.tooLong");
+        var assistantMessage = MessageModel.buildInfoMessage(content);
+        service.callWebView(assistantMessage);
+        service.addMessage(assistantMessage);
+    }
+
     default EventSource buildEventSource(Request request,
                                          DevPilotChatToolWindowService service, Consumer<String> callback) {
         var time = System.currentTimeMillis();
@@ -64,7 +73,7 @@ public interface LlmProvider {
                     interruptSend();
                     return;
                 }
-                
+
                 boolean streaming = Boolean.TRUE;
 
                 if (null != response.getRag()) {
@@ -112,6 +121,20 @@ public interface LlmProvider {
                 if (response != null && response.code() == 401) {
                     handleNoAuth(service);
                     return;
+                }
+                if (response != null && response.code() == 400) {
+                    if (response.body() != null) {
+                        String responseBody = null;
+                        try {
+                            responseBody = response.body().string();
+                        } catch (IOException e) {
+
+                        }
+                        if ("context length is too long".equals(responseBody)) {
+                            handleContextTooLong(service);
+                            return;
+                        }
+                    }
                 }
 
                 if (t != null) {

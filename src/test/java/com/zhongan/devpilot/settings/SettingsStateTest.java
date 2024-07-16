@@ -39,11 +39,4 @@ public class SettingsStateTest extends BasePlatformTestCase {
         assertEquals(ModelServiceEnum.OPENAI.getName(), settings.getSelectedModel());
     }
 
-    public void testEditorActionConfigurationState() {
-        var settings = EditorActionConfigurationState.getInstance();
-
-        assertEquals(EditorActionEnum.GENERATE_TESTS.getPrompt(), settings.getDefaultActions().get("devpilot.action.generate.tests"));
-        assertEquals(6, settings.getDefaultActions().size());
-    }
-
 }

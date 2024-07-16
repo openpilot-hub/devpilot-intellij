@@ -24,15 +24,11 @@ import com.intellij.util.ObjectUtils;
 import com.intellij.vcs.commit.AbstractCommitWorkflowHandler;
 import com.zhongan.devpilot.DevPilotIcons;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
-import com.zhongan.devpilot.constant.DefaultConst;
-import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
-import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.MessageUtil;
 
 import java.io.StringWriter;
@@ -43,7 +39,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 import git4idea.repo.GitRepository;
@@ -83,11 +79,11 @@ public class GenerateGitCommitMessageAction extends AnAction {
             var editor = commitMessage != null ? commitMessage.getEditorField().getEditor() : null;
             ApplicationManager.getApplication().invokeLater(() ->
                     ApplicationManager.getApplication().runWriteAction(() ->
-                        WriteCommandAction.runWriteCommandAction(project, () -> {
-                            if (editor != null) {
-                                editor.getDocument().setText(" ");
-                            }
-                        })));
+                            WriteCommandAction.runWriteCommandAction(project, () -> {
+                                if (editor != null) {
+                                    editor.getDocument().setText(" ");
+                                }
+                            })));
             generateCommitMessage(project, diff, editor);
         } catch (Exception ex) {
             DevPilotNotification.warn("Exception occurred while generating commit message");
@@ -95,21 +91,13 @@ public class GenerateGitCommitMessageAction extends AnAction {
     }
 
     private void generateCommitMessage(Project project, String diff, Editor editor) {
-        if (DocumentUtil.experienceEstimatedTokens(diff) + DocumentUtil.experienceEstimatedTokens(PromptConst.GENERATE_COMMIT) > DefaultConst.GPT_35_TOKEN_MAX_LENGTH) {
-            DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.changesview.tokens.estimation.overflow"));
-        }
         new Task.Backgroundable(project, DevPilotMessageBundle.get("devpilot.commit.tip"), true) {
             @Override
             public void run(@NotNull ProgressIndicator progressIndicator) {
                 if (editor != null) {
                     ((EditorEx) editor).setCaretVisible(false);
-
-                    String prompt = constructPrompt(PromptConst.GENERATE_COMMIT);
-                    String diffPrompt = PromptConst.DIFF_PREVIEW.replace("{diff}", diff);
-                    DevPilotMessage userMessage = MessageUtil.createUserMessage(diffPrompt, "-1");
                     DevPilotChatCompletionRequest devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-                    devPilotChatCompletionRequest.getMessages().add(MessageUtil.createSystemMessage(prompt));
-                    devPilotChatCompletionRequest.getMessages().add(userMessage);
+                    devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "GENERATE_COMMIT", Map.of("locale", getLocale(), "diff", diff)));
                     devPilotChatCompletionRequest.setStream(Boolean.FALSE);
                     var llmProvider = new LlmProviderFactory().getLlmProvider(project);
                     DevPilotChatCompletionResponse result = llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
@@ -188,9 +176,10 @@ public class GenerateGitCommitMessageAction extends AnAction {
         return result.toString();
     }
 
-    public String constructPrompt(String promptContent) {
+    public static String getLocale() {
         Integer languageIndex = LanguageSettingsState.getInstance().getLanguageIndex();
         Locale locale = languageIndex == 0 ? Locale.ENGLISH : Locale.SIMPLIFIED_CHINESE;
-        return promptContent.replace("{locale}", locale.getDisplayLanguage());
+        return locale.getDisplayLanguage();
     }
+
 }

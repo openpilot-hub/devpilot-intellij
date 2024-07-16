@@ -6,13 +6,8 @@ import com.zhongan.devpilot.util.DevPilotMessageBundle;
 public class GenerateMethodCommentAction extends SelectedCodeGenerateBaseAction {
 
     @Override
-    protected String getPrompt() {
-        return EditorActionEnum.GENERATE_METHOD_COMMENTS.getPrompt();
-    }
-
-    @Override
     protected EditorActionEnum getEditorActionEnum() {
-        return EditorActionEnum.GENERATE_METHOD_COMMENTS;
+        return EditorActionEnum.COMMENT_METHOD;
     }
 
     @Override
