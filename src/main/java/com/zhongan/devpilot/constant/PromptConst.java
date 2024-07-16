@@ -12,8 +12,10 @@ public class PromptConst {
 
     public static final String ANSWER_IN_CHINESE = "\n\n请用中文回答";
 
-    public static final String GENERATE_COMMIT = "Summarize the git diff with a concise and descriptive commit message. Adopt the imperative mood, present tense, active voice, and include relevant verbs. Remember that your entire response will be directly used as the git commit message.";
-    
+    public static final String GENERATE_COMMIT = "Write a clean and comprehensive commit message that accurately summarizes the changes made in the given `git diff` output, following the best practices and conventional commit convention. Remember that your entire response will be directly used as the git commit message. The response should be in the language {locale}.";
+
+    public static final String DIFF_PREVIEW = "This is the `git diff`:\n" + "{diff}";
+
     public final static String MOCK_WEB_MVC = "please use MockMvc to mock web requests, ";
 
 }
