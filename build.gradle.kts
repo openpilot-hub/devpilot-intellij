@@ -28,6 +28,10 @@ dependencies {
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
     implementation("org.apache.commons:commons-text:1.10.0")
     implementation("com.knuddels:jtokkit:1.0.0")
+    implementation("io.github.bonede:tree-sitter:0.22.6")
+    implementation("io.github.bonede:tree-sitter-java:0.21.0a")
+    implementation("io.github.bonede:tree-sitter-python:0.21.0a")
+    implementation("io.github.bonede:tree-sitter-go:0.21.0a")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
     testImplementation("org.mockito:mockito-core:5.7.0")
 }
