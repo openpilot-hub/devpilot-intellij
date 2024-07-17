@@ -128,21 +128,22 @@ public final class TrialServiceProvider implements LlmProvider {
         final Document[] document = new Document[1];
         final Language[] language = new Language[1];
         final VirtualFile[] virtualFile = new VirtualFile[1];
+        final String[] relativePath = new String[1];
 
         ApplicationManager.getApplication().runReadAction(() -> {
             document[0] = editor.getDocument();
             language[0] = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(document[0]).getLanguage();
             virtualFile[0] = FileDocumentManager.getInstance().getFile(document[0]);
+            relativePath[0] = getRelativeFilePath(editor.getProject(), virtualFile[0]);
         });
 
         String text = document[0].getText();
-        String relativePath = getRelativeFilePath(editor.getProject(), virtualFile[0]);
 
         Map<String, String> map = new HashMap<>();
         map.put("document", text);
         map.put("position", String.valueOf(offset));
         map.put("language", language[0].getID());
-        map.put("filePath", relativePath);
+        map.put("filePath", relativePath[0]);
         map.put("completionType", instructCompletionRequest.getCompletionType());
         ObjectMapper objectMapper = new ObjectMapper();
 
