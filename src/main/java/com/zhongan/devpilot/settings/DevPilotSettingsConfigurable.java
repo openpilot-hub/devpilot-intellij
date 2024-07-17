@@ -5,7 +5,6 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
-import com.zhongan.devpilot.enums.LoginTypeEnum;
 import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
@@ -73,19 +72,9 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
         availabilityCheck.setEnable(settingsComponent.getStatusCheckEnabled());
-
-        checkCodeCompletionConfig(LoginTypeEnum.getLoginTypeEnum(settings.getLoginType()));
     }
 
     @Override
     public void dispose() {
     }
-
-    private void checkCodeCompletionConfig(LoginTypeEnum loginType) {
-        if (!(LoginTypeEnum.ZA.equals(loginType) || LoginTypeEnum.ZA_TI.equals(loginType))
-                && CompletionSettingsState.getInstance().getEnable()) {
-            CompletionSettingsState.getInstance().setEnable(false);
-        }
-    }
-
 }
