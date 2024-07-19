@@ -29,7 +29,7 @@ public class CommentUtil {
     }
 
     public static boolean containsComment(String text, Language language) {
-        if (text == null) return false;
+        if (text == null || language == null) return false;
         return isMultiLineComment(text, language) || isSingleLineComment(text, language);
     }
 
