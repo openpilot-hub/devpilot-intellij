@@ -142,7 +142,7 @@ public interface LlmProvider {
                         if ("context length is too long".equals(responseBody)) {
                             handleContextTooLong(service);
                             return;
-                        } else if ("plugin version too low".equals(responseBody)) {
+                        } else if ("plugin version is too low".equals(responseBody)) {
                             handlePluginVersionTooLow(service);
                             return;
                         }
