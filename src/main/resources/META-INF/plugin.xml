@@ -75,6 +75,7 @@
          Read more: https://plugins.jetbrains.com/docs/intellij/plugin-compatibility.html -->
     <depends>com.intellij.modules.platform</depends>
     <depends>Git4Idea</depends>
+    <depends>org.jetbrains.idea.maven</depends>
     <depends optional="true" config-file="plugin-withJava.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="plugin-withPython.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="plugin-withGolang.xml">com.intellij.modules.go-capable</depends>
