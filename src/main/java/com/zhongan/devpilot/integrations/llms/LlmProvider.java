@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.integrations.llms;
 
 import com.intellij.openapi.project.Project;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
@@ -52,6 +53,14 @@ public interface LlmProvider {
         var assistantMessage = MessageModel.buildInfoMessage(content);
         service.callWebView(assistantMessage);
         service.addMessage(assistantMessage);
+    }
+
+    default void handlePluginVersionTooLow(DevPilotChatToolWindowService service) {
+        var content = DevPilotMessageBundle.get("devpilot.notification.version.message");
+        var assistantMessage = MessageModel.buildInfoMessage(content);
+        service.callWebView(assistantMessage);
+        service.addMessage(assistantMessage);
+        DevPilotNotification.upgradePluginNotification(service.getProject());
     }
 
     default EventSource buildEventSource(Request request,
@@ -132,6 +141,9 @@ public interface LlmProvider {
                         }
                         if ("context length is too long".equals(responseBody)) {
                             handleContextTooLong(service);
+                            return;
+                        } else if ("plugin version too low".equals(responseBody)) {
+                            handlePluginVersionTooLow(service);
                             return;
                         }
                     }

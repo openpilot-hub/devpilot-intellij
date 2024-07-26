@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.actions.notifications;
 
 import com.intellij.ide.BrowserUtil;
+import com.intellij.ide.plugins.PluginManagerConfigurable;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
@@ -9,6 +10,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.options.ShowSettingsUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.zhongan.devpilot.settings.DevPilotSettingsConfigurable;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
@@ -138,6 +140,21 @@ public class DevPilotNotification {
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
 
         }));
+        Notifications.Bus.notify(notification);
+    }
+
+    public static void upgradePluginNotification(Project project) {
+        var notification = new Notification(
+                "DevPilot Notification Group",
+                DevPilotMessageBundle.get("notification.group.devpilot"),
+                DevPilotMessageBundle.get("devpilot.notification.version.message"),
+                NotificationType.INFORMATION);
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.upgrade.message"),
+                () -> ShowSettingsUtil.getInstance().showSettingsDialog(ProjectUtil.currentOrDefaultProject(project), PluginManagerConfigurable.class)));
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
+
+        }));
+
         Notifications.Bus.notify(notification);
     }
 
