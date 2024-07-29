@@ -28,7 +28,7 @@ import static org.jetbrains.idea.maven.model.MavenArtifactState.CONFLICT;
 import static org.jetbrains.idea.maven.model.MavenArtifactState.DUPLICATE;
 import static org.jetbrains.idea.maven.model.MavenArtifactState.EXCLUDED;
 
-public class UtFrameUtil {
+public class UtFrameworkUtil {
 
     private static final String POWER_MOCK_GROUP_ID = "org.powermock";
 
@@ -38,7 +38,7 @@ public class UtFrameUtil {
 
     private static final String JUNIT4_GROUP_ID = "junit";
 
-    private UtFrameUtil() {
+    private UtFrameworkUtil() {
     }
 
     public static UtFrameTypeEnum getUTFrameWork(Project project, Editor editor) {

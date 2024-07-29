@@ -15,6 +15,7 @@ import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
+import com.zhongan.devpilot.enums.UtFrameTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState;
@@ -25,6 +26,7 @@ import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.PerformanceCheckUtils;
 import com.zhongan.devpilot.util.PsiFileUtil;
+import com.zhongan.devpilot.util.UtFrameworkUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -105,8 +107,11 @@ public class PopupMenuEditorActionGroupUtil {
                                             data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
                                         }
                                         data.put(LANGUAGE, language.getLanguageName());
-                                        data.put(TEST_FRAMEWORK, language.getDefaultTestFramework());
-                                        data.put(MOCK_FRAMEWORK, language.getDefaultMockFramework());
+                                        if ("java".equalsIgnoreCase(language.getLanguageName())) {
+                                            UtFrameTypeEnum utFrameWork = UtFrameworkUtil.getUTFrameWork(project, editor);
+                                            data.put(TEST_FRAMEWORK, utFrameWork.getUtFrameType());
+                                            data.put(MOCK_FRAMEWORK, utFrameWork.getMockFrameType());
+                                        }
                                     });
                         }
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
