@@ -1,4 +1,4 @@
-package com.zhongan.devpilot.util;
+package com.zhongan.devpilot.provider.ut.java;
 
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
@@ -28,7 +28,7 @@ import static org.jetbrains.idea.maven.model.MavenArtifactState.CONFLICT;
 import static org.jetbrains.idea.maven.model.MavenArtifactState.DUPLICATE;
 import static org.jetbrains.idea.maven.model.MavenArtifactState.EXCLUDED;
 
-public class UtFrameworkUtil {
+public class JavaUtFrameworkProvider {
 
     private static final String POWER_MOCK_GROUP_ID = "org.powermock";
 
@@ -38,7 +38,7 @@ public class UtFrameworkUtil {
 
     private static final String JUNIT4_GROUP_ID = "junit";
 
-    private UtFrameworkUtil() {
+    private JavaUtFrameworkProvider() {
     }
 
     public static UtFrameTypeEnum getUTFrameWork(Project project, Editor editor) {

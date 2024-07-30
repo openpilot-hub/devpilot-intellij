@@ -18,6 +18,7 @@ import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.enums.UtFrameTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
+import com.zhongan.devpilot.provider.ut.java.JavaUtFrameworkProvider;
 import com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -26,7 +27,6 @@ import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.PerformanceCheckUtils;
 import com.zhongan.devpilot.util.PsiFileUtil;
-import com.zhongan.devpilot.util.UtFrameworkUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -108,7 +108,7 @@ public class PopupMenuEditorActionGroupUtil {
                                         }
                                         data.put(LANGUAGE, language.getLanguageName());
                                         if ("java".equalsIgnoreCase(language.getLanguageName())) {
-                                            UtFrameTypeEnum utFrameWork = UtFrameworkUtil.getUTFrameWork(project, editor);
+                                            UtFrameTypeEnum utFrameWork = JavaUtFrameworkProvider.getUTFrameWork(project, editor);
                                             data.put(TEST_FRAMEWORK, utFrameWork.getUtFrameType());
                                             data.put(MOCK_FRAMEWORK, utFrameWork.getMockFrameType());
                                         }
