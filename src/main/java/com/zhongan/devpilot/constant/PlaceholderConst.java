@@ -14,4 +14,8 @@ public class PlaceholderConst {
 
     public final static String ADDITIONAL_MOCK_PROMPT = "additionalMockPrompt";
 
+    public final static String RELATED_CLASS = "relatedClass";
+
+    public final static String CLASS_FULL_NAME = "classFullName";
+
 }
