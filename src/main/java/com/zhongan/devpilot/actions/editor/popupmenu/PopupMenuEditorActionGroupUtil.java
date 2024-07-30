@@ -115,21 +115,21 @@ public class PopupMenuEditorActionGroupUtil {
                                             UtFrameTypeEnum utFrameWork = JavaUtFrameworkProvider.getUTFrameWork(project, editor);
                                             data.put(TEST_FRAMEWORK, utFrameWork.getUtFrameType());
                                             data.put(MOCK_FRAMEWORK, utFrameWork.getMockFrameType());
+
+                                            if (psiElement != null) {
+                                                var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
+                                                var fullClassName = PsiElementUtils.getFullClassName(psiElement);
+
+                                                if (relatedClass != null) {
+                                                    data.put(RELATED_CLASS, relatedClass);
+                                                }
+
+                                                if (fullClassName != null) {
+                                                    data.put(CLASS_FULL_NAME, fullClassName);
+                                                }
+                                            }
                                         }
                                     });
-
-                            if (psiElement != null) {
-                                var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
-                                var fullClassName = PsiElementUtils.getFullClassName(psiElement);
-
-                                if (relatedClass != null) {
-                                    data.put(RELATED_CLASS, relatedClass);
-                                }
-
-                                if (fullClassName != null) {
-                                    data.put(CLASS_FULL_NAME, fullClassName);
-                                }
-                            }
                         }
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
                                 && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
