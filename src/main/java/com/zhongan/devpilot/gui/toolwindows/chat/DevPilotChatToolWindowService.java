@@ -89,10 +89,6 @@ public final class DevPilotChatToolWindowService {
         addMessage(messageModel);
         callWebView(MessageModel.buildLoadingMessage());
 
-        if (EditorActionEnum.getEnumByLabel(msgType) == EditorActionEnum.GENERATE_TESTS) {
-            devPilotChatCompletionRequest.setVersion("V2");
-        }
-
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
         var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback);
         if (MULTI_TURN.equals(sessionTypeEnum) &&
