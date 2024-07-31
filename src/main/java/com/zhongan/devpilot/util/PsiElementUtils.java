@@ -4,6 +4,7 @@ import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiMethod;
+import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 
 import org.jetbrains.annotations.NotNull;
@@ -38,38 +39,71 @@ public class PsiElementUtils {
     }
 
     public static String getMethodReturnTypeClass(@NotNull PsiElement element) {
+        String result = null;
+
         if (element instanceof PsiMethod) {
             var returnType = ((PsiMethod) element).getReturnType();
 
             if (returnType instanceof PsiClassReferenceType) {
-                var returnTypeClass = ((PsiClassReferenceType) returnType).resolve();
+                var referenceType = (PsiClassReferenceType) returnType;
+                var returnTypeClass = referenceType.resolve();
+                result = getGenericType(referenceType);
                 if (returnTypeClass != null && !ignoreClass(returnTypeClass)) {
-                    return returnTypeClass.getText();
+                    return result + returnTypeClass.getText();
                 }
             }
         }
 
-        return null;
+        return result;
     }
 
     public static String getMethodParameterTypeClass(@NotNull PsiElement element) {
-        StringBuilder sb = new StringBuilder();
+        var sb = new StringBuilder();
 
         if (element instanceof PsiMethod) {
             var params = ((PsiMethod) element).getParameterList().getParameters();
 
             for (JvmParameter parameter : params) {
                 if (parameter.getType() instanceof PsiClassReferenceType) {
-                    var psiClass = ((PsiClassReferenceType) parameter.getType()).resolve();
+                    var referenceType = (PsiClassReferenceType) parameter.getType();
+                    var psiClass = referenceType.resolve();
+                    var genericClass = getGenericType(referenceType);
                     if (psiClass != null && !ignoreClass(psiClass)) {
                         sb.append(psiClass.getText()).append("\n");
                     }
+                    sb.append(genericClass);
                 }
             }
         }
 
         if (sb.length() <= 0) {
             return null;
+        }
+
+        return sb.toString();
+    }
+
+    private static String getGenericType(PsiClassReferenceType referenceType) {
+        var sb = new StringBuilder();
+
+        var genericType = referenceType.resolveGenerics();
+        var typeClass = genericType.getElement();
+
+        if (typeClass == null) {
+            return "";
+        }
+
+        var psiSubstitutor = genericType.getSubstitutor();
+
+        for (PsiTypeParameter typeParameter : typeClass.getTypeParameters()) {
+            var psiType = psiSubstitutor.substitute(typeParameter);
+
+            if (psiType instanceof PsiClassReferenceType) {
+                var psiClass = ((PsiClassReferenceType) psiType).resolve();
+                if (psiClass != null && !ignoreClass(psiClass)) {
+                    sb.append(psiClass.getText()).append("\n");
+                }
+            }
         }
 
         return sb.toString();
