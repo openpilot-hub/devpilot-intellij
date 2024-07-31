@@ -5,7 +5,7 @@ import java.util.List;
 
 public class DevPilotChatCompletionRequest {
 
-    String version = "V1";
+    String version = "V240801";
 
     boolean stream = true;
 
