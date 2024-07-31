@@ -197,15 +197,15 @@ public class DevPilotChatToolWindow {
                     return new JBCefJSQuery.Response("success");
                 }
                 case "FixCode": {
-                    service.handleActions(EditorActionEnum.FIX_CODE);
+                    service.handleActions(EditorActionEnum.FIX_CODE, null);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CommentCode": {
-                    service.handleActions(EditorActionEnum.GENERATE_COMMENTS);
+                    service.handleActions(EditorActionEnum.GENERATE_COMMENTS, null);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "ExplainCode": {
-                    service.handleActions(EditorActionEnum.EXPLAIN_CODE);
+                    service.handleActions(EditorActionEnum.EXPLAIN_CODE, null);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CopyCode": {

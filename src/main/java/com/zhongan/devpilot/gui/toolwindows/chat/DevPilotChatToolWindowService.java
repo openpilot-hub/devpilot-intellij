@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
+import com.intellij.psi.PsiElement;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
@@ -201,7 +202,7 @@ public final class DevPilotChatToolWindowService {
         sendMessage(null);
     }
 
-    public void handleActions(EditorActionEnum actionEnum) {
+    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement) {
         ActionManager actionManager = ActionManager.getInstance();
         BasicEditorAction myAction = (BasicEditorAction) actionManager
                 .getAction(DevPilotMessageBundle.get(actionEnum.getLabel()));
@@ -211,7 +212,7 @@ public final class DevPilotChatToolWindowService {
                 BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
-            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText());
+            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement);
         });
     }
 

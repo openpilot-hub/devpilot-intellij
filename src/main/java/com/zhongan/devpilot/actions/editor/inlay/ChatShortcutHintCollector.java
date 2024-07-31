@@ -76,7 +76,7 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             TextRange textRange = psiElement.getTextRange();
             editor.getSelectionModel().setSelection(textRange.getStartOffset(), textRange.getEndOffset());
 
-            service.handleActions(actionEnum);
+            service.handleActions(actionEnum, psiElement);
         }));
     }
 

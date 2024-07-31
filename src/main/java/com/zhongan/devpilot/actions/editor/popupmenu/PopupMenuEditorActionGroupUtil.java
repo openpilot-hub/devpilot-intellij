@@ -10,6 +10,7 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
+import com.intellij.psi.PsiElement;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.constant.PromptConst;
@@ -26,6 +27,7 @@ import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.PerformanceCheckUtils;
+import com.zhongan.devpilot.util.PsiElementUtils;
 import com.zhongan.devpilot.util.PsiFileUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
@@ -34,7 +36,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -42,8 +43,10 @@ import javax.swing.Icon;
 
 import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
 import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
+import static com.zhongan.devpilot.constant.PlaceholderConst.CLASS_FULL_NAME;
 import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.MOCK_FRAMEWORK;
+import static com.zhongan.devpilot.constant.PlaceholderConst.RELATED_CLASS;
 import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 
@@ -69,7 +72,7 @@ public class PopupMenuEditorActionGroupUtil {
             defaultActions.forEach((label) -> {
                 var action = new BasicEditorAction(DevPilotMessageBundle.get(label), DevPilotMessageBundle.get(label), ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
-                    protected void actionPerformed(Project project, Editor editor, String selectedText) {
+                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
                         var editorActionEnum = EditorActionEnum.getEnumByLabel(label);
@@ -98,22 +101,44 @@ public class PopupMenuEditorActionGroupUtil {
                         };
                         Map<String, String> data = new HashMap<>();
                         data.put(SELECTED_CODE, selectedText);
+
+                        LanguageUtil.Language language = null;
+
+                        var file = FileDocumentManager.getInstance().getFile(editor.getDocument());
+                        if (file != null) {
+                            language = LanguageUtil.getLanguageByExtension(file.getExtension());
+                        }
+
+                        if (language != null) {
+                            data.put(LANGUAGE, language.getLanguageName());
+                        }
+
                         EditorInfo editorInfo = new EditorInfo(editor);
                         if (editorActionEnum == EditorActionEnum.GENERATE_TESTS) {
-                            Optional.ofNullable(FileDocumentManager.getInstance().getFile(editor.getDocument()))
-                                    .map(vFile -> LanguageUtil.getLanguageByExtension(vFile.getExtension()))
-                                    .ifPresent(language -> {
-                                        if (language.isJvmPlatform() && PsiFileUtil.isCaretInWebClass(project, editor)) {
-                                            data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
+                                if (language != null && language.isJvmPlatform()
+                                        && PsiFileUtil.isCaretInWebClass(project, editor)) {
+                                    data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
+                                }
+                                if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
+                                    UtFrameTypeEnum utFrameWork = JavaUtFrameworkProvider.getUTFrameWork(project, editor);
+                                    data.put(TEST_FRAMEWORK, utFrameWork.getUtFrameType());
+                                    data.put(MOCK_FRAMEWORK, utFrameWork.getMockFrameType());
+
+                                    if (psiElement != null) {
+                                        var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
+                                        var fullClassName = PsiElementUtils.getFullClassName(psiElement);
+
+                                        if (relatedClass != null) {
+                                            data.put(RELATED_CLASS, relatedClass);
                                         }
-                                        data.put(LANGUAGE, language.getLanguageName());
-                                        if ("java".equalsIgnoreCase(language.getLanguageName())) {
-                                            UtFrameTypeEnum utFrameWork = JavaUtFrameworkProvider.getUTFrameWork(project, editor);
-                                            data.put(TEST_FRAMEWORK, utFrameWork.getUtFrameType());
-                                            data.put(MOCK_FRAMEWORK, utFrameWork.getMockFrameType());
+
+                                        if (fullClassName != null) {
+                                            data.put(CLASS_FULL_NAME, fullClassName);
                                         }
-                                    });
+                                    }
+                                }
                         }
+
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
                                 && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
                             // todo 拿到用户真正希望回答的语言
