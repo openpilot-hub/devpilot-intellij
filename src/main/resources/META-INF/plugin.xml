@@ -14,6 +14,7 @@
         <ul>
           <li>Check login status and network availability</li>
           <li>Add feedback and user profile link</li>
+          <li>Add version check</li>
         </ul>
         <h2>Enhancements</h2>
         <ul>
