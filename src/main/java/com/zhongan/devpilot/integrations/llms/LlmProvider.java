@@ -55,11 +55,13 @@ public interface LlmProvider {
         service.addMessage(assistantMessage);
     }
 
-    default void handlePluginVersionTooLow(DevPilotChatToolWindowService service) {
-        var content = DevPilotMessageBundle.get("devpilot.notification.version.message");
-        var assistantMessage = MessageModel.buildInfoMessage(content);
-        service.callWebView(assistantMessage);
-        service.addMessage(assistantMessage);
+    default void handlePluginVersionTooLow(DevPilotChatToolWindowService service, boolean callWebView) {
+        if (callWebView) {
+            var content = DevPilotMessageBundle.get("devpilot.notification.version.message");
+            var assistantMessage = MessageModel.buildInfoMessage(content);
+            service.callWebView(assistantMessage);
+            service.addMessage(assistantMessage);
+        }
         DevPilotNotification.upgradePluginNotification(service.getProject());
     }
 
@@ -142,8 +144,8 @@ public interface LlmProvider {
                         if ("context length is too long".equals(responseBody)) {
                             handleContextTooLong(service);
                             return;
-                        } else if ("plugin version is too low".equals(responseBody)) {
-                            handlePluginVersionTooLow(service);
+                        } else if (isPluginVersionTooLowResp(resolveJsonBody(responseBody))) {
+                            handlePluginVersionTooLow(service, true);
                             return;
                         }
                     }
@@ -165,4 +167,34 @@ public interface LlmProvider {
             }
         });
     }
+
+    default Entity resolveJsonBody(String body) {
+        try {
+            return JsonUtils.fromJson(body, Entity.class);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    default boolean isPluginVersionTooLowResp(Entity entity) {
+        if (entity == null) {
+            return false;
+        }
+        return "plugin version is too low".equals(entity.getMessage());
+    }
+
+    class Entity {
+
+        private String message;
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+    }
+
 }

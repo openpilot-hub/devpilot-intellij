@@ -11,6 +11,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
@@ -197,6 +198,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } else if (response.code() == 401) {
             LoginUtils.logout();
             return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + LoginUtils.loginUrl() + "\">" + "sso" + "</a>");
+        } else if (isPluginVersionTooLowResp(resolveJsonBody(result))) {
+            handlePluginVersionTooLow(ProjectUtil.currentOrDefaultProject(null).getService(DevPilotChatToolWindowService.class), false);
+            return DevPilotChatCompletionResponse.warn(DevPilotMessageBundle.get("devpilot.notification.version.message"));
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                 .getError()
@@ -273,6 +277,12 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         DevPilotMessage devPilotMessage = null;
         try (response) {
             String responseBody = response.body().string();
+            if (!response.isSuccessful()) {
+                if (isPluginVersionTooLowResp(resolveJsonBody(responseBody))) {
+                    handlePluginVersionTooLow(ProjectUtil.currentOrDefaultProject(null).getService(DevPilotChatToolWindowService.class), false);
+                    return null;
+                }
+            }
             Gson gson = new Gson();
             devPilotMessage = gson.fromJson(responseBody, DevPilotMessage.class);
         } catch (IOException e) {
