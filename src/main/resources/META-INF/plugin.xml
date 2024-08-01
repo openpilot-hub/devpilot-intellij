@@ -6,9 +6,27 @@
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>DevPilot</name>
-    <version>2.4.2</version>
+    <version>2.5.0</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.5.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Check login status and network availability</li>
+          <li>Add feedback and user profile link</li>
+          <li>Add version update notification</li>
+        </ul>
+        <h2>Enhancements</h2>
+        <ul>
+          <li>Significantly improve user experience for test case, git commit message and completion</li>
+          <li>Move prompts to ai gateway</li>
+        </ul>
+        <h2>Bug fixes</h2>
+        <ul>
+          <li>Fix webview injection error and some display problem</li>
+          <li>Fix get relative path error</li>
+          <li>Fix git message error</li>
+        </ul>
         <h1>Release 2.4.2</h1>
         <h2>New Features</h2>
             <ul>
