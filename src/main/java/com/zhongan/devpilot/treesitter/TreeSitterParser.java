@@ -3,6 +3,8 @@ package com.zhongan.devpilot.treesitter;
 import com.zhongan.devpilot.util.LanguageUtil;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.treesitter.TSLanguage;
 import org.treesitter.TSParser;
@@ -13,6 +15,13 @@ import org.treesitter.TreeSitterPython;
 
 public class TreeSitterParser {
     private final TSLanguage language;
+    private final static Map<String, TSLanguage> treeSitter = new ConcurrentHashMap<>();
+
+    static {
+        treeSitter.put("java", new TreeSitterJava());
+        treeSitter.put("go", new TreeSitterGo());
+        treeSitter.put("python", new TreeSitterPython());
+    }
 
     public TreeSitterParser(TSLanguage language) {
         this.language = language;
@@ -92,19 +101,7 @@ public class TreeSitterParser {
             return new TreeSitterParser(null);
         }
 
-        TSLanguage tsLanguage = null;
-
-        switch (language.getLanguageName().toLowerCase(Locale.ROOT)) {
-            case "java":
-                tsLanguage = new TreeSitterJava();
-                break;
-            case "go":
-                tsLanguage = new TreeSitterGo();
-                break;
-            case "python":
-                tsLanguage = new TreeSitterPython();
-                break;
-        }
+        TSLanguage tsLanguage = treeSitter.get(language.getLanguageName().toLowerCase(Locale.ROOT));
 
         return new TreeSitterParser(tsLanguage);
     }
