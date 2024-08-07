@@ -2,7 +2,7 @@
     <vendor email="pilot_group@zhongan.com" url="https://www.zhongan.com">Zhongan Online</vendor>
 
     <depends>com.intellij.modules.lang</depends>
-
+    <depends>org.jetbrains.idea.maven</depends>
     <extensions defaultExtensionNs="com.intellij">
         <codeInsight.inlayProvider language="JAVA" implementationClass="com.zhongan.devpilot.actions.editor.inlay.languages.JavaChatShortcutHintProvider"/>
     </extensions>
