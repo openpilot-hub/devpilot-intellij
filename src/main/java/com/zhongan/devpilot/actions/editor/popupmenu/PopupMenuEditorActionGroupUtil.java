@@ -19,7 +19,8 @@ import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.enums.UtFrameTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
-import com.zhongan.devpilot.provider.ut.java.JavaUtFrameworkProvider;
+import com.zhongan.devpilot.provider.ut.UtFrameworkProvider;
+import com.zhongan.devpilot.provider.ut.UtFrameworkProviderFactory;
 import com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -115,15 +116,16 @@ public class PopupMenuEditorActionGroupUtil {
 
                         EditorInfo editorInfo = new EditorInfo(editor);
                         if (editorActionEnum == EditorActionEnum.GENERATE_TESTS) {
-                                if (language != null && language.isJvmPlatform()
-                                        && PsiFileUtil.isCaretInWebClass(project, editor)) {
-                                    data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
-                                }
-                                if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
-                                    UtFrameTypeEnum utFrameWork = JavaUtFrameworkProvider.getUTFrameWork(project, editor);
-                                    data.put(TEST_FRAMEWORK, utFrameWork.getUtFrameType());
-                                    data.put(MOCK_FRAMEWORK, utFrameWork.getMockFrameType());
-
+                            if (language != null && language.isJvmPlatform()
+                                    && PsiFileUtil.isCaretInWebClass(project, editor)) {
+                                data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
+                            }
+                            if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
+                                UtFrameworkProvider utFrameworkProvider = UtFrameworkProviderFactory.create("java");
+                                if (utFrameworkProvider != null) {
+                                    UtFrameTypeEnum utFramework = utFrameworkProvider.getUTFramework(project, editor);
+                                    data.put(TEST_FRAMEWORK, utFramework.getUtFrameType());
+                                    data.put(MOCK_FRAMEWORK, utFramework.getMockFrameType());
                                     if (psiElement != null) {
                                         var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
                                         var fullClassName = PsiElementUtils.getFullClassName(psiElement);
@@ -137,6 +139,7 @@ public class PopupMenuEditorActionGroupUtil {
                                         }
                                     }
                                 }
+                            }
                         }
 
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
