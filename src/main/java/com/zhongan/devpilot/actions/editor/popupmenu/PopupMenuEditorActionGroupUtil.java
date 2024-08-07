@@ -121,12 +121,12 @@ public class PopupMenuEditorActionGroupUtil {
                                 data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
                             }
                             UtFrameworkProvider utFrameworkProvider = UtFrameworkProviderFactory.create(language);
+                            if (utFrameworkProvider != null) {
+                                UtFrameTypeEnum utFramework = utFrameworkProvider.getUTFramework(project, editor);
+                                data.put(TEST_FRAMEWORK, utFramework.getUtFrameType());
+                                data.put(MOCK_FRAMEWORK, utFramework.getMockFrameType());
+                            }
                             if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
-                                if (utFrameworkProvider != null) {
-                                    UtFrameTypeEnum utFramework = utFrameworkProvider.getUTFramework(project, editor);
-                                    data.put(TEST_FRAMEWORK, utFramework.getUtFrameType());
-                                    data.put(MOCK_FRAMEWORK, utFramework.getMockFrameType());
-                                }
                                 if (psiElement != null) {
                                     var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
                                     var fullClassName = PsiElementUtils.getFullClassName(psiElement);
