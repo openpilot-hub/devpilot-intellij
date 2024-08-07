@@ -39,6 +39,12 @@ public class JavaUtFrameworkProvider implements UtFrameworkProvider {
 
     private static final String JUNIT4_GROUP_ID = "junit";
 
+    public static final JavaUtFrameworkProvider INSTANCE = new JavaUtFrameworkProvider();
+
+    private JavaUtFrameworkProvider() {
+    }
+
+    @Override
     public UtFrameTypeEnum getUTFramework(Project project, Editor editor) {
         try {
             if (project == null || project.getBasePath() == null) {

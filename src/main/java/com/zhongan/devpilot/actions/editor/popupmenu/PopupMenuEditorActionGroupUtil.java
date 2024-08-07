@@ -120,8 +120,8 @@ public class PopupMenuEditorActionGroupUtil {
                                     && PsiFileUtil.isCaretInWebClass(project, editor)) {
                                 data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
                             }
+                            UtFrameworkProvider utFrameworkProvider = UtFrameworkProviderFactory.create(language);
                             if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
-                                UtFrameworkProvider utFrameworkProvider = UtFrameworkProviderFactory.create("java");
                                 if (utFrameworkProvider != null) {
                                     UtFrameTypeEnum utFramework = utFrameworkProvider.getUTFramework(project, editor);
                                     data.put(TEST_FRAMEWORK, utFramework.getUtFrameType());
