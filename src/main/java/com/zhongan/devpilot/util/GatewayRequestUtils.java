@@ -60,10 +60,13 @@ public class GatewayRequestUtils {
                 if (devPilotMessage.getContent() != null) {
                     devPilotMessage.setContent(Base64Utils.base64Encoding(devPilotMessage.getContent()));
                 }
-                var promptData = devPilotMessage.getPromptData();
+
+                // avoid immutable map
+                var promptData = new HashMap<>(devPilotMessage.getPromptData());
                 for (Map.Entry<String, String> entry : promptData.entrySet()) {
                     entry.setValue(Base64Utils.base64Encoding(entry.getValue()));
                 }
+                devPilotMessage.setPromptData(promptData);
             }
         }
 
