@@ -126,17 +126,17 @@ public class PopupMenuEditorActionGroupUtil {
                                     UtFrameTypeEnum utFramework = utFrameworkProvider.getUTFramework(project, editor);
                                     data.put(TEST_FRAMEWORK, utFramework.getUtFrameType());
                                     data.put(MOCK_FRAMEWORK, utFramework.getMockFrameType());
-                                    if (psiElement != null) {
-                                        var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
-                                        var fullClassName = PsiElementUtils.getFullClassName(psiElement);
+                                }
+                                if (psiElement != null) {
+                                    var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
+                                    var fullClassName = PsiElementUtils.getFullClassName(psiElement);
 
-                                        if (relatedClass != null) {
-                                            data.put(RELATED_CLASS, relatedClass);
-                                        }
+                                    if (relatedClass != null) {
+                                        data.put(RELATED_CLASS, relatedClass);
+                                    }
 
-                                        if (fullClassName != null) {
-                                            data.put(CLASS_FULL_NAME, fullClassName);
-                                        }
+                                    if (fullClassName != null) {
+                                        data.put(CLASS_FULL_NAME, fullClassName);
                                     }
                                 }
                             }
