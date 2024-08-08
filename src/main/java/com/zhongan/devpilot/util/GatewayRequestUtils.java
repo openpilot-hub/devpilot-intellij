@@ -46,6 +46,7 @@ public class GatewayRequestUtils {
         map.put("language", language[0].getID());
         map.put("filePath", relativePath[0]);
         map.put("completionType", instructCompletionRequest.getCompletionType());
+        map.put("encoding", instructCompletionRequest.getEncoding());
 
         return JsonUtils.toJson(map);
     }
