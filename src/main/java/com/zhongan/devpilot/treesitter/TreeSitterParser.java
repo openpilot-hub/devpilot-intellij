@@ -15,12 +15,13 @@ import org.treesitter.TreeSitterPython;
 
 public class TreeSitterParser {
     private final TSLanguage language;
-    private final static Map<String, TSLanguage> treeSitter = new ConcurrentHashMap<>();
+    private final static Map<String, TreeSitterParser> parserMap = new ConcurrentHashMap<>();
 
     static {
-        treeSitter.put("java", new TreeSitterJava());
-        treeSitter.put("go", new TreeSitterGo());
-        treeSitter.put("python", new TreeSitterPython());
+        parserMap.put("default", new TreeSitterParser(null));
+        parserMap.put("java", new TreeSitterParser(new TreeSitterJava()));
+        parserMap.put("go", new TreeSitterParser(new TreeSitterGo()));
+        parserMap.put("python", new TreeSitterParser(new TreeSitterPython()));
     }
 
     public TreeSitterParser(TSLanguage language) {
@@ -98,11 +99,19 @@ public class TreeSitterParser {
         var language = LanguageUtil.getLanguageByExtension(extension);
 
         if (language == null) {
-            return new TreeSitterParser(null);
+            return getDefaultParser();
         }
 
-        TSLanguage tsLanguage = treeSitter.get(language.getLanguageName().toLowerCase(Locale.ROOT));
+        var parser = parserMap.get(language.getLanguageName().toLowerCase(Locale.ROOT));
 
-        return new TreeSitterParser(tsLanguage);
+        if (parser == null) {
+            return getDefaultParser();
+        }
+
+        return parser;
+    }
+
+    private static TreeSitterParser getDefaultParser() {
+        return parserMap.get("default");
     }
 }
