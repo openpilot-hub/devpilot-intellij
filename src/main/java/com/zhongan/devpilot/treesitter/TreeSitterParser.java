@@ -3,6 +3,8 @@ package com.zhongan.devpilot.treesitter;
 import com.zhongan.devpilot.util.LanguageUtil;
 
 import java.util.Locale;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.treesitter.TSLanguage;
 import org.treesitter.TSParser;
@@ -13,6 +15,15 @@ import org.treesitter.TreeSitterPython;
 
 public class TreeSitterParser {
     private final TSLanguage language;
+
+    private final static Map<String, TreeSitterParser> parserMap = new ConcurrentHashMap<>();
+
+    static {
+        parserMap.put("default", new TreeSitterParser(null));
+        parserMap.put("java", new TreeSitterParser(new TreeSitterJava()));
+        parserMap.put("go", new TreeSitterParser(new TreeSitterGo()));
+        parserMap.put("python", new TreeSitterParser(new TreeSitterPython()));
+    }
 
     public TreeSitterParser(TSLanguage language) {
         this.language = language;
@@ -89,23 +100,19 @@ public class TreeSitterParser {
         var language = LanguageUtil.getLanguageByExtension(extension);
 
         if (language == null) {
-            return new TreeSitterParser(null);
+            return getDefaultParser();
         }
 
-        TSLanguage tsLanguage = null;
+        var parser = parserMap.get(language.getLanguageName().toLowerCase(Locale.ROOT));
 
-        switch (language.getLanguageName().toLowerCase(Locale.ROOT)) {
-            case "java":
-                tsLanguage = new TreeSitterJava();
-                break;
-            case "go":
-                tsLanguage = new TreeSitterGo();
-                break;
-            case "python":
-                tsLanguage = new TreeSitterPython();
-                break;
+        if (parser == null) {
+            return getDefaultParser();
         }
 
-        return new TreeSitterParser(tsLanguage);
+        return parser;
+    }
+
+    private static TreeSitterParser getDefaultParser() {
+        return parserMap.get("default");
     }
 }
