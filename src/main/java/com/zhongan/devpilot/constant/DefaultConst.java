@@ -49,4 +49,6 @@ public class DefaultConst {
     public static final boolean AUTH_ON = true;
 
     public static final boolean TELEMETRY_ON = true;
+
+    public static final boolean REQUEST_ENCODING_ON = true;
 }

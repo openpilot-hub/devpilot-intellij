@@ -4,3 +4,4 @@
 1. AI网关：用于兼容不同的LLM模型，并提供API给插件使用 [网关仓库](https://github.com/openpilot-hub/devpilot-gateway)
 2. 权限系统：用于校验插件用户的登录和使用权限（可以通过设置`DefaultConst.AUTH_ON`为false来关闭）
 3. 指标系统：用于处理用户上报的使用数据用于分析（可以通过设置`DefaultConst.TELEMETRY_ON`为false来关闭）
+4. 请求编码：插件的请求内容会适度的编码为base64格式（可以通过设置`DefaultConst.REQUEST_ENCODING_ON`为false来关闭）

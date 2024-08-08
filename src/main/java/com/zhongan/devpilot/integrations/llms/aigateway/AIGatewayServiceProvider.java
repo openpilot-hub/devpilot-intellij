@@ -3,17 +3,10 @@ package com.zhongan.devpilot.integrations.llms.aigateway;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.intellij.lang.Language;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
@@ -27,6 +20,7 @@ import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.EditorUtils;
+import com.zhongan.devpilot.util.GatewayRequestUtils;
 import com.zhongan.devpilot.util.GitUtil;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
@@ -34,7 +28,6 @@ import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,7 +43,6 @@ import okhttp3.Response;
 import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
-import static com.zhongan.devpilot.util.VirtualFileUtil.getRelativeFilePath;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
@@ -97,7 +89,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 }
             }
             var request = requestBuilder
-                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
 
             DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
@@ -152,7 +144,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         Response response;
 
         try {
-            String requestBody = objectMapper.writeValueAsString(chatCompletionRequest);
+            String requestBody = GatewayRequestUtils.chatRequestJson(chatCompletionRequest);
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
             var request = new Request.Builder()
@@ -223,34 +215,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return null;
         }
 
-        int offset = instructCompletionRequest.getOffset();
-        Editor editor = instructCompletionRequest.getEditor();
-        final Document[] document = new Document[1];
-        final Language[] language = new Language[1];
-        final VirtualFile[] virtualFile = new VirtualFile[1];
-        final String[] relativePath = new String[1];
-
-        ApplicationManager.getApplication().runReadAction(() -> {
-            document[0] = editor.getDocument();
-            language[0] = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(document[0]).getLanguage();
-            virtualFile[0] = FileDocumentManager.getInstance().getFile(document[0]);
-            relativePath[0] = getRelativeFilePath(editor.getProject(), virtualFile[0]);
-        });
-
-        String text = document[0].getText();
-
-        Map<String, String> map = new HashMap<>();
-        map.put("document", text);
-        map.put("position", String.valueOf(offset));
-        map.put("language", language[0].getID());
-        map.put("filePath", relativePath[0]);
-        map.put("completionType", instructCompletionRequest.getCompletionType());
-        ObjectMapper objectMapper = new ObjectMapper();
-
         Response response;
-        String json;
+        String json = GatewayRequestUtils.completionRequestJson(instructCompletionRequest);
         try {
-            json = objectMapper.writeValueAsString(map);
             var request = new Request.Builder()
                 .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
                 .header("User-Agent", UserAgentUtils.buildUserAgent())

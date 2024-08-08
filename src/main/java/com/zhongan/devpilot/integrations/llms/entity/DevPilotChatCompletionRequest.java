@@ -7,6 +7,8 @@ public class DevPilotChatCompletionRequest {
 
     String version = "V240801";
 
+    String encoding = null;
+
     boolean stream = true;
 
     List<DevPilotMessage> messages = new ArrayList<>();
@@ -35,4 +37,11 @@ public class DevPilotChatCompletionRequest {
         this.version = version;
     }
 
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
+    }
 }
