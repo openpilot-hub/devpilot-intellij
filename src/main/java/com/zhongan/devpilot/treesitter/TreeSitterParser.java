@@ -15,6 +15,7 @@ import org.treesitter.TreeSitterPython;
 
 public class TreeSitterParser {
     private final TSLanguage language;
+
     private final static Map<String, TreeSitterParser> parserMap = new ConcurrentHashMap<>();
 
     static {
