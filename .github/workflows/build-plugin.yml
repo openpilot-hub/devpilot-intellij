@@ -22,6 +22,10 @@ jobs:
           java-version: '17'
           distribution: 'adopt'
 
+      - name: Set Config
+        run: |
+          echo "${{ vars.DEVPILOT_CONFIG }}" >> src/main/resources/config/local.properties
+
       - name: Build plugin
         run: ./gradlew buildPlugin
 
