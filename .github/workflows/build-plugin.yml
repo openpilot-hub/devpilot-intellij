@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    environment:
+      name: ${{ vars.DEVPILOT_ENV }}
 
     steps:
       - name: Checkout code
