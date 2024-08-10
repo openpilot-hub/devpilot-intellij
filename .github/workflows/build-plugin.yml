@@ -26,7 +26,7 @@ jobs:
 
       - name: Set Config
         run: |
-          echo `pwd` >> "$GITHUB_OUTPUT"
+          echo `pwd`
           touch src/main/resources/config/local.properties
           echo "${{ vars.DEVPILOT_CONFIG }}" >> src/main/resources/config/local.properties
 
