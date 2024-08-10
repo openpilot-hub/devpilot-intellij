@@ -12,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     environment:
-      name: ${{ vars.DEVPILOT_ENV }}
+      name: production
 
     steps:
       - name: Checkout code
