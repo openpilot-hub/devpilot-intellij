@@ -36,5 +36,5 @@ jobs:
       - name: Upload plugin artifact
         uses: actions/upload-artifact@v2
         with:
-          name: DevPilot
+          name: DevPilot-local
           path: build/distributions/DevPilot-*.zip
