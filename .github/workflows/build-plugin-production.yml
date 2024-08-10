@@ -1,4 +1,4 @@
-name: Build Plugin
+name: Build Plugin (Production)
 
 on:
   workflow_dispatch:
@@ -26,8 +26,6 @@ jobs:
 
       - name: Set Config
         run: |
-          echo `pwd`
-          echo `ls -la`
           mkdir src/main/resources/config
           touch src/main/resources/config/local.properties
           echo "${{ vars.DEVPILOT_CONFIG }}" >> src/main/resources/config/local.properties
@@ -38,5 +36,5 @@ jobs:
       - name: Upload plugin artifact
         uses: actions/upload-artifact@v2
         with:
-          name: plugin-artifact
+          name: DevPilot
           path: build/distributions/DevPilot-*.zip
