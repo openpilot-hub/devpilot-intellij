@@ -24,6 +24,8 @@ public class DevPilotInstructCompletionRequest {
 
     String completionType = "inline";
 
+    String encoding = null;
+
     public Editor getEditor() {
         return editor;
     }
@@ -94,5 +96,13 @@ public class DevPilotInstructCompletionRequest {
 
     public void setCompletionType(String completionType) {
         this.completionType = completionType;
+    }
+
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
     }
 }
