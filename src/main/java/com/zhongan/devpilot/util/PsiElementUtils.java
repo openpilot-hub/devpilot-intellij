@@ -8,12 +8,12 @@ import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+
+import org.jetbrains.annotations.NotNull;
 
 public class PsiElementUtils {
     public static String getFullClassName(@NotNull PsiElement element) {
