@@ -182,6 +182,14 @@ public class PsiElementUtils {
             return true;
         }
 
+        // ignore some log package
+        if (fullClassName.startsWith("org.slf4j")
+                || fullClassName.startsWith("org.jboss.logmanager")
+                || fullClassName.startsWith("org.apache.log4j")
+                || fullClassName.startsWith("ch.qos.logback")) {
+            return true;
+        }
+
         // todo should ignore some famous opensource dependency
 
         return false;
