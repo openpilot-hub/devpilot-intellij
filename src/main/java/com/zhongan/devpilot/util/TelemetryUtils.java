@@ -8,10 +8,14 @@ import java.io.IOException;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_CHAT_ACCEPT_PATH;
 import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_COMPLETION_ACCEPT_PATH;
@@ -112,8 +116,6 @@ public class TelemetryUtils {
     public static void sendMessage(String url, String requestJson) {
         var client = OkhttpUtils.getClient();
 
-        okhttp3.Response response = null;
-
         try {
             var request = new Request.Builder()
                     .url(url)
@@ -122,14 +124,19 @@ public class TelemetryUtils {
                     .put(RequestBody.create(requestJson, MediaType.parse("application/json")))
                     .build();
 
-            var call = client.newCall(request);
-            response = call.execute();
-        } catch (IOException e) {
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    // ignore failure
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    response.close();
+                }
+            });
+        } catch (Exception e) {
             // ignore error
-        } finally {
-            if (response != null) {
-                response.close();
-            }
         }
     }
 
