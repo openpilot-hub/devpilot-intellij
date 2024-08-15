@@ -103,7 +103,11 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
 
         CompletionUtils.VerifyResult result = CompletionUtils
                 .isValidChange(editor, document, offset, event.getOffset());
-
+        if (result.isValid()) {
+            if (!CompletionUtils.checkTriggerTime(editor)) {
+                return CompletionUtils.VerifyResult.create(true);
+            }
+        }
         return CompletionUtils.VerifyResult.create(!result.isValid(), result.getCompletionType());
     }
 

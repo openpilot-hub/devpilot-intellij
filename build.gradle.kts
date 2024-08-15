@@ -33,6 +33,7 @@ dependencies {
     implementation("io.github.bonede:tree-sitter-go:0.21.0a")
     implementation("com.knuddels:jtokkit:1.0.0")
     implementation("org.apache.maven.shared:maven-shared-utils:3.4.2")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.1.8")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
     testImplementation("org.mockito:mockito-core:5.7.0")
 }

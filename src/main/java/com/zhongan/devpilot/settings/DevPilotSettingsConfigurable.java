@@ -42,11 +42,13 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var languageSettings = LanguageSettingsState.getInstance();
         var languageIndex = settingsComponent.getLanguageIndex();
         var completionEnable = CompletionSettingsState.getInstance().getEnable();
+        var interval = CompletionSettingsState.getInstance().getInterval();
         Boolean enable = AvailabilityCheck.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !languageIndex.equals(languageSettings.getLanguageIndex())
                 || !settingsComponent.getCompletionEnabled() == (completionEnable)
+                || !settingsComponent.getAutoCompletionInterval().equals(interval)
                 || !settingsComponent.getStatusCheckEnabled() == (enable);
     }
 
@@ -69,7 +71,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
-
+        completionSettings.setInterval(settingsComponent.getAutoCompletionInterval());
         AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
         availabilityCheck.setEnable(settingsComponent.getStatusCheckEnabled());
     }
