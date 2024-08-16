@@ -68,11 +68,6 @@ public class GraphicsUtils {
     }
 
     public static Integer getTabSize(Editor editor) {
-//        if (!ApplicationManager.getApplication().isReadAccessAllowed()) {
-//            Logger.getInstance("GraphicsUtils").warn("Read access is not allowed here - returning null");
-//            failIfAlpha();
-//            return null;
-//        }
         CommonCodeStyleSettings commonCodeStyleSettings = editor.getProject() != null ? PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()) != null ? new CommonCodeStyleSettings(PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()).getLanguage()) : null : null;
 
         return commonCodeStyleSettings != null && commonCodeStyleSettings.getIndentOptions() != null ? commonCodeStyleSettings.getIndentOptions().TAB_SIZE : editor.getSettings().getTabSize(editor.getProject());
