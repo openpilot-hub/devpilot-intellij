@@ -8,6 +8,7 @@ import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.psi.xml.XmlFile;
 import com.zhongan.devpilot.enums.UtFrameTypeEnum;
+import com.zhongan.devpilot.provider.ut.UtFrameworkProvider;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -28,7 +29,7 @@ import static org.jetbrains.idea.maven.model.MavenArtifactState.CONFLICT;
 import static org.jetbrains.idea.maven.model.MavenArtifactState.DUPLICATE;
 import static org.jetbrains.idea.maven.model.MavenArtifactState.EXCLUDED;
 
-public class JavaUtFrameworkProvider {
+public class JavaUtFrameworkProvider implements UtFrameworkProvider {
 
     private static final String POWER_MOCK_GROUP_ID = "org.powermock";
 
@@ -38,10 +39,13 @@ public class JavaUtFrameworkProvider {
 
     private static final String JUNIT4_GROUP_ID = "junit";
 
+    public static final JavaUtFrameworkProvider INSTANCE = new JavaUtFrameworkProvider();
+
     private JavaUtFrameworkProvider() {
     }
 
-    public static UtFrameTypeEnum getUTFrameWork(Project project, Editor editor) {
+    @Override
+    public UtFrameTypeEnum getUTFramework(Project project, Editor editor) {
         try {
             if (project == null || project.getBasePath() == null) {
                 return JUNIT5_MOCKITO;
