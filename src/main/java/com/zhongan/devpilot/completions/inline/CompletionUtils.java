@@ -2,9 +2,9 @@ package com.zhongan.devpilot.completions.inline;
 
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageUtil;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.TextRange;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
@@ -53,7 +53,11 @@ public class CompletionUtils {
     }
 
     // Limit trigger condition, avoid too much unnecessary request
-    public static VerifyResult ignoreLogicalPositionTrigger(String newText, String currentLineText, Language language) {
+    public static VerifyResult ignoreTrigger(String newText, String currentLineText, Language language) {
+        // Check if the current line ends with ";" or "；"(Chinese semicolon is wrong input)
+        if (StringUtils.endsWith(StringUtils.trim(newText), ";") || StringUtils.endsWith(StringUtils.trim(newText), "；")) {
+            return VerifyResult.create(true);
+        }
         boolean isPreComment = CommentUtil.containsComment(StringUtils.trim(currentLineText), language);
 
         // code end with "{"
@@ -79,37 +83,11 @@ public class CompletionUtils {
         return VerifyResult.create(false);
     }
 
-    public static VerifyResult ignoreFromCurrentLineChange(String newText, String currentLineText, Language language) {
-        if (StringUtils.endsWith(StringUtils.trim(newText), ";")) {
-            return VerifyResult.create(true);
-        }
-
-        // code end with ";"
-        boolean endsWithSemicolon = StringUtils.endsWith(StringUtils.trim(currentLineText), ";");
-
-        // code end with "{"
-        boolean endWithLBrace = StringUtils.endsWith(StringUtils.trim(currentLineText), "{");
-
-        // code end with "}"
-        boolean endWithRBrace = StringUtils.endsWith(StringUtils.trim(currentLineText), "}");
-
-        boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
-
-        if (emptyAndTabChar && (endWithLBrace || endWithRBrace || endsWithSemicolon)) {
-            return VerifyResult.create(true);
-        }
-        return VerifyResult.create(false);
-    }
-
     public static VerifyResult isValidChange(Editor editor, Document document, int newOffset, int previousOffset) {
         if (newOffset < 0 || previousOffset > newOffset) return VerifyResult.create(false);
-
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
-        if (isCodeReFormatAction(editor, document, newOffset, addedText)) {
-            return VerifyResult.create(false);
-        }
 
-        if (isCopyCodeAction(editor, document, newOffset, addedText)) {
+        if (isCodeReFormatOrPastAction()) {
             return VerifyResult.create(false);
         }
 
@@ -118,18 +96,9 @@ public class CompletionUtils {
                 new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
 
         var language = LanguageUtil.getFileLanguage(FileDocumentManager.getInstance().getFile(document));
-        VerifyResult result = ignoreLogicalPositionTrigger(addedText, currentLogicalLineText, language);
+        VerifyResult result = ignoreTrigger(addedText, currentLogicalLineText, language);
         if (result.isValid()) {
             return VerifyResult.create(!result.isValid(), result.getCompletionType());
-        }
-        if (!result.isValid() && !"comment".equals(result.completionType)) {
-            int lineIndex = document.getLineNumber(newOffset);
-            TextRange lineRange = TextRange.create(document.getLineStartOffset(lineIndex), document.getLineEndOffset(lineIndex));
-            String currentLineText = document.getText(lineRange);
-            result = ignoreFromCurrentLineChange(addedText, currentLineText, language);
-            if (result.isValid()) {
-                return VerifyResult.create(!result.isValid(), result.getCompletionType());
-            }
         }
 
         boolean valid = isValidMidlinePosition(document, newOffset) &&
@@ -140,26 +109,10 @@ public class CompletionUtils {
         return VerifyResult.create(valid, result.getCompletionType());
     }
 
-    private static boolean isCodeReFormatAction(Editor editor, Document document, int newOffset, String addedText) {
-        if (!StringUtils.isEmpty(StringUtils.trim(addedText)) || StringUtils.startsWith(addedText, "\n")) {
-            return false;
-        }
-        LogicalPosition logicalPosition = editor.getCaretModel().getLogicalPosition();
-        int currentLine = logicalPosition.line;
-        int lineStartOffset = document.getLineStartOffset(currentLine);
-        int lineEndOffset = document.getLineEndOffset(currentLine);
-        return newOffset < lineStartOffset || newOffset > lineEndOffset;
-    }
-
-    private static boolean isCopyCodeAction(Editor editor, Document document, int newOffset, String addedText) {
-        if (StringUtils.isEmpty(StringUtils.trim(addedText))) {
-            return false;
-        }
-        LogicalPosition logicalPosition = editor.getCaretModel().getLogicalPosition();
-        int currentLine = logicalPosition.line;
-        int lineStartOffset = document.getLineStartOffset(currentLine);
-        int lineEndOffset = document.getLineEndOffset(currentLine);
-        return newOffset < lineStartOffset || newOffset > lineEndOffset;
+    private static boolean isCodeReFormatOrPastAction() {
+        CommandProcessor commandProcessor = CommandProcessor.getInstance();
+        String currentCommandName = commandProcessor.getCurrentCommandName();
+        return StringUtils.equals(currentCommandName, "Reformat Code") || StringUtils.equals(currentCommandName, "Paste");
     }
 
     public static boolean checkTriggerTime(@NotNull Editor editor,
