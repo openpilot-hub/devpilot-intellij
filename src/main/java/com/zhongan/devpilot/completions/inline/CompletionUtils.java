@@ -1,7 +1,5 @@
 package com.zhongan.devpilot.completions.inline;
 
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.intellij.lang.Language;
 import com.intellij.lang.LanguageUtil;
 import com.intellij.openapi.editor.Document;
@@ -15,7 +13,6 @@ import com.zhongan.devpilot.util.CommentUtil;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
@@ -27,16 +24,7 @@ import static com.zhongan.devpilot.completions.general.DependencyContainer.singl
 public class CompletionUtils {
     private static final Pattern END_OF_LINE_VALID_PATTERN = Pattern.compile("^\\s*[)}\\]\"'`]*\\s*[:{;,]?\\s*$");
 
-    private static final int CONSISTENT_WRITE_THRESHOLD = 100; // ms
-
-    private static final long TRIGGER_WRITE_THRESHOLD = CompletionSettingsState.getInstance().getInterval(); // ms
-
-    // lineNum -> timestamp
-    private static final Cache<Integer, TriggerInfo> triggerTimeCache = Caffeine.newBuilder()
-            .initialCapacity(1)
-            .maximumSize(100)
-            .expireAfterWrite(30, TimeUnit.SECONDS)
-            .build();
+    private static TriggerInfo lastTriggerInfo = new TriggerInfo();
 
     public static boolean isValidDocumentChange(Document document, int newOffset, int previousOffset) {
         if (newOffset < 0 || previousOffset > newOffset) return false;
@@ -107,7 +95,6 @@ public class CompletionUtils {
 
         boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
 
-        // 处理newText 是空， 并且当前行结尾是 { ; 的情况，这种情况不认为是有效输入， 比如格式化代码，在括号，分号所在行输入tab或者空格等情况
         if (emptyAndTabChar && (endWithLBrace || endWithRBrace || endsWithSemicolon)) {
             return VerifyResult.create(true);
         }
@@ -181,28 +168,22 @@ public class CompletionUtils {
                                            @NotNull String userInput,
                                            @NotNull CompletionAdjustment completionAdjustment,
                                            String completionType) {
-        LogicalPosition logicalPosition = editor.getCaretModel().getLogicalPosition();
-        int currentLine = logicalPosition.line;
-        TriggerInfo lastTriggerInfo = triggerTimeCache.get(currentLine, line -> new TriggerInfo());
-        long interval;
-        boolean isConsistentWrite = (interval = System.currentTimeMillis() - lastTriggerInfo.getTriggerTime()) <= CONSISTENT_WRITE_THRESHOLD;
+        boolean isConsistentWrite = System.currentTimeMillis() - lastTriggerInfo.getTriggerTime() < getTriggerInterval();
         Timer previousTimer = lastTriggerInfo.getTimer();
+        if (previousTimer != null) {
+            previousTimer.cancel();
+        }
         if (isConsistentWrite) {
-            buildTriggerInfo(currentLine, editor, offset, lastShownSuggestion, userInput, completionAdjustment, completionType);
-            if (previousTimer != null) {
-                previousTimer.cancel();
-            }
+            buildDelayTrigger(editor, offset, lastShownSuggestion, userInput, completionAdjustment, completionType);
             return false;
         } else {
-            if (interval < TRIGGER_WRITE_THRESHOLD) {
-                if (previousTimer != null) {
-                    previousTimer.cancel();
-                }
-                buildTriggerInfo(currentLine, editor, offset, lastShownSuggestion, userInput, completionAdjustment, completionType);
-                return false;
-            }
+            lastTriggerInfo.setTriggerTime(System.currentTimeMillis());
             return true;
         }
+    }
+
+    private static int getTriggerInterval() {
+        return CompletionSettingsState.getInstance().getInterval();
     }
 
     public static class TriggerInfo {
@@ -228,14 +209,13 @@ public class CompletionUtils {
         }
     }
 
-    private static void buildTriggerInfo(int currentLine, @NotNull Editor editor,
-                                  int offset,
-                                  @Nullable DevPilotCompletion lastShownSuggestion,
-                                  @NotNull String userInput,
-                                  @NotNull CompletionAdjustment completionAdjustment,
-                                  String completionType) {
-        TriggerInfo triggerInfo = new TriggerInfo();
-        triggerInfo.setTriggerTime(System.currentTimeMillis());
+    private static void buildDelayTrigger(@NotNull Editor editor,
+                                          int offset,
+                                          @Nullable DevPilotCompletion lastShownSuggestion,
+                                          @NotNull String userInput,
+                                          @NotNull CompletionAdjustment completionAdjustment,
+                                          String completionType) {
+        lastTriggerInfo.setTriggerTime(System.currentTimeMillis());
         Timer timer = new Timer("delay-trigger");
         timer.schedule(
                 new TimerTask() {
@@ -249,9 +229,8 @@ public class CompletionUtils {
                                 completionAdjustment,
                                 completionType);
                     }
-                }, TRIGGER_WRITE_THRESHOLD);
-        triggerInfo.setTimer(timer);
-        triggerTimeCache.put(currentLine, triggerInfo);
+                }, getTriggerInterval());
+        lastTriggerInfo.setTimer(timer);
     }
 
     public static class VerifyResult {
