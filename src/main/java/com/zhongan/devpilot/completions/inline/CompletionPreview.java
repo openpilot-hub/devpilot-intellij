@@ -165,8 +165,10 @@ public class CompletionPreview implements Disposable {
 
         var name = file.getName();
         var fileExtension = name.substring(name.lastIndexOf(".") + 1);
-        suffix = TreeSitterParser.getInstance(fileExtension)
-                .parse(editor.getDocument().getText(), cursorOffset, suffix);
+        if (!suffix.contains("\n")) {
+            suffix = TreeSitterParser.getInstance(fileExtension)
+                    .parse(editor.getDocument().getText(), cursorOffset, suffix);
+        }
 
         editor.getDocument().insertString(cursorOffset, suffix);
         editor.getCaretModel().moveToOffset(startOffset + suffix.length());
