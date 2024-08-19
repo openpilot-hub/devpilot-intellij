@@ -7,6 +7,6 @@ import java.util.List;
 public class JavaChatShortcutHintProvider extends ChatShortcutHintBaseProvider {
 
     public JavaChatShortcutHintProvider() {
-        super(List.of("METHOD"));
+        super(List.of("METHOD", "CLASS"));
     }
 }

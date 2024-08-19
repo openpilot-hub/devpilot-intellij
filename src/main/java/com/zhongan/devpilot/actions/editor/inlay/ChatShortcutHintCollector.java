@@ -51,22 +51,31 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
 
     @Override
     public boolean collect(@NotNull PsiElement psiElement, @NotNull Editor editor, @NotNull InlayHintsSink inlayHintsSink) {
-        if (ChatShortcutSettingState.getInstance().getEnable() &&
-                supportedElementTypes.contains(PsiUtilCore.getElementType(psiElement).toString())) {
+        var elementType = PsiUtilCore.getElementType(psiElement).toString();
 
-            inlayHintsSink.addBlockElement(getAnchorOffset(psiElement), true, true, 1000,
-                    factory.seq(factory.textSpacePlaceholder(computeInitialWhitespace(editor, psiElement), false),
-                            factory.icon(DevPilotIcons.SYSTEM_ICON_INLAY),
-                            buildClickableTextChatShortcutEntry(" " + DevPilotMessageBundle.get("devpilot.inlay.shortcut.explain")
-                                    + " | ", EditorActionEnum.EXPLAIN_CODE, psiElement),
-                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.fix")
-                                    + " | ", EditorActionEnum.FIX_CODE, psiElement),
-                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.inlineComment")
-                                    + " | ", EditorActionEnum.GENERATE_COMMENTS, psiElement),
-                            buildClickableMethodCommentsShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.methodComments") +
-                                    " | ", psiElement),
-                            buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.test"),
-                                    EditorActionEnum.GENERATE_TESTS, psiElement)));
+        if (ChatShortcutSettingState.getInstance().getEnable()) {
+
+            if ("CLASS".equals(elementType)) {
+                inlayHintsSink.addBlockElement(getAnchorOffset(psiElement), true, true, 1000,
+                        factory.seq(factory.textSpacePlaceholder(computeInitialWhitespace(editor, psiElement), false),
+                                factory.icon(DevPilotIcons.SYSTEM_ICON_INLAY),
+                                buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.test"),
+                                        EditorActionEnum.GENERATE_TESTS, psiElement)));
+            } else if (supportedElementTypes.contains(elementType)) {
+                inlayHintsSink.addBlockElement(getAnchorOffset(psiElement), true, true, 1000,
+                        factory.seq(factory.textSpacePlaceholder(computeInitialWhitespace(editor, psiElement), false),
+                                factory.icon(DevPilotIcons.SYSTEM_ICON_INLAY),
+                                buildClickableTextChatShortcutEntry(" " + DevPilotMessageBundle.get("devpilot.inlay.shortcut.explain")
+                                        + " | ", EditorActionEnum.EXPLAIN_CODE, psiElement),
+                                buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.fix")
+                                        + " | ", EditorActionEnum.FIX_CODE, psiElement),
+                                buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.inlineComment")
+                                        + " | ", EditorActionEnum.GENERATE_COMMENTS, psiElement),
+                                buildClickableMethodCommentsShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.methodComments") +
+                                        " | ", psiElement),
+                                buildClickableTextChatShortcutEntry(DevPilotMessageBundle.get("devpilot.inlay.shortcut.test"),
+                                        EditorActionEnum.GENERATE_TESTS, psiElement)));
+            }
         }
         return true;
     }
