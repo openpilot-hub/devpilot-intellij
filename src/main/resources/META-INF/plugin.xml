@@ -20,7 +20,7 @@
         </ul>
         <h2>Bug fixes</h2>
         <ul>
-          <li>Fix support for other ide like pycharm</li>
+          <li>Fix support for other ides like pycharm</li>
           <li>Reduce memory use for completion format</li>
         </ul>
         <h1>Release 2.5.0</h1>
