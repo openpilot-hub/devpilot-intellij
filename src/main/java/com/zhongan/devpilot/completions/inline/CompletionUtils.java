@@ -20,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
+import static com.zhongan.devpilot.constant.DefaultConst.COMPLETION_TRIGGER_INTERVAL;
 
 public class CompletionUtils {
     private static final Pattern END_OF_LINE_VALID_PATTERN = Pattern.compile("^\\s*[)}\\]\"'`]*\\s*[:{;,]?\\s*$");
@@ -136,7 +137,7 @@ public class CompletionUtils {
     }
 
     private static int getTriggerInterval() {
-        return CompletionSettingsState.getInstance().getInterval();
+        return COMPLETION_TRIGGER_INTERVAL;
     }
 
     public static class TriggerInfo {

@@ -11,8 +11,6 @@ public class CompletionSettingsState implements PersistentStateComponent<Complet
 
     private Boolean enable = true;
 
-    private Integer interval = 500; // ms
-
     public static CompletionSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(CompletionSettingsState.class);
     }
@@ -23,16 +21,6 @@ public class CompletionSettingsState implements PersistentStateComponent<Complet
 
     public void setEnable(Boolean enable) {
         this.enable = enable;
-    }
-
-    public Integer getInterval() {
-        return interval;
-    }
-
-    public void setInterval(Integer interval) {
-        if (interval >= 500) {
-            this.interval = interval;
-        }
     }
 
     @Override
