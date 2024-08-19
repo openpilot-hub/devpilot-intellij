@@ -67,6 +67,14 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
             return;
         }
 
+        if (!CompletionUtils.checkTriggerTime(editor,
+                offset,
+                lastShownCompletion,
+                event.getNewFragment().toString(),
+                new DefaultCompletionAdjustment(),
+                result.getCompletionType())) {
+            return;
+        }
         handler.retrieveAndShowCompletion(
                 editor,
                 offset,
@@ -103,7 +111,6 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
 
         CompletionUtils.VerifyResult result = CompletionUtils
                 .isValidChange(editor, document, offset, event.getOffset());
-
         return CompletionUtils.VerifyResult.create(!result.isValid(), result.getCompletionType());
     }
 

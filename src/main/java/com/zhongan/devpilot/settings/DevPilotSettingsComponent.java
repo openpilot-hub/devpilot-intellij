@@ -42,21 +42,21 @@ public class DevPilotSettingsComponent {
                 AvailabilityCheck.getInstance().getEnable());
 
         mainPanel = FormBuilder.createFormBuilder()
-            .addComponent(UI.PanelFactory.panel(fullNameField)
-                .withLabel(DevPilotMessageBundle.get("devpilot.setting.displayNameFieldLabel"))
-                .resizeX(false)
-                .createPanel())
-            .addComponent(createLanguageSectionPanel(languageIndex))
-            .addComponent(new TitledSeparator(
-                    DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
-            .addComponent(autoCompletionRadio)
-            .addVerticalGap(8)
+                .addComponent(UI.PanelFactory.panel(fullNameField)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.setting.displayNameFieldLabel"))
+                        .resizeX(false)
+                        .createPanel())
+                .addComponent(createLanguageSectionPanel(languageIndex))
+                .addComponent(new TitledSeparator(
+                        DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
+                .addComponent(autoCompletionRadio)
+                .addVerticalGap(8)
 
-            .addComponent(new TitledSeparator(
-                    DevPilotMessageBundle.get("devpilot.settings.service.status.check.title")))
-            .addComponent(statusCheckRadio)
-            .addComponentFillVertically(new JPanel(), 0)
-            .getPanel();
+                .addComponent(new TitledSeparator(
+                        DevPilotMessageBundle.get("devpilot.settings.service.status.check.title")))
+                .addComponent(statusCheckRadio)
+                .addComponentFillVertically(new JPanel(), 0)
+                .getPanel();
     }
 
     public JPanel createLanguageSectionPanel(Integer languageIndex) {

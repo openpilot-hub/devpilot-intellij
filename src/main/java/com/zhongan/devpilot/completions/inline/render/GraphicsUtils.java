@@ -1,7 +1,5 @@
 package com.zhongan.devpilot.completions.inline.render;
 
-import com.intellij.openapi.application.ApplicationManager;
-import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.colors.EditorFontType;
 import com.intellij.psi.PsiDocumentManager;
@@ -68,23 +66,9 @@ public class GraphicsUtils {
     }
 
     public static Integer getTabSize(Editor editor) {
-        if (!ApplicationManager.getApplication().isReadAccessAllowed()) {
-            Logger.getInstance("GraphicsUtils").warn("Read access is not allowed here - returning null");
-            failIfAlpha();
-            return null;
-        }
         CommonCodeStyleSettings commonCodeStyleSettings = editor.getProject() != null ? PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()) != null ? new CommonCodeStyleSettings(PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(editor.getDocument()).getLanguage()) : null : null;
 
         return commonCodeStyleSettings != null && commonCodeStyleSettings.getIndentOptions() != null ? commonCodeStyleSettings.getIndentOptions().TAB_SIZE : editor.getSettings().getTabSize(editor.getProject());
-    }
-
-    private static void failIfAlpha() {
-        boolean isAlpha = true;
-        boolean isTest = ApplicationManager.getApplication().isUnitTestMode();
-        if (isAlpha && !isTest) {
-            Logger.getInstance("GraphicsUtils").error("!!!Alpha user please notice!!! You called `getTabSize` from a thread without read access. Because you're alpha, a `RuntimeException` will be thrown - This is being done in order to cause chaos for alpha devs, so that they'll fix it.");
-            throw new RuntimeException("You called `getTabSize` from a thread without read access!");
-        }
     }
 
 }
