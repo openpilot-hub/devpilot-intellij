@@ -8,7 +8,6 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.TextRange;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
-import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.util.CommentUtil;
 
 import java.util.Timer;
