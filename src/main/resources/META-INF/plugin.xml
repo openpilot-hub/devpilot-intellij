@@ -13,10 +13,10 @@
         <h2>Enhancements</h2>
         <ul>
           <li>Encoding request using base64</li>
-          <li>Add support for idea 242</li>
+          <li>Add support for Jetbrains 2024.2</li>
           <li>Support test case for java class</li>
           <li>Adjust completion trigger interval</li>
-          <li>Change telemtry upload to async</li>
+          <li>Change telemetry upload to async</li>
         </ul>
         <h2>Bug fixes</h2>
         <ul>
