@@ -6,9 +6,23 @@
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>DevPilot</name>
-    <version>2.5.0</version>
+    <version>2.5.1</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.5.1</h1>
+        <h2>Enhancements</h2>
+        <ul>
+          <li>Encoding request using base64</li>
+          <li>Add support for idea 242</li>
+          <li>Support test case for java class</li>
+          <li>Adjust completion trigger interval</li>
+          <li>Change telemtry upload to async</li>
+        </ul>
+        <h2>Bug fixes</h2>
+        <ul>
+          <li>Fix support for other ide like pycharm</li>
+          <li>Reduce memory use for completion format</li>
+        </ul>
         <h1>Release 2.5.0</h1>
         <h2>New Features</h2>
         <ul>
