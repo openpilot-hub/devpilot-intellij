@@ -29,7 +29,7 @@ public class DevPilotErrorReporter extends ITNReporter {
 
     private final PluginId devpilotPluginId = PluginId.getId("com.zhongan.devPilot");
 
-    private static final String READ_ACCESS_ERROR = "Read access is allowed from inside read-action (or EDT) only (see com.intellij.openapi.application.Application.runReadAction())";
+    private static final String READ_ACCESS_ERROR = "Read access is allowed from inside read-action";
 
     /**
      * Ignore deprecated method error, in internal model, still receiver warning
