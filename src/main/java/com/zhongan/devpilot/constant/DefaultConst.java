@@ -52,6 +52,6 @@ public class DefaultConst {
 
     public static final boolean REQUEST_ENCODING_ON = true;
 
-    public static final int COMPLETION_TRIGGER_INTERVAL = 500;
+    public static final int COMPLETION_TRIGGER_INTERVAL = 1000;
 
 }
