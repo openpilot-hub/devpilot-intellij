@@ -9,6 +9,11 @@
     <version>2.5.1</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.5.2</h1>
+        <h2>Bug fixes</h2>
+        <ul>
+          <li>Fix compatibility issues for 2024.2</li>
+        </ul>
         <h1>Release 2.5.1</h1>
         <h2>Enhancements</h2>
         <ul>
