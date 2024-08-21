@@ -185,6 +185,12 @@
                 id="AcceptDevPilotInlineCompletionAction" text="Accept Inline Completion">
             <keyboard-shortcut first-keystroke="TAB" keymap="$default"/>
         </action>
+        <action id="AcceptDevPilotInlineCompletionByLineAction" class="com.zhongan.devpilot.completions.inline.AcceptDevPilotInlineCompletionByLineAction" text="Apply Inline Completion By Line">
+            <keyboard-shortcut first-keystroke="control DOWN" keymap="$default"/>
+            <keyboard-shortcut first-keystroke="meta DOWN" keymap="Mac OS X" replace-all="true"/>
+            <keyboard-shortcut first-keystroke="meta DOWN" keymap="Mac OS X 10.5+" replace-all="true"/>
+        </action>
+
         <!--support alt + B-->
         <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
                 id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
