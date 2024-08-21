@@ -4,6 +4,7 @@ import com.intellij.codeInsight.completion.CompletionParameters;
 import com.intellij.codeInsight.completion.CompletionResultSet;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.util.TextRange;
 import com.zhongan.devpilot.completions.general.SuggestionTrigger;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
@@ -45,12 +46,13 @@ public class CompletionUtils {
 
     @Nullable
     public static DevPilotCompletion createDevpilotCompletion(
-        @NotNull Document document,
-        int offset,
-        String oldPrefix,
-        ResultEntry result,
-        int index,
-        SuggestionTrigger suggestionTrigger) {
+            Editor editor,
+            @NotNull Document document,
+            int offset,
+            String oldPrefix,
+            ResultEntry result,
+            int index,
+            SuggestionTrigger suggestionTrigger) {
         String cursorPrefix = CompletionUtils.getCursorPrefix(document, offset);
         String cursorSuffix = CompletionUtils.getCursorSuffix(document, offset);
         if (cursorPrefix == null || cursorSuffix == null) {
@@ -58,29 +60,57 @@ public class CompletionUtils {
         }
 
         return new DevPilotCompletion(
-            result.id,
-            oldPrefix,
-            result.newPrefix,
-            result.oldSuffix,
-            result.newSuffix,
-            index,
-            cursorPrefix,
-            cursorSuffix,
-            result.completionMetadata,
-            suggestionTrigger);
+                editor,
+                result.id,
+                oldPrefix,
+                result.newPrefix,
+                result.oldSuffix,
+                result.newSuffix,
+                index,
+                cursorPrefix,
+                cursorSuffix,
+                result.completionMetadata,
+                suggestionTrigger);
+    }
+
+    @Nullable
+    public static DevPilotCompletion createSimpleDevpilotCompletion(
+            Editor editor,
+            int offset,
+            String oldPrefix,
+            String newPrefix,
+            String id,
+            @NotNull Document document) {
+        String cursorPrefix = CompletionUtils.getCursorPrefix(document, offset);
+        String cursorSuffix = CompletionUtils.getCursorSuffix(document, offset);
+        if (cursorPrefix == null || cursorSuffix == null) {
+            return null;
+        }
+        return new DevPilotCompletion(
+                editor,
+                id,
+                oldPrefix,
+                newPrefix,
+                "",
+                "",
+                0,
+                cursorPrefix,
+                cursorSuffix,
+                null,
+                null);
     }
 
     public static int completionLimit(
-        CompletionParameters parameters, CompletionResultSet result, boolean isLocked) {
+            CompletionParameters parameters, CompletionResultSet result, boolean isLocked) {
         return completionLimit(
-            parameters.getEditor().getDocument(),
-            result.getPrefixMatcher().getPrefix(),
-            parameters.getOffset(),
-            isLocked);
+                parameters.getEditor().getDocument(),
+                result.getPrefixMatcher().getPrefix(),
+                parameters.getOffset(),
+                isLocked);
     }
 
     public static int completionLimit(
-        @NotNull Document document, @NotNull String prefix, int offset, boolean isLocked) {
+            @NotNull Document document, @NotNull String prefix, int offset, boolean isLocked) {
         if (isLocked) {
             return 1;
         }

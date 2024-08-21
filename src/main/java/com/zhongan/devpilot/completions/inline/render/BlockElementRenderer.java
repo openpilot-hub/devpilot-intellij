@@ -1,9 +1,14 @@
 package com.zhongan.devpilot.completions.inline.render;
 
+import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorCustomElementRenderer;
 import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.markup.TextAttributes;
+import com.intellij.openapi.keymap.KeymapUtil;
+import com.intellij.openapi.util.text.StringUtil;
+import com.zhongan.devpilot.completions.inline.AcceptDevPilotInlineCompletionByLineAction;
+import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -30,8 +35,12 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
     @Override
     public int calcWidthInPixels(Inlay inlay) {
         String firstLine = blockText.get(0);
+        boolean hint = blockText.size() > 1;
+        if (hint) {
+            firstLine = firstLine + "       " + hintText();
+        }
         return editor.getContentComponent()
-            .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(firstLine);
+                .getFontMetrics(GraphicsUtils.getFont(editor, firstLine)).stringWidth(firstLine);
     }
 
     @Override
@@ -41,18 +50,33 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
 
     @Override
     public void paint(Inlay inlay, Graphics g, Rectangle targetRegion, TextAttributes textAttributes) {
+        boolean hint = blockText.size() > 1;
         color = color != null ? color : GraphicsUtils.getColor();
         g.setColor(color);
-        g.setFont(GraphicsUtils.getFont(editor, deprecated));
-
         for (int i = 0; i < blockText.size(); i++) {
             String line = blockText.get(i);
+            if (i == 0 && hint) {
+                line = line + "       " + hintText();
+                hint = false;
+            }
+            g.setFont(GraphicsUtils.getFont(editor, line));
             g.drawString(
-                line,
-                0,
-                targetRegion.y + i * editor.getLineHeight() + editor.getAscent()
+                    line,
+                    0,
+                    targetRegion.y + i * editor.getLineHeight() + editor.getAscent()
             );
         }
+    }
+
+    private String hintText() {
+        String acceptShortcut = getShortcutText();
+        return String.format("%s %s", acceptShortcut, DevPilotMessageBundle.get("completion.apply.partial.tooltips"));
+    }
+
+    private String getShortcutText() {
+        return StringUtil.defaultIfEmpty(
+                KeymapUtil.getFirstKeyboardShortcutText(ActionManager.getInstance().getAction(AcceptDevPilotInlineCompletionByLineAction.ACTION_ID)),
+                "Missing shortcut key");
     }
 
     @TestOnly

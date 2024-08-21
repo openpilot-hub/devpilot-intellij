@@ -4,7 +4,9 @@ import com.intellij.openapi.Disposable;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Caret;
+import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.openapi.editor.ex.util.EditorUtil;
 import com.intellij.openapi.editor.impl.EditorImpl;
 import com.intellij.openapi.project.Project;
@@ -20,22 +22,27 @@ import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.treesitter.TreeSitterParser;
 import com.zhongan.devpilot.util.TelemetryUtils;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.zhongan.devpilot.completions.CompletionUtils.createSimpleDevpilotCompletion;
 import static com.zhongan.devpilot.completions.inline.CompletionPreviewUtils.shouldRemoveSuffix;
 
 public class CompletionPreview implements Disposable {
     private static final Key<CompletionPreview> INLINE_COMPLETION_PREVIEW =
-        Key.create("INLINE_COMPLETION_PREVIEW");
+            Key.create("INLINE_COMPLETION_PREVIEW");
 
     public final Editor editor;
 
     private final int offset;
 
-    private DevPilotInlay devPilotInlay;
+    public DevPilotInlay devPilotInlay;
 
     private List<DevPilotCompletion> completions;
 
@@ -44,7 +51,7 @@ public class CompletionPreview implements Disposable {
     private InlineCaretListener inlineCaretListener;
 
     private CompletionPreview(
-        @NotNull Editor editor, List<DevPilotCompletion> completions, int offset) {
+            @NotNull Editor editor, List<DevPilotCompletion> completions, int offset) {
         this.editor = editor;
         this.completions = completions;
         this.offset = offset;
@@ -56,7 +63,7 @@ public class CompletionPreview implements Disposable {
     }
 
     public static DevPilotCompletion createInstance(
-        Editor editor, List<DevPilotCompletion> completions, int offset) {
+            Editor editor, List<DevPilotCompletion> completions, int offset) {
         CompletionPreview preview = getInstance(editor);
 
         if (preview != null) {
@@ -108,8 +115,8 @@ public class CompletionPreview implements Disposable {
         DevPilotCompletion completion = completions.get(currentIndex);
 
         if (!(editor instanceof EditorImpl)
-            || editor.getSelectionModel().hasSelection()
-            || InplaceRefactoring.getActiveInplaceRenamer(editor) != null) {
+                || editor.getSelectionModel().hasSelection()
+                || InplaceRefactoring.getActiveInplaceRenamer(editor) != null) {
             return null;
         }
 
@@ -124,6 +131,7 @@ public class CompletionPreview implements Disposable {
 
     public void dispose() {
         editor.putUserData(INLINE_COMPLETION_PREVIEW, null);
+        completions.forEach(DevPilotCompletion::clear);
     }
 
     public void applyPreview(@Nullable Caret caret) {
@@ -150,6 +158,87 @@ public class CompletionPreview implements Disposable {
         } finally {
             Disposer.dispose(this);
         }
+    }
+
+    public void applyPreviewByLine(@Nullable Caret caret) {
+        if (caret == null) {
+            return;
+        }
+
+        Project project = editor.getProject();
+
+        if (project == null) {
+            return;
+        }
+
+        PsiFile file = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+
+        if (file == null) {
+            return;
+        }
+
+        try {
+            applyPreviewInternalByLine(project, file);
+        } catch (Throwable e) {
+            Logger.getInstance(getClass()).warn("Failed in the processes of accepting completion by line", e);
+        } finally {
+            Disposer.dispose(this);
+        }
+    }
+
+    private void applyPreviewInternalByLine(Project project, PsiFile file) {
+        DevPilotCompletion completion = completions.get(currentIndex);
+        Document document = editor.getDocument();
+        String line = completion.getNextUnacceptLineState().getLine();
+        LogicalPosition currentPos = editor.getCaretModel().getLogicalPosition();
+        int insertionOffset = editor.logicalPositionToOffset(currentPos);
+        if (StringUtils.isEmpty(line)) {
+            completion.acceptLine(insertionOffset);
+            line = completion.getNextUnacceptLineState().getLine();
+        }
+        if (completion.getLineStateItems().getIndex() > 0) {
+            insertionOffset += "\n".length();
+        }
+        document.insertString(insertionOffset, line + "\n");
+        completion.acceptLine(insertionOffset + line.length());
+        editor.getCaretModel().moveToOffset(insertionOffset + line.length());
+        Objects.requireNonNull(CompletionPreview.getInstance(editor)).continuePreview();
+        PsiFile fileAfterCompletion = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
+        int startOffset = insertionOffset - completion.oldPrefix.length();
+        int endOffset = insertionOffset + line.length();
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            getAutoImportHandler(editor, fileAfterCompletion, startOffset, endOffset).invoke();
+        });
+        TelemetryUtils.completionAccept(completion.id, file);
+    }
+
+    public void continuePreview() {
+        DevPilotCompletion completion = completions.get(currentIndex);
+        if (!(editor instanceof EditorImpl)
+                || editor.getSelectionModel().hasSelection()
+                || InplaceRefactoring.getActiveInplaceRenamer(editor) != null) {
+            return;
+        }
+
+        try {
+            editor.getDocument().startGuardedBlockChecking();
+            DevPilotCompletion simpleDevpilotCompletion = createSimpleDevpilotCompletion(editor, editor.getCaretModel().getOffset(),
+                    "",
+                    completion.getLineStateItems().getUnacceptedLines(),
+                    UUID.randomUUID().toString(), editor.getDocument());
+            CompletionPreview.clear(editor);
+            CompletionPreview.createInstance(editor, Collections.singletonList(simpleDevpilotCompletion), editor.getCaretModel().getOffset());
+        } finally {
+            editor.getDocument().stopGuardedBlockChecking();
+        }
+    }
+
+    public boolean isByLineChange() {
+        LogicalPosition logicalPosition = editor.getCaretModel().getLogicalPosition();
+        int newOffset = editor.logicalPositionToOffset(logicalPosition);
+        DevPilotCompletion completion = completions.get(currentIndex);
+        int currentCompletionPosition = completion.getCurrentCompletionPosition();
+        return newOffset == currentCompletionPosition;
     }
 
     private void applyPreviewInternal(@NotNull Integer cursorOffset, Project project, PsiFile file) {
