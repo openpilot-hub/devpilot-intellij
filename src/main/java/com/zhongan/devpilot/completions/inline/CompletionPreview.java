@@ -42,7 +42,7 @@ public class CompletionPreview implements Disposable {
 
     private final int offset;
 
-    public DevPilotInlay devPilotInlay;
+    private DevPilotInlay devPilotInlay;
 
     private List<DevPilotCompletion> completions;
 
