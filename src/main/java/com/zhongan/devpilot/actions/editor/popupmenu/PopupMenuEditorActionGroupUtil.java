@@ -67,6 +67,7 @@ public class PopupMenuEditorActionGroupUtil {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
             group.removeAll();
             group.add(new NewChatAction());
+            group.add(new ReferenceChatAction());
             group.addSeparator();
 
             var defaultActions = EditorActionConfigurationState.getInstance().getDefaultActions();
