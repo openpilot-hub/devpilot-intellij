@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -97,6 +98,9 @@ public interface LlmProvider {
                     }
                     result.append("</div>\n\n");
                 } else {
+                    if (CollectionUtils.isEmpty(response.getChoices())) {
+                        return;
+                    }
                     var choice = response.getChoices().get(0);
                     var finishReason = choice.getFinishReason();
 
