@@ -145,9 +145,7 @@ public class PopupMenuEditorActionGroupUtil {
                         var showText = DevPilotMessageBundle.get(label);
 
                         if (codeReferenceModel == null) {
-                            codeReferenceModel = new CodeReferenceModel(editorInfo.getLanguageId(), editorInfo.getFilePresentableUrl(),
-                                    editorInfo.getFileName(), editorInfo.getSourceCode(), editorInfo.getSelectedStartLine(),
-                                    editorInfo.getSelectedStartColumn(), editorInfo.getSelectedEndLine(), editorInfo.getSelectedEndColumn(), editorActionEnum);
+                            codeReferenceModel = CodeReferenceModel.getCodeRefFromEditor(editorInfo, editorActionEnum);
                         }
 
                         var codeMessage = MessageModel.buildCodeMessage(

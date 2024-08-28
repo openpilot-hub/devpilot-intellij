@@ -119,8 +119,8 @@ public class DevPilotChatToolWindow {
 
                     ApplicationManager.getApplication().invokeLater(() -> {
                         var message = service.getUserContentCode(messageModel);
-                        var userMessageModel = MessageModel.buildUserMessage(uuid, time, message, username);
-                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message, null, userMessageModel);
+                        var userMessageModel = MessageModel.buildCodeMessage(uuid, time, message.getContent(), username, message.getCodeRef());
+                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message.getContent(), null, userMessageModel);
                     });
 
                     return new JBCefJSQuery.Response("success");

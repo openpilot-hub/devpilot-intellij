@@ -48,10 +48,7 @@ public class ReferenceCodeAction extends AnAction {
             return;
         }
 
-        var codeReference = new CodeReferenceModel(editorInfo.getLanguageId(), editorInfo.getFilePresentableUrl(),
-                editorInfo.getFileName(), editorInfo.getSourceCode(), editorInfo.getSelectedStartLine(),
-                editorInfo.getSelectedStartColumn(), editorInfo.getSelectedEndLine(), editorInfo.getSelectedEndColumn(), null);
-
+        var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo, null);
         var service = project.getService(DevPilotChatToolWindowService.class);
         service.referenceCode(codeReference);
     }

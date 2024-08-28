@@ -3,6 +3,7 @@ package com.zhongan.devpilot.webview.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.zhongan.devpilot.enums.EditorActionEnum;
+import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeReferenceModel {
@@ -22,11 +23,19 @@ public class CodeReferenceModel {
 
     private Integer selectedEndColumn;
 
+    private boolean visible = true;
+
     @JsonIgnore
     private EditorActionEnum type;
 
     public CodeReferenceModel() {
 
+    }
+
+    public static CodeReferenceModel getCodeRefFromEditor(EditorInfo editorInfo, EditorActionEnum actionEnum) {
+        return new CodeReferenceModel(editorInfo.getLanguageId(), editorInfo.getFilePresentableUrl(),
+                editorInfo.getFileName(), editorInfo.getSourceCode(), editorInfo.getSelectedStartLine(),
+                editorInfo.getSelectedStartColumn(), editorInfo.getSelectedEndLine(), editorInfo.getSelectedEndColumn(), actionEnum);
     }
 
     public CodeReferenceModel(String languageId, String fileUrl, String fileName, String sourceCode,
@@ -105,6 +114,14 @@ public class CodeReferenceModel {
 
     public void setSelectedEndColumn(Integer selectedEndColumn) {
         this.selectedEndColumn = selectedEndColumn;
+    }
+
+    public boolean isVisible() {
+        return visible;
+    }
+
+    public void setVisible(boolean visible) {
+        this.visible = visible;
     }
 
     public EditorActionEnum getType() {

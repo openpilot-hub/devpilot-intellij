@@ -56,9 +56,7 @@ public abstract class SelectedCodeGenerateBaseAction extends AnAction {
         service.clearRequestSession();
 
         var showText = getShowText();
-        var codeReference = new CodeReferenceModel(editorInfo.getLanguageId(), editorInfo.getFilePresentableUrl(),
-                editorInfo.getFileName(), editorInfo.getSourceCode(), editorInfo.getSelectedStartLine(),
-                editorInfo.getSelectedStartColumn(), editorInfo.getSelectedEndLine(), editorInfo.getSelectedEndColumn(), getEditorActionEnum());
+        var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo, getEditorActionEnum());
 
         var codeMessage = MessageModel.buildCodeMessage(
                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);

@@ -4,7 +4,6 @@ import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
@@ -13,6 +12,7 @@ import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
+import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -20,7 +20,6 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
-import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.MessageUtil;
 import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
@@ -34,7 +33,6 @@ import com.zhongan.devpilot.webview.model.ThemeModel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
 
@@ -241,7 +239,7 @@ public final class DevPilotChatToolWindowService {
         });
     }
 
-    public String getUserContentCode(MessageModel messageModel) {
+    public MessageModel getUserContentCode(MessageModel messageModel) {
         var message = messageModel.getContent();
 
         if (messageModel.getCodeRef() != null) {
@@ -252,29 +250,28 @@ public final class DevPilotChatToolWindowService {
                 language = "";
             }
             var codeFormat = String.format("```%s\n%s\n```\n", language, sourceCode);
-            return message + "\n" + codeFormat;
+            codeRef.setVisible(false);
+            messageModel.setContent(message + "\n" + codeFormat);
+            return messageModel;
         }
 
         Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
         if (editor == null || !editor.getSelectionModel().hasSelection()) {
-            return message;
+            return messageModel;
         }
 
-        var code = editor.getSelectionModel().getSelectedText();
-        String language = null;
-        var file = FileDocumentManager.getInstance().getFile(editor.getDocument());
-        if (file != null) {
-            var lan = LanguageUtil.getLanguageByExtension(file.getExtension());
-            if (lan == null) {
-                language = "";
-            } else {
-                language = lan.getLanguageName().toLowerCase(Locale.ROOT);
-            }
+        var editorInfo = new EditorInfo(editor);
+        if (editorInfo.getSourceCode() == null) {
+            return messageModel;
         }
 
-        var codeFormat = String.format("```%s\n%s\n```\n", language, code);
+        var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo, null);
+        var codeFormat = String.format("```%s\n%s\n```\n", codeReference.getLanguageId(), codeReference.getSourceCode());
 
-        return message + "\n" + codeFormat;
+        messageModel.setContent(message + "\n" + codeFormat);
+        messageModel.setCodeRef(codeReference);
+
+        return messageModel;
     }
 
     // get user message by assistant message id
