@@ -132,10 +132,10 @@ public class PopupMenuEditorActionGroupUtil {
                             }
                         }
 
-                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
-                                && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
-                            // todo 拿到用户真正希望回答的语言
+                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
                             data.put(ANSWER_LANGUAGE, "zh_CN");
+                        } else {
+                            data.put(ANSWER_LANGUAGE, "en_US");
                         }
 
                         var service = project.getService(DevPilotChatToolWindowService.class);
