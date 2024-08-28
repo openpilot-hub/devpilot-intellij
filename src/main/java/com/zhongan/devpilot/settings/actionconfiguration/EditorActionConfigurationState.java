@@ -9,12 +9,10 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.zhongan.devpilot.enums.EditorActionEnum.CHECK_PERFORMANCE;
 import static com.zhongan.devpilot.enums.EditorActionEnum.EXPLAIN_CODE;
 import static com.zhongan.devpilot.enums.EditorActionEnum.FIX_CODE;
 import static com.zhongan.devpilot.enums.EditorActionEnum.GENERATE_COMMENTS;
 import static com.zhongan.devpilot.enums.EditorActionEnum.GENERATE_TESTS;
-import static com.zhongan.devpilot.enums.EditorActionEnum.REVIEW_CODE;
 
 @State(
     name = "com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState",
@@ -28,10 +26,8 @@ public class EditorActionConfigurationState implements PersistentStateComponent<
         defaultActions = new ArrayList<>();
         defaultActions.add(EXPLAIN_CODE.getLabel());
         defaultActions.add(FIX_CODE.getLabel());
-        defaultActions.add(CHECK_PERFORMANCE.getLabel());
         defaultActions.add(GENERATE_COMMENTS.getLabel());
         defaultActions.add(GENERATE_TESTS.getLabel());
-        defaultActions.add(REVIEW_CODE.getLabel());
     }
 
     public static EditorActionConfigurationState getInstance() {

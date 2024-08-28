@@ -31,7 +31,9 @@ import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.JComponent;
 
@@ -46,6 +48,15 @@ public class DevPilotChatToolWindow {
     private JBCefBrowser jbCefBrowser;
 
     private final Project project;
+
+    private static final Map<String, EditorActionEnum> codeActionMap = new ConcurrentHashMap<>();
+
+    static {
+        codeActionMap.put("FixCode", EditorActionEnum.FIX_CODE);
+        codeActionMap.put("CommentCode", EditorActionEnum.GENERATE_COMMENTS);
+        codeActionMap.put("ExplainCode", EditorActionEnum.EXPLAIN_CODE);
+        codeActionMap.put("TestCode", EditorActionEnum.GENERATE_TESTS);
+    }
 
     public DevPilotChatToolWindow(Project project) {
         super();
@@ -105,10 +116,13 @@ public class DevPilotChatToolWindow {
                     var time = System.currentTimeMillis();
                     var username = DevPilotLlmSettingsState.getInstance().getFullName();
                     var uuid = UUID.randomUUID().toString();
-                    var message = messageModel.getContent();
 
-                    var userMessageModel = MessageModel.buildUserMessage(uuid, time, message, username);
-                    service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message, null, userMessageModel);
+                    ApplicationManager.getApplication().invokeLater(() -> {
+                        var message = service.getUserContentCode(messageModel);
+                        var userMessageModel = MessageModel.buildUserMessage(uuid, time, message, username);
+                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message, null, userMessageModel);
+                    });
+
                     return new JBCefJSQuery.Response("success");
                 }
                 case "InterruptChatStream": {
@@ -179,7 +193,8 @@ public class DevPilotChatToolWindow {
 
                     ApplicationManager.getApplication().invokeLater(
                             () -> EditorUtils.openFileAndSelectLines(project, codeReferenceModel.getFileUrl(),
-                                    codeReferenceModel.getSelectedStartLine(), codeReferenceModel.getSelectedEndLine()));
+                                    codeReferenceModel.getSelectedStartLine(), codeReferenceModel.getSelectedStartColumn(),
+                                    codeReferenceModel.getSelectedEndLine(), codeReferenceModel.getSelectedEndColumn()));
 
                     return new JBCefJSQuery.Response("success");
                 }
@@ -196,16 +211,17 @@ public class DevPilotChatToolWindow {
                     service.regenerateMessage();
                     return new JBCefJSQuery.Response("success");
                 }
-                case "FixCode": {
-                    service.handleActions(EditorActionEnum.FIX_CODE, null);
-                    return new JBCefJSQuery.Response("success");
-                }
-                case "CommentCode": {
-                    service.handleActions(EditorActionEnum.GENERATE_COMMENTS, null);
-                    return new JBCefJSQuery.Response("success");
-                }
-                case "ExplainCode": {
-                    service.handleActions(EditorActionEnum.EXPLAIN_CODE, null);
+                case "FixCode":
+                case "CommentCode":
+                case "ExplainCode":
+                case "TestCode": {
+                    var payload = jsCallModel.getPayload();
+                    var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
+                    if (messageModel == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    service.handleActions(messageModel.getCodeRef(), codeActionMap.get(command), null);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CopyCode": {

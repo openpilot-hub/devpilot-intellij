@@ -8,17 +8,14 @@ import com.intellij.openapi.wm.ToolWindow;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
-import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
-import com.zhongan.devpilot.webview.model.MessageModel;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
+public class ReferenceCodeAction extends AnAction {
 
-public class ReferenceChatAction extends AnAction {
-
-    public ReferenceChatAction() {
+    public ReferenceCodeAction() {
         super(DevPilotMessageBundle.get("devpilot.action.reference.chat"), DevPilotMessageBundle.get("devpilot.action.reference.chat"), AllIcons.Actions.Find);
         PopupMenuEditorActionGroupUtil.registerOrReplaceAction(this);
     }
@@ -42,19 +39,21 @@ public class ReferenceChatAction extends AnAction {
         toolWindow.show();
 
         var editor = event.getData(PlatformDataKeys.EDITOR);
-
         if (editor == null) {
             return;
         }
 
         var editorInfo = new EditorInfo(editor);
-        var codeReference = new CodeReferenceModel(editorInfo.getFilePresentableUrl(),
-                editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), null);
+        if (editorInfo.getSourceCode() == null) {
+            return;
+        }
+
+        var codeReference = new CodeReferenceModel(editorInfo.getLanguageId(), editorInfo.getFilePresentableUrl(),
+                editorInfo.getFileName(), editorInfo.getSourceCode(), editorInfo.getSelectedStartLine(),
+                editorInfo.getSelectedStartColumn(), editorInfo.getSelectedEndLine(), editorInfo.getSelectedEndColumn(), null);
 
         var service = project.getService(DevPilotChatToolWindowService.class);
-        var username = DevPilotLlmSettingsState.getInstance().getFullName();
-        service.clearRequestSession();
-
+        service.referenceCode(codeReference);
     }
 
 }

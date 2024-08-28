@@ -4,6 +4,7 @@ import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
@@ -19,8 +20,10 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
+import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.MessageUtil;
 import com.zhongan.devpilot.util.TokenUtils;
+import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.EmbeddedModel;
 import com.zhongan.devpilot.webview.model.JavaCallModel;
 import com.zhongan.devpilot.webview.model.LocaleModel;
@@ -31,8 +34,11 @@ import com.zhongan.devpilot.webview.model.ThemeModel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+
+import org.apache.commons.lang3.StringUtils;
 
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
@@ -212,8 +218,63 @@ public final class DevPilotChatToolWindowService {
                 BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
-            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement);
+            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement, null);
         });
+    }
+
+    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement) {
+        if (codeReferenceModel == null || StringUtils.isEmpty(codeReferenceModel.getSourceCode())) {
+            handleActions(actionEnum, psiElement);
+            return;
+        }
+
+        ActionManager actionManager = ActionManager.getInstance();
+        BasicEditorAction myAction = (BasicEditorAction) actionManager
+                .getAction(DevPilotMessageBundle.get(actionEnum.getLabel()));
+        ApplicationManager.getApplication().invokeLater(() -> {
+            Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+            if (editor == null) {
+                BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
+                return;
+            }
+            myAction.fastAction(project, editor, codeReferenceModel.getSourceCode(), psiElement, codeReferenceModel);
+        });
+    }
+
+    public String getUserContentCode(MessageModel messageModel) {
+        var message = messageModel.getContent();
+
+        if (messageModel.getCodeRef() != null) {
+            var codeRef = messageModel.getCodeRef();
+            var sourceCode = codeRef.getSourceCode();
+            var language = codeRef.getLanguageId();
+            if (language == null) {
+                language = "";
+            }
+            var codeFormat = String.format("```%s\n%s\n```\n", language, sourceCode);
+            return message + "\n" + codeFormat;
+        }
+
+        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+        if (editor == null || !editor.getSelectionModel().hasSelection()) {
+            return message;
+        }
+
+        var code = editor.getSelectionModel().getSelectedText();
+        String language = null;
+        var file = FileDocumentManager.getInstance().getFile(editor.getDocument());
+        if (file != null) {
+            var lan = LanguageUtil.getLanguageByExtension(file.getExtension());
+            if (lan == null) {
+                language = "";
+            } else {
+                language = lan.getLanguageName().toLowerCase(Locale.ROOT);
+            }
+        }
+
+        var codeFormat = String.format("```%s\n%s\n```\n", language, code);
+
+        return message + "\n" + codeFormat;
     }
 
     // get user message by assistant message id
@@ -354,6 +415,14 @@ public final class DevPilotChatToolWindowService {
         JavaCallModel javaCallModel = new JavaCallModel();
         javaCallModel.setCommand("PresentCodeEmbeddedState");
         javaCallModel.setPayload(new EmbeddedModel(isEmbedded, repoName));
+
+        callWebView(javaCallModel);
+    }
+
+    public void referenceCode(CodeReferenceModel referenceModel) {
+        var javaCallModel = new JavaCallModel();
+        javaCallModel.setCommand("ReferenceCode");
+        javaCallModel.setPayload(referenceModel);
 
         callWebView(javaCallModel);
     }

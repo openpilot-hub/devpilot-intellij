@@ -4,8 +4,6 @@ import java.util.Objects;
 
 public enum EditorActionEnum {
 
-    CHECK_PERFORMANCE("devpilot.action.performance.check", "Performance check in the following code"),
-
     GENERATE_COMMENTS("devpilot.action.generate.comments", "Generate comments in the following code"),
 
     COMMENT_METHOD("devpilot.action.generate.method.comments", ""),
@@ -13,8 +11,6 @@ public enum EditorActionEnum {
     GENERATE_TESTS("devpilot.action.generate.tests", "Generate Tests in the following code"),
 
     FIX_CODE("devpilot.action.fix", "Fix This in the following code"),
-
-    REVIEW_CODE("devpilot.action.review", "Review code in the following code"),
 
     EXPLAIN_CODE("devpilot.action.explain", "Explain this in the following code"),
 
