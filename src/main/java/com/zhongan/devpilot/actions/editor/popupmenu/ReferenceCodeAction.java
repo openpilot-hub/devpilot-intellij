@@ -13,10 +13,10 @@ import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 
 import org.jetbrains.annotations.NotNull;
 
-public class NewChatAction extends AnAction {
+public class ReferenceCodeAction extends AnAction {
 
-    public NewChatAction() {
-        super(DevPilotMessageBundle.get("devpilot.action.new.chat"), DevPilotMessageBundle.get("devpilot.action.new.chat.desc"), AllIcons.Actions.Find);
+    public ReferenceCodeAction() {
+        super(DevPilotMessageBundle.get("devpilot.action.reference.chat"), DevPilotMessageBundle.get("devpilot.action.reference.chat"), AllIcons.Actions.Find);
         PopupMenuEditorActionGroupUtil.registerOrReplaceAction(this);
     }
 
@@ -50,7 +50,6 @@ public class NewChatAction extends AnAction {
 
         var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo, null);
         var service = project.getService(DevPilotChatToolWindowService.class);
-        service.clearRequestSession();
         service.referenceCode(codeReference);
     }
 

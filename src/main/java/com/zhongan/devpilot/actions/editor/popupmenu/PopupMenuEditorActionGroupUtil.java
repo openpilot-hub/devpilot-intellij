@@ -27,7 +27,6 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
-import com.zhongan.devpilot.util.PerformanceCheckUtils;
 import com.zhongan.devpilot.util.PsiElementUtils;
 import com.zhongan.devpilot.util.PsiFileUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
@@ -54,11 +53,9 @@ import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 public class PopupMenuEditorActionGroupUtil {
 
     private static final Map<String, Icon> ICONS = new LinkedHashMap<>(Map.of(
-            EditorActionEnum.CHECK_PERFORMANCE.getLabel(), AllIcons.Plugins.Updated,
             EditorActionEnum.GENERATE_COMMENTS.getLabel(), AllIcons.Actions.InlayRenameInCommentsActive,
             EditorActionEnum.GENERATE_TESTS.getLabel(), AllIcons.Modules.GeneratedTestRoot,
             EditorActionEnum.FIX_CODE.getLabel(), AllIcons.Actions.QuickfixBulb,
-            EditorActionEnum.REVIEW_CODE.getLabel(), AllIcons.Actions.PreviewDetailsVertically,
             EditorActionEnum.EXPLAIN_CODE.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
@@ -67,13 +64,14 @@ public class PopupMenuEditorActionGroupUtil {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
             group.removeAll();
             group.add(new NewChatAction());
+            group.add(new ReferenceCodeAction());
             group.addSeparator();
 
             var defaultActions = EditorActionConfigurationState.getInstance().getDefaultActions();
             defaultActions.forEach((label) -> {
                 var action = new BasicEditorAction(DevPilotMessageBundle.get(label), DevPilotMessageBundle.get(label), ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
-                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement) {
+                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
                         var editorActionEnum = EditorActionEnum.getEnumByLabel(label);
@@ -88,16 +86,8 @@ public class PopupMenuEditorActionGroupUtil {
                                 return;
                             }
 
-                            switch (editorActionEnum) {
-                                case CHECK_PERFORMANCE:
-                                    // display result, and open diff window
-                                    PerformanceCheckUtils.showDiffWindow(selectedText, project, editor);
-                                    break;
-                                case GENERATE_COMMENTS:
-                                    DocumentUtil.diffCommentAndFormatWindow(project, editor, result);
-                                    break;
-                                default:
-                                    break;
+                            if (editorActionEnum == EditorActionEnum.GENERATE_COMMENTS) {
+                                DocumentUtil.diffCommentAndFormatWindow(project, editor, result);
                             }
                         };
                         Map<String, String> data = new HashMap<>();
@@ -142,10 +132,10 @@ public class PopupMenuEditorActionGroupUtil {
                             }
                         }
 
-                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1
-                                && editorActionEnum != EditorActionEnum.GENERATE_COMMENTS) {
-                            // todo 拿到用户真正希望回答的语言
+                        if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
                             data.put(ANSWER_LANGUAGE, "zh_CN");
+                        } else {
+                            data.put(ANSWER_LANGUAGE, "en_US");
                         }
 
                         var service = project.getService(DevPilotChatToolWindowService.class);
@@ -153,11 +143,13 @@ public class PopupMenuEditorActionGroupUtil {
                         service.clearRequestSession();
 
                         var showText = DevPilotMessageBundle.get(label);
-                        var codeReference = new CodeReferenceModel(editorInfo.getFilePresentableUrl(),
-                                editorInfo.getFileName(), editorInfo.getSelectedStartLine(), editorInfo.getSelectedEndLine(), editorActionEnum);
+
+                        if (codeReferenceModel == null) {
+                            codeReferenceModel = CodeReferenceModel.getCodeRefFromEditor(editorInfo, editorActionEnum);
+                        }
 
                         var codeMessage = MessageModel.buildCodeMessage(
-                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
+                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel);
 
                         service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }
