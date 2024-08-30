@@ -255,17 +255,23 @@ public final class DevPilotChatToolWindowService {
             return messageModel;
         }
 
-        Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
-        if (editor == null || !editor.getSelectionModel().hasSelection()) {
+        final Editor[] editor = {null};
+
+        ApplicationManager.getApplication().invokeLater(() -> {
+            editor[0] = FileEditorManager.getInstance(project).getSelectedTextEditor();
+        });
+
+        if (editor[0] == null || !editor[0].getSelectionModel().hasSelection()) {
             return messageModel;
         }
 
-        var editorInfo = new EditorInfo(editor);
+        var editorInfo = new EditorInfo(editor[0]);
         if (editorInfo.getSourceCode() == null) {
             return messageModel;
         }
 
         var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo, null);
+        codeReference.setVisible(false);
         var codeFormat = String.format("```%s\n%s\n```\n", codeReference.getLanguageId(), codeReference.getSourceCode());
 
         messageModel.setContent(message + "\n" + codeFormat);
