@@ -117,11 +117,9 @@ public class DevPilotChatToolWindow {
                     var username = DevPilotLlmSettingsState.getInstance().getFullName();
                     var uuid = UUID.randomUUID().toString();
 
-                    ApplicationManager.getApplication().invokeLater(() -> {
-                        var message = service.getUserContentCode(messageModel);
-                        var userMessageModel = MessageModel.buildCodeMessage(uuid, time, message.getContent(), username, message.getCodeRef());
-                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message.getContent(), null, userMessageModel);
-                    });
+                    var message = service.getUserContentCode(messageModel);
+                    var userMessageModel = MessageModel.buildCodeMessage(uuid, time, message.getContent(), username, message.getCodeRef());
+                    service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message.getContent(), null, userMessageModel);
 
                     return new JBCefJSQuery.Response("success");
                 }
