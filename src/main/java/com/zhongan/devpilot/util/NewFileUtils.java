@@ -1,13 +1,5 @@
 package com.zhongan.devpilot.util;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
@@ -27,6 +19,15 @@ import com.intellij.psi.impl.file.PsiDirectoryFactory;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
