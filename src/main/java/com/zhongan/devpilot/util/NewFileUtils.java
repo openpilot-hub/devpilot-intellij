@@ -121,13 +121,13 @@ public class NewFileUtils {
     }
 
     private static String extraClassNameFromGeneratedText(String generatedText) {
-        String regex = "public class (\\w+) \\{";
+        String regex = "(?:public\\s+)?(?:abstract\\s+|final\\s+)?(class|interface|enum)\\s+(\\w+)";
         Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(generatedText);
 
         String generatedClassName = null;
         if (matcher.find()) {
-            generatedClassName = matcher.group(1);
+            generatedClassName = matcher.group(2);
         }
         return generatedClassName;
     }
