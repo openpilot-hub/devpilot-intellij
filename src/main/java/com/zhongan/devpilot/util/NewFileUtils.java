@@ -94,10 +94,10 @@ public class NewFileUtils {
 
     private static PsiDirectory handleGeneratedJavaPackageName(Project project, String generatedText, String fileUrl) {
         String result = StringUtils.EMPTY;
-        String target = "src" + File.separator + "main" + File.separator + "java";
+        String target = File.separator + "src" + File.separator + "main" + File.separator + "java";
         if (StringUtils.isNotEmpty(fileUrl) && fileUrl.contains(target)) {
             // Find the project root path for the currently selected code
-            result = fileUrl.substring(0, fileUrl.indexOf(target) + target.length());
+            result = fileUrl.substring(0, fileUrl.indexOf(target));
             if (StringUtils.isNotEmpty(result)) {
                 VirtualFile vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(result);
                 if (vf == null) {
@@ -118,14 +118,16 @@ public class NewFileUtils {
         }
         // When the root path is obtained, append the sourceDirectory
         if (StringUtils.isNotEmpty(result)) {
-            result += File.separator + target + File.separator;
+            result += target + File.separator;
         }
         if (StringUtils.isEmpty(result)) {
             // Try to determine whether the target exists in the root path. If the target exists, use it directly
-            result = project.getBasePath() + File.separator;
+            result = project.getBasePath();
             VirtualFile vf = LocalFileSystem.getInstance().refreshAndFindFileByPath(result + target);
             if (null != vf) {
                 result += target + File.separator;
+            } else {
+                result += File.separator;
             }
         }
         // Append PackageDirectory
@@ -166,10 +168,13 @@ public class NewFileUtils {
         FileType fileType = FileTypeManager.getInstance().getFileTypeByExtension(fileExtension.substring(1));
         PsiDirectory finalSelectedFileDir = targetFilePsiDir;
         String finalFileName = fileName;
-        WriteCommandAction.runWriteCommandAction(project, () -> {
-            PsiFile fileFromText = PsiFileFactory.getInstance(project).createFileFromText(finalFileName, fileType, generatedText);
-            PsiFile createdFile = (PsiFile) finalSelectedFileDir.add(fileFromText);
-            FileEditorManager.getInstance(project).openFile(createdFile.getVirtualFile(), true);
+
+        DumbService.getInstance(project).runWhenSmart(() -> {
+            WriteCommandAction.runWriteCommandAction(project, () -> {
+                PsiFile fileFromText = PsiFileFactory.getInstance(project).createFileFromText(finalFileName, fileType, generatedText);
+                PsiFile createdFile = (PsiFile) finalSelectedFileDir.add(fileFromText);
+                FileEditorManager.getInstance(project).openFile(createdFile.getVirtualFile(), true);
+            });
         });
     }
 
