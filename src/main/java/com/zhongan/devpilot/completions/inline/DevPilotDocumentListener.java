@@ -57,6 +57,10 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
             return;
         }
         DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
+        CompletionPreview completionPreview = CompletionPreview.getInstance(editor);
+        if (completionPreview != null && completionPreview.isByLineChange()) {
+            return;
+        }
         CompletionPreview.clear(editor);
         int offset = event.getOffset() + event.getNewLength();
 

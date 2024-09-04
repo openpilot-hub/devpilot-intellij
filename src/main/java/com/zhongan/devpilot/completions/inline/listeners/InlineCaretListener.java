@@ -23,7 +23,9 @@ public class InlineCaretListener implements CaretListener, Disposable {
         if (isSingleOffsetChange(event)) {
             return;
         }
-
+        if (completionPreview.isByLineChange()) {
+            return;
+        }
         Disposer.dispose(completionPreview);
         InlineCompletionCache.clear(event.getEditor());
     }
