@@ -59,7 +59,7 @@ public class PsiElementUtils {
             var fields = psiClass.getFields();
 
             for (PsiMethod psiMethod : methods) {
-                result.addAll(getMethodParameterTypeClass(psiMethod));
+                result.addAll(getMethodRelatedClass(psiMethod));
             }
 
             for (PsiField psiField : fields) {
