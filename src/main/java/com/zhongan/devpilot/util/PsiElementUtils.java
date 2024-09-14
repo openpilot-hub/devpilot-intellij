@@ -1,14 +1,22 @@
 package com.zhongan.devpilot.util;
 
 import com.intellij.lang.jvm.JvmParameter;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiImportStatement;
+import com.intellij.psi.PsiImportStaticStatement;
+import com.intellij.psi.PsiJavaFile;
+import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiTypeParameter;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,13 +46,26 @@ public class PsiElementUtils {
             classSet = getClassRelatedClass(element);
         }
 
+        return transformElementToString(classSet);
+    }
+
+    public static <T extends PsiElement> String transformElementToString(Collection<T> elements) {
         var result = new StringBuilder();
 
-        for (PsiClass psiClass : classSet) {
-            if (ignoreClass(psiClass)) {
-                continue;
+        for (T element : elements) {
+            if (element instanceof PsiClass) {
+                if (ignoreClass((PsiClass) element)) {
+                    continue;
+                }
             }
-            result.append(psiClass.getText()).append("\n");
+
+            if (element instanceof PsiMethod) {
+                if (ignoreMethod((PsiMethod) element)) {
+                    continue;
+                }
+            }
+
+            result.append(element.getText()).append("\n");
         }
 
         return result.toString();
@@ -88,12 +109,8 @@ public class PsiElementUtils {
 
             if (returnType instanceof PsiClassReferenceType) {
                 var referenceType = (PsiClassReferenceType) returnType;
-                var returnTypeClass = referenceType.resolve();
-                result.addAll(getGenericType(referenceType));
-                if (returnTypeClass != null) {
-                    result.add(returnTypeClass);
-                    return result;
-                }
+                result.addAll(getTypeClassAndGenericType(referenceType));
+                return result;
             }
         }
 
@@ -109,11 +126,7 @@ public class PsiElementUtils {
             for (JvmParameter parameter : params) {
                 if (parameter.getType() instanceof PsiClassReferenceType) {
                     var referenceType = (PsiClassReferenceType) parameter.getType();
-                    var psiClass = referenceType.resolve();
-                    if (psiClass != null) {
-                        result.add(psiClass);
-                    }
-                    result.addAll(getGenericType(referenceType));
+                    result.addAll(getTypeClassAndGenericType(referenceType));
                 }
             }
         }
@@ -129,11 +142,7 @@ public class PsiElementUtils {
 
             if (field.getType() instanceof PsiClassReferenceType) {
                 var referenceType = (PsiClassReferenceType) field.getType();
-                var psiClass = referenceType.resolve();
-                if (psiClass != null) {
-                    result.add(psiClass);
-                }
-                result.addAll(getGenericType(referenceType));
+                result.addAll(getTypeClassAndGenericType(referenceType));
             }
         }
 
@@ -166,6 +175,18 @@ public class PsiElementUtils {
         return result;
     }
 
+    private static List<PsiClass> getTypeClassAndGenericType(PsiClassReferenceType referenceType) {
+        var result = new ArrayList<PsiClass>();
+
+        var psiClass = referenceType.resolve();
+        if (psiClass != null) {
+            result.add(psiClass);
+        }
+        result.addAll(getGenericType(referenceType));
+
+        return result;
+    }
+
     private static boolean ignoreClass(PsiClass psiClass) {
         if (psiClass == null) {
             return true;
@@ -193,5 +214,114 @@ public class PsiElementUtils {
         // todo should ignore some famous opensource dependency
 
         return false;
+    }
+
+    private static boolean ignoreMethod(PsiMethod psiMethod) {
+        var psiClass = psiMethod.getContainingClass();
+        return ignoreClass(psiClass);
+    }
+
+    public static Set<PsiElement> parseElementsList(Project project, List<String> elements) {
+        var result = new HashSet<PsiElement>();
+
+        for (String element : elements) {
+            // element format class#method
+            var arrays = element.split("#");
+            var classFullName = arrays[0];
+            String methodName = null;
+
+            if (arrays.length > 1) {
+                methodName = arrays[1];
+            }
+
+            var e = getElementByName(project, classFullName, methodName);
+            if (e != null) {
+                result.add(e);
+            }
+        }
+
+        return result;
+    }
+
+    private static PsiElement getElementByName(Project project, String className, String methodName) {
+        var javaPsiFacade = JavaPsiFacade.getInstance(project);
+        var factory = javaPsiFacade.getElementFactory();
+
+        var classType = factory.createTypeByFQClassName(className);
+        var psiClass = classType.resolve();
+
+        if (psiClass != null) {
+            if (methodName == null) {
+                return psiClass;
+            } else {
+                var methods = psiClass.getMethods();
+                for (var method : methods) {
+                    if (methodName.equals(method.getName())) {
+                        return method;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    public static PsiJavaFile getPsiJavaFileByFilePath(Project project, String filePath) {
+        var virtualFile = LocalFileSystem.getInstance().findFileByPath(filePath);
+        if (virtualFile != null) {
+            var psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+            if (!(psiFile instanceof PsiJavaFile)) {
+                return null;
+            }
+            return (PsiJavaFile) psiFile;
+        }
+        return null;
+    }
+
+    private static PsiClass getPsiClassByFile(PsiJavaFile psiJavaFile) {
+        var classes = psiJavaFile.getClasses();
+        if (classes.length > 0) {
+            return classes[0];
+        }
+        return null;
+    }
+
+    public static String getImportList(PsiJavaFile psiJavaFile) {
+        var importList = new StringBuilder();
+        var importStatements = psiJavaFile.getImportList();
+        if (importStatements != null) {
+            var imports = importStatements.getImportStatements();
+            for (PsiImportStatement importStatement : imports) {
+                importList.append(importStatement.getQualifiedName()).append(";");
+            }
+
+            for (PsiImportStaticStatement importStatement : importStatements.getImportStaticStatements()) {
+                if (importStatement.getImportReference() != null) {
+                    importList.append(importStatement.getImportReference().getQualifiedName()).append(";");
+                }
+            }
+        }
+        return importList.toString();
+    }
+
+    public static String getFieldList(PsiJavaFile psiJavaFile) {
+        var fieldList = new StringBuilder();
+
+        var psiClass = getPsiClassByFile(psiJavaFile);
+        if (psiClass == null) {
+            return "";
+        }
+
+        var fields = psiClass.getFields();
+        for (PsiField field : fields) {
+            fieldList.append(field.getModifierList().getText())
+                      .append(" ")
+                      .append(field.getType().getPresentableText())
+                      .append(" ")
+                      .append(field.getName())
+                      .append(";")
+                      .append(System.lineSeparator());
+        }
+        return fieldList.toString();
     }
 }

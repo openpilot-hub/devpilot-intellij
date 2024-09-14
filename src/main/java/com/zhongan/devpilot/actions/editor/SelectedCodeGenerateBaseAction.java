@@ -61,7 +61,7 @@ public abstract class SelectedCodeGenerateBaseAction extends AnAction {
         var codeMessage = MessageModel.buildCodeMessage(
                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReference);
 
-        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), COMMENT_METHOD.name(), Map.of("selectedCode", selectedText), null, callback, codeMessage);
+        service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), COMMENT_METHOD.name(), Map.of("selectedCode", selectedText), null, callback, codeMessage);
     }
 
     protected abstract EditorActionEnum getEditorActionEnum();

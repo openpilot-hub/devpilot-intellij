@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.psi.PsiElement;
+import com.intellij.psi.PsiJavaFile;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
@@ -16,11 +17,13 @@ import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
+import com.zhongan.devpilot.util.PsiElementUtils;
 import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.EmbeddedModel;
@@ -28,12 +31,17 @@ import com.zhongan.devpilot.webview.model.JavaCallModel;
 import com.zhongan.devpilot.webview.model.LocaleModel;
 import com.zhongan.devpilot.webview.model.LoginModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+import com.zhongan.devpilot.webview.model.RecallModel;
 import com.zhongan.devpilot.webview.model.ThemeModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
@@ -52,6 +60,12 @@ public final class DevPilotChatToolWindowService {
 
     private final List<DevPilotMessage> historyRequestMessageList = new ArrayList<>();
 
+    private final AtomicBoolean cancel = new AtomicBoolean(false);
+
+    private MessageModel lastMessage = new MessageModel();
+
+    private final AtomicInteger nowStep = new AtomicInteger(1);
+
     public DevPilotChatToolWindowService(Project project) {
         this.project = project;
         this.devPilotChatToolWindow = new DevPilotChatToolWindow(project);
@@ -65,7 +79,107 @@ public final class DevPilotChatToolWindowService {
         return this.project;
     }
 
-    public String sendMessage(Integer sessionType, String msgType, Map<String, String> data, String message, Consumer<String> callback, MessageModel messageModel) {
+    public void smartChat(Integer sessionType, String msgType, Map<String, String> data, String message, Consumer<String> callback, MessageModel messageModel) {
+        this.cancel.set(false);
+
+        callWebView(messageModel);
+        addMessage(messageModel);
+        callWebView(MessageModel.buildLoadingMessage());
+
+        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        final List<String>[] references = new List[1];
+
+        var codeReference = messageModel.getCodeRef();
+        PsiJavaFile psiJavaFile = null;
+        if (codeReference != null) {
+            psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+        }
+
+        final Set<PsiElement>[] localRef = new Set[1];
+
+        PsiJavaFile finalPsiJavaFile = psiJavaFile;
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            // if no code ref, step1 and step2 will not process
+            if (codeReference != null && finalPsiJavaFile != null) {
+                // step1 call model to do code prediction
+                if (cancel.get()) {
+                    return;
+                }
+
+                this.nowStep.set(1);
+                this.lastMessage = MessageModel
+                        .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(1));
+                callWebView(this.lastMessage);
+
+                final Map<String, String>[] dataMap = new Map[1];
+                ApplicationManager.getApplication().runReadAction(() -> {
+                    dataMap[0] = Map.of(
+                            "import", PsiElementUtils.getImportList(finalPsiJavaFile),
+                            "package", finalPsiJavaFile.getPackageName(),
+                            "field", PsiElementUtils.getFieldList(finalPsiJavaFile),
+                            "targetCode", codeReference.getSourceCode(),
+                            "filePath", codeReference.getFileUrl()
+                    );
+                });
+                var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
+                devPilotChatCompletionRequest.setVersion("V240801");
+                devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", dataMap[0]));
+                devPilotChatCompletionRequest.setStream(Boolean.FALSE);
+                var response = this.llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
+                if (!response.isSuccessful()) {
+                    return;
+                }
+                var codePrediction = JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
+                if (codePrediction != null) {
+                    references[0] = codePrediction.getReferences();
+                }
+
+                // step2 call rag to analyze code
+                if (cancel.get()) {
+                    return;
+                }
+
+                this.nowStep.set(2);
+                this.lastMessage = MessageModel
+                        .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(2));
+                callWebView(this.lastMessage);
+
+                // call local rag
+                if (references[0] != null) {
+                    ApplicationManager.getApplication().runReadAction(() -> {
+                        localRef[0] = PsiElementUtils.parseElementsList(project, references[0]);
+                    });
+                }
+
+                // todo call remote rag
+            }
+
+            // step3 call model to get the final result
+            if (cancel.get()) {
+                return;
+            }
+
+            this.nowStep.set(3);
+
+            // avoid immutable map
+            var newMap = new HashMap<>(data);
+            final List<CodeReferenceModel>[] localRefs = new List[1];
+
+            if (localRef[0] != null) {
+                ApplicationManager.getApplication().runReadAction(() -> {
+                    var relatedCode = PsiElementUtils.transformElementToString(localRef[0]);
+                    newMap.put("relatedClass", relatedCode);
+                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef[0], EditorActionEnum.getEnumByName(msgType));
+                });
+            }
+
+            sendMessage(sessionType, msgType, newMap, message, callback, messageModel, null, localRefs[0]);
+        });
+    }
+
+    public String sendMessage(Integer sessionType, String msgType, Map<String, String> data,
+                              String message, Consumer<String> callback, MessageModel messageModel,
+                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
         DevPilotMessage userMessage;
         if (data == null || data.isEmpty()) {
             userMessage = MessageUtil.createUserMessage(message, msgType, messageModel.getId());
@@ -89,12 +203,8 @@ public final class DevPilotChatToolWindowService {
             devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         }
 
-        callWebView(messageModel);
-        addMessage(messageModel);
-        callWebView(MessageModel.buildLoadingMessage());
-
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback);
+        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs);
         if (MULTI_TURN.equals(sessionTypeEnum) &&
                 devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
@@ -115,7 +225,7 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback);
+        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, null, null);
         if (devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
             historyRequestMessageList.add(
@@ -126,8 +236,16 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void interruptSend() {
-        if (this.llmProvider != null) {
+        this.cancel.set(true);
+        if (this.nowStep.get() >= 3) {
             this.llmProvider.interruptSend();
+        } else {
+            if (this.lastMessage != null) {
+                this.lastMessage.setStreaming(false);
+                addMessage(this.lastMessage);
+                callWebView();
+                this.lastMessage = null;
+            }
         }
     }
 

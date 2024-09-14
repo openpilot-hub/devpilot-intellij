@@ -37,6 +37,18 @@ public enum EditorActionEnum {
         return null;
     }
 
+    public static EditorActionEnum getEnumByName(String name) {
+        if (Objects.isNull(name)) {
+            return null;
+        }
+        for (EditorActionEnum type : EditorActionEnum.values()) {
+            if (type.name().equals(name)) {
+                return type;
+            }
+        }
+        return null;
+    }
+
     public String getLabel() {
         return label;
     }

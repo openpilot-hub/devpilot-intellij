@@ -22,6 +22,8 @@ public class MessageModel {
 
     private CodeReferenceModel codeRef;
 
+    private RecallModel recall;
+
     public static MessageModel buildCodeMessage(String id, Long time, String content,
                                                 String username, CodeReferenceModel codeReference) {
         MessageModel messageModel = new MessageModel();
@@ -41,10 +43,10 @@ public class MessageModel {
     }
 
     public static MessageModel buildInfoMessage(String content) {
-        return buildAssistantMessage(UUID.randomUUID().toString(), System.currentTimeMillis(), content, false);
+        return buildAssistantMessage(UUID.randomUUID().toString(), System.currentTimeMillis(), content, false, null);
     }
 
-    public static MessageModel buildAssistantMessage(String id, Long time, String content, boolean streaming) {
+    public static MessageModel buildAssistantMessage(String id, Long time, String content, boolean streaming, RecallModel recall) {
         MessageModel messageModel = new MessageModel();
         messageModel.setId(id);
         messageModel.setTime(time);
@@ -54,6 +56,7 @@ public class MessageModel {
         messageModel.setAvatar(null);
         messageModel.setStreaming(streaming);
         messageModel.setCodeRef(null);
+        messageModel.setRecall(recall);
         return messageModel;
     }
 
@@ -143,5 +146,13 @@ public class MessageModel {
 
     public void setCodeRef(CodeReferenceModel codeRef) {
         this.codeRef = codeRef;
+    }
+
+    public RecallModel getRecall() {
+        return recall;
+    }
+
+    public void setRecall(RecallModel recall) {
+        this.recall = recall;
     }
 }

@@ -25,6 +25,7 @@ import com.zhongan.devpilot.util.GitUtil;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
+import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.io.IOException;
@@ -57,7 +58,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     private MessageModel resultModel = new MessageModel();
 
     @Override
-    public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
+    public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
+                                 Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
@@ -93,7 +95,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                     .build();
 
             DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
-            this.es = this.buildEventSource(request, service, callback);
+            this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs);
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
 

@@ -151,7 +151,7 @@ public class PopupMenuEditorActionGroupUtil {
                         var codeMessage = MessageModel.buildCodeMessage(
                                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel);
 
-                        service.sendMessage(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
+                        service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }
                 };
                 group.add(action);
