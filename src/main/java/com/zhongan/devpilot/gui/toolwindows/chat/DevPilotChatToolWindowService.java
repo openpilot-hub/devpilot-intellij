@@ -90,49 +90,25 @@ public final class DevPilotChatToolWindowService {
         final List<String>[] references = new List[1];
 
         var codeReference = messageModel.getCodeRef();
-        PsiJavaFile psiJavaFile = null;
+        final PsiJavaFile[] psiJavaFile = new PsiJavaFile[1];
         if (codeReference != null) {
-            psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+            ApplicationManager.getApplication().runReadAction(() -> {
+                psiJavaFile[0] = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+            });
         }
 
         final Set<PsiElement>[] localRef = new Set[1];
 
-        PsiJavaFile finalPsiJavaFile = psiJavaFile;
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             // if no code ref, step1 and step2 will not process
-            if (codeReference != null && finalPsiJavaFile != null) {
+            if (codeReference != null && psiJavaFile[0] != null) {
                 // step1 call model to do code prediction
                 if (cancel.get()) {
                     return;
                 }
 
                 this.nowStep.set(1);
-                this.lastMessage = MessageModel
-                        .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(1));
-                callWebView(this.lastMessage);
-
-                final Map<String, String>[] dataMap = new Map[1];
-                ApplicationManager.getApplication().runReadAction(() -> {
-                    dataMap[0] = Map.of(
-                            "import", PsiElementUtils.getImportList(finalPsiJavaFile),
-                            "package", finalPsiJavaFile.getPackageName(),
-                            "field", PsiElementUtils.getFieldList(finalPsiJavaFile),
-                            "targetCode", codeReference.getSourceCode(),
-                            "filePath", codeReference.getFileUrl()
-                    );
-                });
-                var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-                devPilotChatCompletionRequest.setVersion("V240801");
-                devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", dataMap[0]));
-                devPilotChatCompletionRequest.setStream(Boolean.FALSE);
-                var response = this.llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
-                if (!response.isSuccessful()) {
-                    return;
-                }
-                var codePrediction = JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
-                if (codePrediction != null) {
-                    references[0] = codePrediction.getReferences();
-                }
+                references[0] = codePredict(codeReference, psiJavaFile[0]);
 
                 // step2 call rag to analyze code
                 if (cancel.get()) {
@@ -140,18 +116,7 @@ public final class DevPilotChatToolWindowService {
                 }
 
                 this.nowStep.set(2);
-                this.lastMessage = MessageModel
-                        .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(2));
-                callWebView(this.lastMessage);
-
-                // call local rag
-                if (references[0] != null) {
-                    ApplicationManager.getApplication().runReadAction(() -> {
-                        localRef[0] = PsiElementUtils.parseElementsList(project, references[0]);
-                    });
-                }
-
-                // todo call remote rag
+                localRef[0] = callRag(references[0]);
             }
 
             // step3 call model to get the final result
@@ -175,6 +140,115 @@ public final class DevPilotChatToolWindowService {
 
             sendMessage(sessionType, msgType, newMap, message, callback, messageModel, null, localRefs[0]);
         });
+    }
+
+    public void regenerateSmartChat(MessageModel messageModel, Consumer<String> callback) {
+        this.cancel.set(false);
+
+        callWebView(MessageModel.buildLoadingMessage());
+
+        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        final List<String>[] references = new List[1];
+
+        var codeReference = messageModel.getCodeRef();
+        final PsiJavaFile[] psiJavaFile = new PsiJavaFile[1];
+        if (codeReference != null) {
+            ApplicationManager.getApplication().runReadAction(() -> {
+                psiJavaFile[0] = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+            });
+        }
+
+        final Set<PsiElement>[] localRef = new Set[1];
+
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            // if no code ref, step1 and step2 will not process
+            if (codeReference != null && psiJavaFile[0] != null) {
+                // step1 call model to do code prediction
+                if (cancel.get()) {
+                    return;
+                }
+
+                this.nowStep.set(1);
+                references[0] = codePredict(codeReference, psiJavaFile[0]);
+
+                // step2 call rag to analyze code
+                if (cancel.get()) {
+                    return;
+                }
+
+                this.nowStep.set(2);
+                localRef[0] = callRag(references[0]);
+            }
+
+            // step3 call model to get the final result
+            if (cancel.get()) {
+                return;
+            }
+
+            this.nowStep.set(3);
+
+            var data = new HashMap<String, String>();
+            final List<CodeReferenceModel>[] localRefs = new List[1];
+
+            if (localRef[0] != null) {
+                ApplicationManager.getApplication().runReadAction(() -> {
+                    var relatedCode = PsiElementUtils.transformElementToString(localRef[0]);
+                    data.put("relatedClass", relatedCode);
+                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef[0], messageModel.getCodeRef().getType());
+                });
+            }
+
+            sendMessage(callback, data, null, localRefs[0]);
+        });
+    }
+
+    private List<String> codePredict(CodeReferenceModel codeReference, PsiJavaFile psiJavaFile) {
+        this.lastMessage = MessageModel
+                .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(1));
+        callWebView(this.lastMessage);
+
+        final Map<String, String>[] dataMap = new Map[1];
+        ApplicationManager.getApplication().runReadAction(() -> {
+            dataMap[0] = Map.of(
+                    "import", PsiElementUtils.getImportList(psiJavaFile),
+                    "package", psiJavaFile.getPackageName(),
+                    "field", PsiElementUtils.getFieldList(psiJavaFile),
+                    "targetCode", codeReference.getSourceCode(),
+                    "filePath", codeReference.getFileUrl()
+            );
+        });
+        var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
+        devPilotChatCompletionRequest.setVersion("V240801");
+        devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", dataMap[0]));
+        devPilotChatCompletionRequest.setStream(Boolean.FALSE);
+        var response = this.llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
+        if (!response.isSuccessful()) {
+            return null;
+        }
+        var codePrediction = JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
+        if (codePrediction != null) {
+            return codePrediction.getReferences();
+        }
+
+        return null;
+    }
+
+    private Set<PsiElement> callRag(List<String> references) {
+        this.lastMessage = MessageModel
+                .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(2));
+        callWebView(this.lastMessage);
+
+        final Set<PsiElement>[] localRef = new Set[1];
+
+        // call local rag
+        if (references != null) {
+            ApplicationManager.getApplication().runReadAction(() -> {
+                localRef[0] = PsiElementUtils.parseElementsList(project, references);
+            });
+        }
+
+        // todo call remote rag
+        return localRef[0];
     }
 
     public String sendMessage(Integer sessionType, String msgType, Map<String, String> data,
@@ -215,17 +289,20 @@ public final class DevPilotChatToolWindowService {
         return chatCompletion;
     }
 
-    public String sendMessage(Consumer<String> callback) {
-        // check session type,default multi session
+    public String sendMessage(Consumer<String> callback, Map<String, String> data, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+        // if data is not empty, the data should add into last history request message
+        if (data != null && !data.isEmpty() && !historyMessageList.isEmpty()) {
+            var lastHistoryRequestMessage = historyRequestMessageList.get(historyRequestMessageList.size() - 1);
+            lastHistoryRequestMessage.getPromptData().putAll(data);
+        }
+
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         devPilotChatCompletionRequest.setStream(true);
         devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
 
-        callWebView(MessageModel.buildLoadingMessage());
-
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, null, null);
+        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs);
         if (devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
             historyRequestMessageList.add(
@@ -320,8 +397,15 @@ public final class DevPilotChatToolWindowService {
         var id = lastMessage.getId();
         historyMessageList.removeIf(item -> item.getId().equals(id));
         historyRequestMessageList.removeIf(item -> item.getId().equals(id));
+
         // todo handle real callback
-        sendMessage(null);
+        lastMessage = historyMessageList.get(historyMessageList.size() - 1);
+
+        if (!lastMessage.getRole().equals("user")) {
+            return;
+        }
+
+        regenerateSmartChat(lastMessage, null);
     }
 
     public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement) {
