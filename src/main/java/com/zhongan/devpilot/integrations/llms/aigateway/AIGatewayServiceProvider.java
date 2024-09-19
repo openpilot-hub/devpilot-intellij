@@ -304,4 +304,41 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         }
         return false;
     }
+
+    @Override
+    public DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest) {
+        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+
+        if (StringUtils.isEmpty(host)) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
+        }
+
+        Response response;
+
+        try {
+            String requestBody = GatewayRequestUtils.chatRequestJson(chatCompletionRequest);
+            DevPilotNotification.debug("Send Request :[" + requestBody + "].");
+
+            var request = new Request.Builder()
+                    .url(host + "/devpilot/v1/chat/completions")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", LoginUtils.getLoginType())
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            Call call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+
+        try {
+            return parseCompletionsResult(chatCompletionRequest, response);
+        } catch (IOException e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+    }
 }

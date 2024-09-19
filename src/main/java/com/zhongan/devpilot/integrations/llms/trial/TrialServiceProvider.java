@@ -205,4 +205,33 @@ public final class TrialServiceProvider implements LlmProvider {
                     .getMessage());
         }
     }
+
+    @Override
+    public DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest) {
+        if (!LoginUtils.isLogin()) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + LoginUtils.loginUrl() + "\">Wechat Login</a>");
+        }
+
+        Response response;
+
+        try {
+            var request = new Request.Builder()
+                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", "wx")
+                    .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
+                    .build();
+
+            var call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+
+        try {
+            return parseResult(chatCompletionRequest, response);
+        } catch (Exception e) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+    }
 }

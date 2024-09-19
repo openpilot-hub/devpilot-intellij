@@ -8,7 +8,6 @@ import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.psi.PsiElement;
-import com.intellij.psi.PsiJavaFile;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
@@ -87,37 +86,23 @@ public final class DevPilotChatToolWindowService {
         callWebView(MessageModel.buildLoadingMessage());
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
-        final List<String>[] references = new List[1];
-
-        var codeReference = messageModel.getCodeRef();
-        final PsiJavaFile[] psiJavaFile = new PsiJavaFile[1];
-        if (codeReference != null) {
-            ApplicationManager.getApplication().runReadAction(() -> {
-                psiJavaFile[0] = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
-            });
-        }
-
-        final Set<PsiElement>[] localRef = new Set[1];
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            // if no code ref, step1 and step2 will not process
-            if (codeReference != null && psiJavaFile[0] != null) {
-                // step1 call model to do code prediction
-                if (cancel.get()) {
-                    return;
-                }
-
-                this.nowStep.set(1);
-                references[0] = codePredict(codeReference, psiJavaFile[0]);
-
-                // step2 call rag to analyze code
-                if (cancel.get()) {
-                    return;
-                }
-
-                this.nowStep.set(2);
-                localRef[0] = callRag(references[0]);
+            // step1 call model to do code prediction
+            if (cancel.get()) {
+                return;
             }
+
+            this.nowStep.set(1);
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef());
+
+            // step2 call rag to analyze code
+            if (cancel.get()) {
+                return;
+            }
+
+            this.nowStep.set(2);
+            var localRef = callRag(references);
 
             // step3 call model to get the final result
             if (cancel.get()) {
@@ -127,14 +112,19 @@ public final class DevPilotChatToolWindowService {
             this.nowStep.set(3);
 
             // avoid immutable map
-            var newMap = new HashMap<>(data);
+            Map<String, String> newMap;
+            if (data != null) {
+                newMap = new HashMap<>(data);
+            } else {
+                newMap = new HashMap<>();
+            }
             final List<CodeReferenceModel>[] localRefs = new List[1];
 
-            if (localRef[0] != null) {
+            if (localRef != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var relatedCode = PsiElementUtils.transformElementToString(localRef[0]);
+                    var relatedCode = PsiElementUtils.transformElementToString(localRef);
                     newMap.put("relatedClass", relatedCode);
-                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef[0], EditorActionEnum.getEnumByName(msgType));
+                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, EditorActionEnum.getEnumByName(msgType));
                 });
             }
 
@@ -148,37 +138,23 @@ public final class DevPilotChatToolWindowService {
         callWebView(MessageModel.buildLoadingMessage());
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
-        final List<String>[] references = new List[1];
-
-        var codeReference = messageModel.getCodeRef();
-        final PsiJavaFile[] psiJavaFile = new PsiJavaFile[1];
-        if (codeReference != null) {
-            ApplicationManager.getApplication().runReadAction(() -> {
-                psiJavaFile[0] = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
-            });
-        }
-
-        final Set<PsiElement>[] localRef = new Set[1];
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
-            // if no code ref, step1 and step2 will not process
-            if (codeReference != null && psiJavaFile[0] != null) {
-                // step1 call model to do code prediction
-                if (cancel.get()) {
-                    return;
-                }
-
-                this.nowStep.set(1);
-                references[0] = codePredict(codeReference, psiJavaFile[0]);
-
-                // step2 call rag to analyze code
-                if (cancel.get()) {
-                    return;
-                }
-
-                this.nowStep.set(2);
-                localRef[0] = callRag(references[0]);
+            // step1 call model to do code prediction
+            if (cancel.get()) {
+                return;
             }
+
+            this.nowStep.set(1);
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef());
+
+            // step2 call rag to analyze code
+            if (cancel.get()) {
+                return;
+            }
+
+            this.nowStep.set(2);
+            var localRef = callRag(references);
 
             // step3 call model to get the final result
             if (cancel.get()) {
@@ -190,11 +166,11 @@ public final class DevPilotChatToolWindowService {
             var data = new HashMap<String, String>();
             final List<CodeReferenceModel>[] localRefs = new List[1];
 
-            if (localRef[0] != null) {
+            if (localRef != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var relatedCode = PsiElementUtils.transformElementToString(localRef[0]);
+                    var relatedCode = PsiElementUtils.transformElementToString(localRef);
                     data.put("relatedClass", relatedCode);
-                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef[0], messageModel.getCodeRef().getType());
+                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, messageModel.getCodeRef().getType());
                 });
             }
 
@@ -202,26 +178,40 @@ public final class DevPilotChatToolWindowService {
         });
     }
 
-    private List<String> codePredict(CodeReferenceModel codeReference, PsiJavaFile psiJavaFile) {
+    private List<String> codePredict(String content, CodeReferenceModel codeReference) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(1));
         callWebView(this.lastMessage);
 
-        final Map<String, String>[] dataMap = new Map[1];
-        ApplicationManager.getApplication().runReadAction(() -> {
-            dataMap[0] = Map.of(
-                    "import", PsiElementUtils.getImportList(psiJavaFile),
-                    "package", psiJavaFile.getPackageName(),
-                    "field", PsiElementUtils.getFieldList(psiJavaFile),
-                    "targetCode", codeReference.getSourceCode(),
-                    "filePath", codeReference.getFileUrl()
-            );
-        });
+        final Map<String, String> dataMap = new HashMap<>();
+
+        if (codeReference != null) {
+            ApplicationManager.getApplication().runReadAction(() -> {
+                var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+
+                if (psiJavaFile != null) {
+                    dataMap.putAll(
+                            Map.of(
+                                    "import", PsiElementUtils.getImportList(psiJavaFile),
+                                    "package", psiJavaFile.getPackageName(),
+                                    "field", PsiElementUtils.getFieldList(psiJavaFile),
+                                    "targetCode", codeReference.getSourceCode(),
+                                    "filePath", codeReference.getFileUrl()
+                            )
+                    );
+                }
+            });
+        }
+
+        if (!StringUtils.isEmpty(content)) {
+            dataMap.put("userContent", content);
+        }
+
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         devPilotChatCompletionRequest.setVersion("V240801");
-        devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", dataMap[0]));
+        devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", dataMap));
         devPilotChatCompletionRequest.setStream(Boolean.FALSE);
-        var response = this.llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
+        var response = this.llmProvider.codePrediction(devPilotChatCompletionRequest);
         if (!response.isSuccessful()) {
             return null;
         }
@@ -241,11 +231,13 @@ public final class DevPilotChatToolWindowService {
         final Set<PsiElement>[] localRef = new Set[1];
 
         // call local rag
-        if (references != null) {
-            ApplicationManager.getApplication().runReadAction(() -> {
-                localRef[0] = PsiElementUtils.parseElementsList(project, references);
-            });
+        if (references == null) {
+            return null;
         }
+
+        ApplicationManager.getApplication().runReadAction(() -> {
+            localRef[0] = PsiElementUtils.parseElementsList(project, references);
+        });
 
         // todo call remote rag
         return localRef[0];
@@ -258,7 +250,7 @@ public final class DevPilotChatToolWindowService {
         if (data == null || data.isEmpty()) {
             userMessage = MessageUtil.createUserMessage(message, msgType, messageModel.getId());
         } else {
-            userMessage = MessageUtil.createPromptMessage(messageModel.getId(), msgType, data);
+            userMessage = MessageUtil.createPromptMessage(messageModel.getId(), msgType, message, data);
         }
 
         // check session type,default multi session
@@ -293,6 +285,9 @@ public final class DevPilotChatToolWindowService {
         // if data is not empty, the data should add into last history request message
         if (data != null && !data.isEmpty() && !historyMessageList.isEmpty()) {
             var lastHistoryRequestMessage = historyRequestMessageList.get(historyRequestMessageList.size() - 1);
+            if (lastHistoryRequestMessage.getPromptData() == null) {
+                lastHistoryRequestMessage.setPromptData(new HashMap<>());
+            }
             lastHistoryRequestMessage.getPromptData().putAll(data);
         }
 

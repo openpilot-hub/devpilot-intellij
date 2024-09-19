@@ -24,6 +24,16 @@ public class MessageUtil {
         return message;
     }
 
+    public static DevPilotMessage createPromptMessage(String id, String msgType, String content, Map<String, String> data) {
+        DevPilotMessage message = new DevPilotMessage();
+        message.setId(id);
+        message.setRole("user");
+        message.setPromptData(data);
+        message.setCommandType(msgType);
+        message.setContent(content);
+        return message;
+    }
+
     public static DevPilotMessage createUserMessage(String content, String msgType, String id) {
         return createMessage(id, "user", msgType, content);
     }

@@ -39,6 +39,8 @@ public interface LlmProvider {
 
     DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest);
 
+    DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest);
+
     void interruptSend();
 
     default void restoreMessage(MessageModel messageModel) {
