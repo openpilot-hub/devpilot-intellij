@@ -83,13 +83,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", LoginUtils.getLoginType());
 
-            if (isLatestUserContentContainsRepo(chatCompletionRequest)) {
-                String repoName = EditorUtils.getCurrentEditorRepositoryName(project);
-                if (repoName != null && GitUtil.isRepoEmbedded(repoName)) {
-                    requestBuilder.header("Embedded-Repos-V2", repoName);
-                    requestBuilder.header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US");
-                }
-            }
             var request = requestBuilder
                     .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
