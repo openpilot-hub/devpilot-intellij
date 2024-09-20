@@ -94,7 +94,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(1);
-            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef());
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
 
             // step2 call rag to analyze code
             if (cancel.get()) {
@@ -146,7 +146,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(1);
-            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef());
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
 
             // step2 call rag to analyze code
             if (cancel.get()) {
@@ -178,12 +178,22 @@ public final class DevPilotChatToolWindowService {
         });
     }
 
-    private List<String> codePredict(String content, CodeReferenceModel codeReference) {
+    private List<String> codePredict(String content, CodeReferenceModel codeReference, String commandType) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(1));
         callWebView(this.lastMessage);
 
         final Map<String, String> dataMap = new HashMap<>();
+
+        if (commandType == null) {
+            if (codeReference == null) {
+                commandType = "PURE_CHAT";
+            } else {
+                commandType = codeReference.getType().name();
+            }
+        }
+
+        dataMap.put("commandTypeFor", commandType);
 
         if (codeReference != null) {
             ApplicationManager.getApplication().runReadAction(() -> {
@@ -192,9 +202,9 @@ public final class DevPilotChatToolWindowService {
                 if (psiJavaFile != null) {
                     dataMap.putAll(
                             Map.of(
-                                    "import", PsiElementUtils.getImportList(psiJavaFile),
+                                    "imports", PsiElementUtils.getImportList(psiJavaFile),
                                     "package", psiJavaFile.getPackageName(),
-                                    "field", PsiElementUtils.getFieldList(psiJavaFile),
+                                    "fields", PsiElementUtils.getFieldList(psiJavaFile),
                                     "targetCode", codeReference.getSourceCode(),
                                     "filePath", codeReference.getFileUrl()
                             )
@@ -203,13 +213,11 @@ public final class DevPilotChatToolWindowService {
             });
         }
 
-        if (!StringUtils.isEmpty(content)) {
-            dataMap.put("userContent", content);
-        }
-
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         devPilotChatCompletionRequest.setVersion("V240801");
-        devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", dataMap));
+        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
+        devPilotChatCompletionRequest.getMessages().add(
+                MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", content, dataMap));
         devPilotChatCompletionRequest.setStream(Boolean.FALSE);
         var response = this.llmProvider.codePrediction(devPilotChatCompletionRequest);
         if (!response.isSuccessful()) {
