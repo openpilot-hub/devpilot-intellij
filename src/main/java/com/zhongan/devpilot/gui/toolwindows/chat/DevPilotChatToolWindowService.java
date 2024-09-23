@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
+import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
@@ -205,7 +206,7 @@ public final class DevPilotChatToolWindowService {
                                     "imports", PsiElementUtils.getImportList(psiJavaFile),
                                     "package", psiJavaFile.getPackageName(),
                                     "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                                    "targetCode", codeReference.getSourceCode(),
+                                    "selectedCode", codeReference.getSourceCode(),
                                     "filePath", codeReference.getFileUrl()
                             )
                     );
@@ -236,19 +237,15 @@ public final class DevPilotChatToolWindowService {
                 .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(2));
         callWebView(this.lastMessage);
 
-        final Set<PsiElement>[] localRef = new Set[1];
-
         // call local rag
         if (references == null) {
             return null;
         }
 
-        ApplicationManager.getApplication().runReadAction(() -> {
-            localRef[0] = PsiElementUtils.parseElementsList(project, references);
-        });
-
         // todo call remote rag
-        return localRef[0];
+        return ApplicationManager.getApplication().runReadAction(
+                (Computable<Set<PsiElement>>) () -> PsiElementUtils.parseElementsList(project, references)
+        );
     }
 
     public String sendMessage(Integer sessionType, String msgType, Map<String, String> data,
@@ -322,6 +319,7 @@ public final class DevPilotChatToolWindowService {
         } else {
             if (this.lastMessage != null) {
                 this.lastMessage.setStreaming(false);
+                this.lastMessage.setRecall(RecallModel.createTerminated(this.nowStep.get()));
                 addMessage(this.lastMessage);
                 callWebView();
                 this.lastMessage = null;

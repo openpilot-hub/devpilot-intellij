@@ -20,11 +20,20 @@ public class RecallModel {
     }
 
     public static RecallModel create(int step) {
-        return create(step, null, null);
+        return create(step, null, null, 1);
+    }
+
+    public static RecallModel createTerminated(int step) {
+        return create(step, null, null, 2);
+    }
+
+    public static RecallModel create(int step, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+        return create(step, remoteRefs, localRefs, 1);
     }
 
     // 1 - step1 doing; 2 - step2 doing; 3 - step3 doing; 4 - step3 done
-    public static RecallModel create(int step, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+    // type: 1 - loading; 2 - terminated
+    public static RecallModel create(int step, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int type) {
         var steps = new ArrayList<Step>();
 
         for (int i = 1; i <= step - 1; i++) {
@@ -32,7 +41,11 @@ public class RecallModel {
         }
 
         if (step < 4) {
-            steps.add(new Step("loading"));
+            if (type == 2) {
+                steps.add(new Step("terminated"));
+            } else {
+                steps.add(new Step("loading"));
+            }
         }
 
         if (remoteRefs == null) {

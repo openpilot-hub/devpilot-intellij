@@ -46,7 +46,6 @@ import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.CLASS_FULL_NAME;
 import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.MOCK_FRAMEWORK;
-import static com.zhongan.devpilot.constant.PlaceholderConst.RELATED_CLASS;
 import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 
@@ -116,18 +115,14 @@ public class PopupMenuEditorActionGroupUtil {
                                 data.put(TEST_FRAMEWORK, utFramework.getUtFrameType());
                                 data.put(MOCK_FRAMEWORK, utFramework.getMockFrameType());
                             }
-                            if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
-                                if (psiElement != null) {
-                                    var relatedClass = PsiElementUtils.getRelatedClass(psiElement);
-                                    var fullClassName = PsiElementUtils.getFullClassName(psiElement);
+                        }
 
-                                    if (relatedClass != null) {
-                                        data.put(RELATED_CLASS, relatedClass);
-                                    }
+                        if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
+                            if (psiElement != null) {
+                                var fullClassName = PsiElementUtils.getFullClassName(psiElement);
 
-                                    if (fullClassName != null) {
-                                        data.put(CLASS_FULL_NAME, fullClassName);
-                                    }
+                                if (fullClassName != null) {
+                                    data.put(CLASS_FULL_NAME, fullClassName);
                                 }
                             }
                         }
@@ -150,6 +145,19 @@ public class PopupMenuEditorActionGroupUtil {
 
                         var codeMessage = MessageModel.buildCodeMessage(
                                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel);
+
+                        var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReferenceModel.getFileUrl());
+
+                        if (psiJavaFile != null) {
+                            data.putAll(
+                                    Map.of(
+                                            "imports", PsiElementUtils.getImportList(psiJavaFile),
+                                            "package", psiJavaFile.getPackageName(),
+                                            "fields", PsiElementUtils.getFieldList(psiJavaFile),
+                                            "filePath", codeReferenceModel.getFileUrl()
+                                    )
+                            );
+                        }
 
                         service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }

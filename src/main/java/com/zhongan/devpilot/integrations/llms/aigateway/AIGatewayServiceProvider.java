@@ -25,6 +25,7 @@ import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+import com.zhongan.devpilot.webview.model.RecallModel;
 
 import java.io.IOException;
 import java.util.List;
@@ -104,6 +105,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             // remember the broken message
             if (resultModel != null && !StringUtils.isEmpty(resultModel.getContent())) {
                 resultModel.setStreaming(false);
+                resultModel.setRecall(RecallModel.createTerminated(3));
                 toolWindowService.addMessage(resultModel);
             }
 
