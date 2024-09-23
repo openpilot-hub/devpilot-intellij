@@ -4,24 +4,27 @@ import java.util.Objects;
 
 public enum EditorActionEnum {
 
-    GENERATE_COMMENTS("devpilot.action.generate.comments", "Generate comments in the following code"),
+    GENERATE_COMMENTS("devpilot.action.generate.comments", "devpilot.inlay.shortcut.inlineComment", "Generate comments in the following code"),
 
-    COMMENT_METHOD("devpilot.action.generate.method.comments", ""),
+    COMMENT_METHOD("devpilot.action.generate.method.comments", "devpilot.inlay.shortcut.methodComments", ""),
 
-    GENERATE_TESTS("devpilot.action.generate.tests", "Generate Tests in the following code"),
+    GENERATE_TESTS("devpilot.action.generate.tests", "devpilot.inlay.shortcut.test", "Generate Tests in the following code"),
 
-    FIX_CODE("devpilot.action.fix", "Fix This in the following code"),
+    FIX_CODE("devpilot.action.fix", "devpilot.inlay.shortcut.fix", "Fix This in the following code"),
 
-    EXPLAIN_CODE("devpilot.action.explain", "Explain this in the following code"),
+    EXPLAIN_CODE("devpilot.action.explain", "devpilot.inlay.shortcut.explain", "Explain this in the following code"),
 
-    COMPLETE_CODE("devpilot.action.completions", "code completions");
+    COMPLETE_CODE("devpilot.action.completions", "", "code completions");
 
     private final String label;
 
+    private final String inlayLabel;
+
     private final String userMessage;
 
-    EditorActionEnum(String label, String userMessage) {
+    EditorActionEnum(String label, String inlayLabel, String userMessage) {
         this.label = label;
+        this.inlayLabel = inlayLabel;
         this.userMessage = userMessage;
     }
 
@@ -51,6 +54,10 @@ public enum EditorActionEnum {
 
     public String getLabel() {
         return label;
+    }
+
+    public String getInlayLabel() {
+        return inlayLabel;
     }
 
     public String getUserMessage() {

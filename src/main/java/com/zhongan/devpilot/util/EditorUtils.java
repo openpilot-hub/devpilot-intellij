@@ -5,15 +5,19 @@ import com.intellij.openapi.editor.LogicalPosition;
 import com.intellij.openapi.editor.ScrollType;
 import com.intellij.openapi.editor.ScrollingModel;
 import com.intellij.openapi.editor.SelectionModel;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -80,5 +84,16 @@ public class EditorUtils {
         }
 
         FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, file), true);
+    }
+
+    public static void refreshInlayPresentationDisplay(Integer methodInlayPresentationDisplayIndex) {
+        var projects = ProjectManager.getInstance().getOpenProjects();
+
+        Arrays.stream(projects).sequential().forEach(project ->
+                Optional.ofNullable(FileEditorManager.getInstance(project))
+                        .flatMap(fileEditorManager -> Optional.ofNullable(fileEditorManager.getSelectedTextEditor()))
+                        .flatMap(editor -> Optional.ofNullable(FileDocumentManager.getInstance().getFile(editor.getDocument())))
+                        .ifPresent(virtualFile -> FileEditorManager.getInstance(project).updateFilePresentation(virtualFile))
+        );
     }
 }
