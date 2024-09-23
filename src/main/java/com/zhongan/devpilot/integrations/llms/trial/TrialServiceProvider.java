@@ -18,6 +18,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.GatewayRequestUtils;
+import com.zhongan.devpilot.util.GatewayRequestV2Utils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
@@ -217,11 +218,16 @@ public final class TrialServiceProvider implements LlmProvider {
         Response response;
 
         try {
+            var requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
             var request = new Request.Builder()
-                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
+                    .url(TRIAL_DEFAULT_HOST + "/v2/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
-                    .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
             var call = OkhttpUtils.getClient().newCall(request);

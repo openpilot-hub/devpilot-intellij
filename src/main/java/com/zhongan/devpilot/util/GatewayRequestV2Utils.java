@@ -7,7 +7,7 @@ import java.util.Base64;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class RequestV2Utils {
+public class GatewayRequestV2Utils {
     public static String encodeRequest(Object requestBody) throws Exception {
         String jsonString = JsonUtils.toJson(requestBody);
 

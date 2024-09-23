@@ -22,6 +22,7 @@ import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.GatewayRequestUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
+import com.zhongan.devpilot.util.GatewayRequestV2Utils;
 import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
@@ -310,11 +311,15 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         Response response;
 
         try {
-            String requestBody = GatewayRequestUtils.chatRequestJson(chatCompletionRequest);
+            String requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
             var request = new Request.Builder()
-                    .url(host + "/devpilot/v1/chat/completions")
+                    .url(host + "/devpilot/v2/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", LoginUtils.getLoginType())
                     .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
