@@ -162,7 +162,9 @@ public class PopupMenuEditorActionGroupUtil {
                         service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }
                 };
-                group.add(action);
+                if (!label.equals(EditorActionEnum.COMMENT_METHOD.getLabel())) {
+                    group.add(action);
+                }
             });
         }
     }

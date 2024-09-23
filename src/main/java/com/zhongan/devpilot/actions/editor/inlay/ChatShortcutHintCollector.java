@@ -6,12 +6,6 @@ import com.intellij.codeInsight.hints.presentation.InlayPresentation;
 import com.intellij.codeInsight.hints.presentation.PresentationFactory;
 import com.intellij.codeInsight.hints.presentation.SequencePresentation;
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.actionSystem.Presentation;
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Document;
@@ -197,13 +191,10 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
         if (EditorActionEnum.COMMENT_METHOD.equals(actionEnum)) {
             ApplicationManager.getApplication().invokeLater(() -> {
                 moveCareToPreviousLineStart(editor, textRange.getStartOffset());
-                AnAction action = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.generate.method.comments");
-                DataContext context = SimpleDataContext.getProjectContext(editor.getProject());
-                action.actionPerformed(new AnActionEvent(null, context, "", new Presentation(), ActionManager.getInstance(), 0));
             });
-        } else {
-            service.handleActions(actionEnum, psiElement);
         }
+
+        service.handleActions(actionEnum, psiElement);
     }
 
     private static int getAnchorOffset(@NotNull PsiElement psiElement) {
