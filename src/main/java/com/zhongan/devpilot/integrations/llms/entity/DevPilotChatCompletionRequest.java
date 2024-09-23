@@ -5,7 +5,7 @@ import java.util.List;
 
 public class DevPilotChatCompletionRequest {
 
-    String version = "V240801";
+    String version = "V240923";
 
     String encoding = null;
 

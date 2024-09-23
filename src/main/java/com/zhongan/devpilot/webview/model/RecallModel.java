@@ -27,6 +27,10 @@ public class RecallModel {
         return create(step, null, null, 2);
     }
 
+    public static RecallModel createTerminated(int step, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+        return create(step, remoteRefs, localRefs, 2);
+    }
+
     public static RecallModel create(int step, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
         return create(step, remoteRefs, localRefs, 1);
     }

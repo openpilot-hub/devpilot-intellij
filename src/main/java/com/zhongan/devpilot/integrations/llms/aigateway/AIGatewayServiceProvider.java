@@ -106,7 +106,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             // remember the broken message
             if (resultModel != null && !StringUtils.isEmpty(resultModel.getContent())) {
                 resultModel.setStreaming(false);
-                resultModel.setRecall(RecallModel.createTerminated(3));
+                var recall = resultModel.getRecall();
+                var newRecall = RecallModel.createTerminated(3, recall.getRemoteRefs(), recall.getLocalRefs());
+                resultModel.setRecall(newRecall);
                 toolWindowService.addMessage(resultModel);
             }
 

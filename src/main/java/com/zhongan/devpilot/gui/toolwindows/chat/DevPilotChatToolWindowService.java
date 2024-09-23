@@ -170,7 +170,8 @@ public final class DevPilotChatToolWindowService {
             if (localRef != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
                     var relatedCode = PsiElementUtils.transformElementToString(localRef);
-                    data.put("relatedClass", relatedCode);
+                    data.put("relatedContext", relatedCode);
+//                    data.put("additionalRelatedContext", null);
                     localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, messageModel.getCodeRef().getType());
                 });
             }
@@ -215,7 +216,7 @@ public final class DevPilotChatToolWindowService {
         }
 
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        devPilotChatCompletionRequest.setVersion("V240801");
+        devPilotChatCompletionRequest.setVersion("V240923");
         devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         devPilotChatCompletionRequest.getMessages().add(
                 MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", content, dataMap));
