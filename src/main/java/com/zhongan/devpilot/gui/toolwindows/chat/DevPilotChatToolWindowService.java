@@ -124,7 +124,8 @@ public final class DevPilotChatToolWindowService {
             if (localRef != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
                     var relatedCode = PsiElementUtils.transformElementToString(localRef);
-                    newMap.put("relatedClass", relatedCode);
+                    newMap.put("relatedContext", relatedCode);
+                    // newMap.put("additionalRelatedContext", null);
                     localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, EditorActionEnum.getEnumByName(msgType));
                 });
             }
