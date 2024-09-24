@@ -72,6 +72,9 @@ public class PsiElementUtils {
         var result = new StringBuilder();
 
         for (T element : elements) {
+            if (element == null) {
+                continue;
+            }
             if (element instanceof PsiClass) {
                 PsiClass psiClass = (PsiClass) element;
                 if (ignoreClass(psiClass)) {
