@@ -244,11 +244,7 @@ public class PsiElementUtils {
     }
 
     private static PsiElement getElementByName(Project project, String className, String methodName) {
-        var javaPsiFacade = JavaPsiFacade.getInstance(project);
-        var factory = javaPsiFacade.getElementFactory();
-
-        var classType = factory.createTypeByFQClassName(className);
-        var psiClass = classType.resolve();
+        var psiClass = findRealClass(project, className);
 
         if (psiClass != null) {
             if (methodName == null) {
@@ -264,6 +260,31 @@ public class PsiElementUtils {
         }
 
         return null;
+    }
+
+    // AI model may confuse between inner class and normal class, so we should resolve this situation
+    private static PsiClass findRealClass(Project project, String className) {
+        var javaPsiFacade = JavaPsiFacade.getInstance(project);
+        var factory = javaPsiFacade.getElementFactory();
+
+        var classType = factory.createTypeByFQClassName(className);
+        var psiClass = classType.resolve();
+
+        if (psiClass != null) {
+            return psiClass;
+        }
+
+        if (className.contains("$")) {
+            className = className.replace('$', '.');
+        } else {
+            var lastDot = className.lastIndexOf('.');
+            if (lastDot != -1) {
+                className = className.substring(0, lastDot) + "$" + className.substring(lastDot + 1);
+            }
+        }
+
+        classType = factory.createTypeByFQClassName(className);
+        return classType.resolve();
     }
 
     public static PsiJavaFile getPsiJavaFileByFilePath(Project project, String filePath) {
