@@ -151,7 +151,7 @@ public class PopupMenuEditorActionGroupUtil {
                         if (psiJavaFile != null) {
                             data.putAll(
                                     Map.of(
-                                            "imports", PsiElementUtils.getImportList(psiJavaFile),
+                                            "imports", PsiElementUtils.getImportInfo(psiJavaFile),
                                             "package", psiJavaFile.getPackageName(),
                                             "fields", PsiElementUtils.getFieldList(psiJavaFile),
                                             "filePath", codeReferenceModel.getFileUrl()

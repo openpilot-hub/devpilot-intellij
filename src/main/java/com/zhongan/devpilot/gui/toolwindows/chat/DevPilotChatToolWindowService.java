@@ -205,7 +205,7 @@ public final class DevPilotChatToolWindowService {
                 if (psiJavaFile != null) {
                     dataMap.putAll(
                             Map.of(
-                                    "imports", PsiElementUtils.getImportList(psiJavaFile),
+                                    "imports", PsiElementUtils.getImportInfo(psiJavaFile),
                                     "package", psiJavaFile.getPackageName(),
                                     "fields", PsiElementUtils.getFieldList(psiJavaFile),
                                     "selectedCode", codeReference.getSourceCode(),
@@ -234,7 +234,7 @@ public final class DevPilotChatToolWindowService {
         return null;
     }
 
-    private Set<PsiElement> callRag(List<String> references) {
+    private List<PsiElement> callRag(List<String> references) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(2));
         callWebView(this.lastMessage);
@@ -246,7 +246,7 @@ public final class DevPilotChatToolWindowService {
 
         // todo call remote rag
         return ApplicationManager.getApplication().runReadAction(
-                (Computable<Set<PsiElement>>) () -> PsiElementUtils.parseElementsList(project, references)
+                (Computable<List<PsiElement>>) () -> PsiElementUtils.referenceRecall(project, references)
         );
     }
 

@@ -2,25 +2,45 @@ package com.zhongan.devpilot.util;
 
 import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
+import com.intellij.psi.PsiFile;
+import com.intellij.psi.PsiImportList;
 import com.intellij.psi.PsiImportStatement;
+import com.intellij.psi.PsiImportStatementBase;
 import com.intellij.psi.PsiImportStaticStatement;
+import com.intellij.psi.PsiJavaCodeReferenceElement;
 import com.intellij.psi.PsiJavaFile;
 import com.intellij.psi.PsiManager;
 import com.intellij.psi.PsiMethod;
 import com.intellij.psi.PsiTypeParameter;
+import com.intellij.psi.impl.compiled.ClsClassImpl;
 import com.intellij.psi.impl.source.PsiClassReferenceType;
+import com.intellij.psi.search.GlobalSearchScope;
+import com.intellij.psi.search.searches.ClassInheritorsSearch;
+import com.intellij.psi.util.PropertyUtil;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.jar.Manifest;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class PsiElementUtils {
@@ -54,18 +74,22 @@ public class PsiElementUtils {
 
         for (T element : elements) {
             if (element instanceof PsiClass) {
-                if (ignoreClass((PsiClass) element)) {
+                PsiClass psiClass = (PsiClass) element;
+                if (ignoreClass(psiClass)) {
                     continue;
                 }
+                result.append("Class: ").append(psiClass.getQualifiedName()).append("\n\n");
             }
 
             if (element instanceof PsiMethod) {
-                if (ignoreMethod((PsiMethod) element)) {
+                PsiMethod psiMethod = (PsiMethod) element;
+                if (ignoreMethod(psiMethod)) {
                     continue;
                 }
+                result.append("Method: ").append(StringUtils.join(psiMethod.getContainingClass().getQualifiedName(), psiMethod.getName(), "#")).append("\n");
             }
 
-            result.append(element.getText()).append("\n");
+            result.append(element.getText()).append("\n\n");
         }
 
         return result.toString();
@@ -318,4 +342,148 @@ public class PsiElementUtils {
         }
         return fieldList.toString();
     }
+
+    public static String getImportInfo(PsiFile psiFile) {
+        StringBuilder importedClasses = new StringBuilder();
+        if (!(psiFile instanceof PsiJavaFile)) {
+            return "";
+        }
+        PsiImportList importList = ((PsiJavaFile) psiFile).getImportList();
+        if (importList != null) {
+            PsiImportStatementBase[] importStatements = Arrays.stream(importList.getAllImportStatements()).toArray(PsiImportStatementBase[]::new);
+            for (PsiImportStatementBase importStatement : importStatements) {
+                importedClasses.append(importStatement.getText()).append(System.lineSeparator());
+            }
+        }
+        return importedClasses.toString();
+    }
+
+    public static List<PsiElement> referenceRecall(Project project, List<String> refs) {
+        if (CollectionUtils.isEmpty(refs)) {
+            return Collections.emptyList();
+        }
+        List<String> finalRefs = removeDuplicates(refs);
+        return doRecall(project, finalRefs);
+    }
+
+    private static List<String> removeDuplicates(List<String> refs) {
+        if (CollectionUtils.isEmpty(refs)) {
+            return Collections.emptyList();
+        }
+        Set<String> uniqueRefs = new HashSet<>(refs);
+        HashSet<String> res = new LinkedHashSet<>(uniqueRefs);
+        uniqueRefs.forEach(ref -> {
+            if (StringUtils.contains(ref, "#")) {
+                String[] split = StringUtils.split(ref, "#");
+                String className = split[0];
+                if (res.contains(className)) {
+                    res.remove(ref);
+                }
+            }
+        });
+        return new ArrayList<>(res);
+    }
+
+    private static List<PsiElement> doRecall(Project project, List<String> references) {
+        List<PsiElement> res = new ArrayList<>();
+        if (CollectionUtils.isEmpty(references)) {
+            return Collections.emptyList();
+        }
+        for (String ref : references) {
+            if (StringUtils.contains(ref, "#")) {
+                String[] split = StringUtils.split(ref, "#");
+                String className = split[0];
+                String methodName = split[1];
+                res.add(methodRecall(project, className, methodName));
+            } else {
+                res.add(classRecall(project, ref));
+            }
+        }
+        return res;
+    }
+
+    public static PsiElement classRecall(Project project, String clz) {
+        PsiClass psiClass = JavaPsiFacade.getInstance(project).findClass(clz, GlobalSearchScope.allScope(project));
+        if (psiClass == null) {
+            return null;
+        }
+        if (isCompiled(psiClass)) {
+            PsiClass sourceMirror = ((ClsClassImpl) psiClass).getSourceMirrorClass();
+            if (sourceMirror != null) {
+                psiClass = sourceMirror;
+            }
+        }
+        return psiClass;
+    }
+
+    private static PsiElement methodRecall(Project project, String clz, String methodName) {
+        PsiClass[] classes = JavaPsiFacade.getInstance(project).findClasses(clz, GlobalSearchScope.allScope(project));
+        if (classes.length == 0) {
+            return null;
+        }
+        PsiClass psiClass = classes[0];
+        if (psiClass.isInterface()) {
+            PsiClass first = ClassInheritorsSearch.search(psiClass).findFirst();
+            if (first != null) {
+                psiClass = first;
+            }
+        }
+        if (isCompiled(psiClass)) {
+            PsiClass sourceMirror = ((ClsClassImpl) psiClass).getSourceMirrorClass();
+            if (sourceMirror != null) {
+                psiClass = sourceMirror;
+            }
+        }
+        PsiMethod psiMethod = Arrays.stream(psiClass.findMethodsByName(methodName, true)).max(Comparator.comparingInt(o -> o.getParameters().length)).orElse(null);
+        if (isValidMethod(psiMethod, psiClass)) {
+            return psiMethod;
+        }
+        return null;
+    }
+
+    private static boolean isValidMethod(PsiMethod psiMethod, PsiClass psiClass) {
+        if (psiMethod == null) return false;
+        if (PropertyUtil.isSimpleGetter(psiMethod) || PropertyUtil.isSimpleSetter(psiMethod)) return false;
+        if (isCompiled(psiClass)) {
+            return !StringUtils.contains(psiMethod.getText(), "/* compiled code */");
+        } else {
+            return psiMethod.getBody() != null;
+        }
+    }
+
+    private static boolean isCompiled(@NotNull PsiClass psiClass) {
+        return psiClass instanceof ClsClassImpl;
+    }
+
+    /**
+     * used in rag case if need.
+     * @param project
+     * @param psiClass
+     * @return
+     */
+    public static Pair<String, String> getJarTitleAndVersion(Project project, PsiClass psiClass) {
+        PsiFile psiFile = psiClass.getContainingFile();
+        VirtualFile virtualFile = psiFile.getVirtualFile();
+        ProjectFileIndex fileIndex = ProjectFileIndex.SERVICE.getInstance(project);
+        String title = "", version = "";
+        if (fileIndex.isInLibraryClasses(virtualFile)) {
+            VirtualFile classRoot = fileIndex.getClassRootForFile(virtualFile);
+            if (classRoot != null) {
+                String jarPath = classRoot.getPresentableUrl();
+                Manifest manifest;
+                try (JarFile jarFile = new JarFile(jarPath)) {
+                    manifest = jarFile.getManifest();
+                } catch (Exception e) {
+                    return Pair.of(title, version);
+                }
+                if (manifest != null) {
+                    Attributes mainAttributes = manifest.getMainAttributes();
+                    version = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+                    title = mainAttributes.getValue(Attributes.Name.IMPLEMENTATION_TITLE);
+                }
+            }
+        }
+        return Pair.of(title, version);
+    }
+
 }
