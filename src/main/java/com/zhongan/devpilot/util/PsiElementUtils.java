@@ -432,7 +432,7 @@ public class PsiElementUtils {
             if (sourceMirror != null) {
                 psiClass = sourceMirror;
             }
-            if (sourceMirror == null || StringUtils.contains(psiClass.getText(), "/* compiled code */")) {
+            if (StringUtils.contains(psiClass.getText(), "/* compiled code */")) {
                 return null;
             }
         }
