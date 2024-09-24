@@ -85,7 +85,11 @@ public class PsiElementUtils {
                 if (ignoreMethod(psiMethod)) {
                     continue;
                 }
-                result.append("Method: ").append(StringUtils.join(psiMethod.getContainingClass().getQualifiedName(), psiMethod.getName(), "#")).append("\n");
+                if (psiMethod.getContainingClass() != null) {
+                    result.append("Method: ").append(StringUtils.join(psiMethod.getContainingClass().getQualifiedName(), psiMethod.getName(), "#")).append("\n");
+                } else {
+                    result.append("Method: ").append("\n");
+                }
             }
 
             result.append(element.getText()).append("\n\n");
