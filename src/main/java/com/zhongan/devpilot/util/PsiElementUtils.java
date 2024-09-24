@@ -432,6 +432,9 @@ public class PsiElementUtils {
             if (sourceMirror != null) {
                 psiClass = sourceMirror;
             }
+            if (sourceMirror == null || StringUtils.contains(psiClass.getText(), "/* compiled code */")) {
+                return null;
+            }
         }
         return psiClass;
     }
@@ -477,6 +480,7 @@ public class PsiElementUtils {
 
     /**
      * used in rag case if need.
+     *
      * @param project
      * @param psiClass
      * @return
