@@ -314,13 +314,7 @@ public class PsiElementUtils {
 
         var fields = psiClass.getFields();
         for (PsiField field : fields) {
-            fieldList.append(field.getModifierList().getText())
-                      .append(" ")
-                      .append(field.getType().getPresentableText())
-                      .append(" ")
-                      .append(field.getName())
-                      .append(";")
-                      .append(System.lineSeparator());
+            fieldList.append(field.getText()).append(System.lineSeparator());
         }
         return fieldList.toString();
     }
