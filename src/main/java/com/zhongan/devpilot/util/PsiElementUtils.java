@@ -438,11 +438,7 @@ public class PsiElementUtils {
     }
 
     public static PsiElement classRecall(Project project, String clz) {
-        if (StringUtils.contains(clz, "$")) {
-            clz = clz.replace('$', '.');
-        }
-        // this method can only find out inner classes in xxx.Innerclass
-        PsiClass psiClass = JavaPsiFacade.getInstance(project).findClass(clz, GlobalSearchScope.allScope(project));
+        PsiClass psiClass = findPsiClass(project, clz);
         if (psiClass == null) {
             return null;
         }
@@ -460,11 +456,10 @@ public class PsiElementUtils {
     }
 
     private static PsiElement methodRecall(Project project, String clz, String methodName) {
-        PsiClass[] classes = JavaPsiFacade.getInstance(project).findClasses(clz, GlobalSearchScope.allScope(project));
-        if (classes.length == 0) {
+        PsiClass psiClass = findPsiClass(project, clz);
+        if (psiClass == null) {
             return null;
         }
-        PsiClass psiClass = classes[0];
         if (psiClass.isInterface()) {
             PsiClass first = ClassInheritorsSearch.search(psiClass).findFirst();
             if (first != null) {
@@ -482,6 +477,18 @@ public class PsiElementUtils {
             return psiMethod;
         }
         return null;
+    }
+
+    private static PsiClass findPsiClass(Project project, String clz) {
+        if (project == null || StringUtils.isEmpty(clz)) {
+            return null;
+        }
+        if (StringUtils.contains(clz, "$")) {
+            clz = clz.replace('$', '.');
+        }
+
+        // this method can only find out inner classes in xxx.Innerclass
+        return JavaPsiFacade.getInstance(project).findClass(clz, GlobalSearchScope.allScope(project));
     }
 
     private static boolean isValidMethod(PsiMethod psiMethod, PsiClass psiClass) {
