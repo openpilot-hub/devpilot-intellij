@@ -439,12 +439,15 @@ public class PsiElementUtils {
     }
 
     public static PsiElement classRecall(Project project, String clz) {
-        // this method can find out inner classes in xxx.Innerclass or xxxx$InnerClass format
-        PsiClass[] psiClasses = JavaPsiFacade.getInstance(project).findClasses(clz, GlobalSearchScope.allScope(project));
-        if (ArrayUtils.isEmpty(psiClasses)) {
+        if (StringUtils.contains(clz, "$")) {
+            clz = clz.replace('$', '.');
+        }
+        // this method can only find out inner classes in xxx.Innerclass
+        PsiClass psiClass = JavaPsiFacade.getInstance(project).findClass(clz, GlobalSearchScope.allScope(project));
+        if (psiClass == null) {
             return null;
         }
-        PsiClass psiClass = psiClasses[0];
+
         if (isCompiled(psiClass)) {
             PsiClass sourceMirror = ((ClsClassImpl) psiClass).getSourceMirrorClass();
             if (sourceMirror != null) {
