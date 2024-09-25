@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static com.zhongan.devpilot.util.PsiElementUtils.shouldIgnorePsiElement;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeReferenceModel {
     private String languageId;
@@ -54,6 +56,9 @@ public class CodeReferenceModel {
         var result = new ArrayList<CodeReferenceModel>();
 
         for (PsiElement element : list) {
+            if (shouldIgnorePsiElement(element)) {
+                continue;
+            }
             var ref = getCodeRefFromPsiElement(element, actionEnum);
             if (ref != null) {
                 result.add(ref);

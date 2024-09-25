@@ -73,22 +73,16 @@ public class PsiElementUtils {
         var result = new StringBuilder();
 
         for (T element : elements) {
-            if (element == null) {
+            if (shouldIgnorePsiElement(element)) {
                 continue;
             }
             if (element instanceof PsiClass) {
                 PsiClass psiClass = (PsiClass) element;
-                if (ignoreClass(psiClass)) {
-                    continue;
-                }
                 result.append("Class: ").append(psiClass.getQualifiedName()).append("\n\n");
             }
 
             if (element instanceof PsiMethod) {
                 PsiMethod psiMethod = (PsiMethod) element;
-                if (ignoreMethod(psiMethod)) {
-                    continue;
-                }
                 if (psiMethod.getContainingClass() != null) {
                     result.append("Method: ").append(StringUtils.join(psiMethod.getContainingClass().getQualifiedName(), psiMethod.getName(), "#")).append("\n");
                 } else {
@@ -250,6 +244,22 @@ public class PsiElementUtils {
     private static boolean ignoreMethod(PsiMethod psiMethod) {
         var psiClass = psiMethod.getContainingClass();
         return ignoreClass(psiClass);
+    }
+
+    public static boolean shouldIgnorePsiElement(PsiElement psiElement) {
+        if (psiElement == null) {
+            return true;
+        }
+
+        if (psiElement instanceof PsiMethod) {
+            return ignoreMethod((PsiMethod) psiElement);
+        }
+
+        if (psiElement instanceof PsiClass) {
+            return ignoreClass((PsiClass) psiElement);
+        }
+
+        return false;
     }
 
     public static Set<PsiElement> parseElementsList(Project project, List<String> elements) {
