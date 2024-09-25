@@ -182,7 +182,7 @@ public final class DevPilotChatToolWindowService {
 
     private List<String> codePredict(String content, CodeReferenceModel codeReference, String commandType) {
         this.lastMessage = MessageModel
-                .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(1));
+                .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(1));
         callWebView(this.lastMessage);
 
         final Map<String, String> dataMap = new HashMap<>();
@@ -219,7 +219,7 @@ public final class DevPilotChatToolWindowService {
         devPilotChatCompletionRequest.setVersion("V240923");
         devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         devPilotChatCompletionRequest.getMessages().add(
-                MessageUtil.createPromptMessage("-1", "CODE_PREDICTION", content, dataMap));
+                MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "CODE_PREDICTION", content, dataMap));
         devPilotChatCompletionRequest.setStream(Boolean.FALSE);
         var response = this.llmProvider.codePrediction(devPilotChatCompletionRequest);
         if (!response.isSuccessful()) {
@@ -235,7 +235,7 @@ public final class DevPilotChatToolWindowService {
 
     private List<PsiElement> callRag(List<String> references) {
         this.lastMessage = MessageModel
-                .buildAssistantMessage("-1", System.currentTimeMillis(), "", true, RecallModel.create(2));
+                .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(2));
         callWebView(this.lastMessage);
 
         // call local rag

@@ -62,7 +62,7 @@ public class MessageModel {
 
     public static MessageModel buildDividerMessage() {
         MessageModel messageModel = new MessageModel();
-        messageModel.setId("-1");
+        messageModel.setId(System.currentTimeMillis() + "");
         messageModel.setTime(System.currentTimeMillis());
         messageModel.setRole("divider");
         messageModel.setContent(null);
@@ -74,7 +74,7 @@ public class MessageModel {
 
     public static MessageModel buildLoadingMessage() {
         MessageModel messageModel = new MessageModel();
-        messageModel.setId("-1");
+        messageModel.setId(System.currentTimeMillis() + "");
         messageModel.setTime(System.currentTimeMillis());
         messageModel.setRole("assistant");
         messageModel.setContent("...");

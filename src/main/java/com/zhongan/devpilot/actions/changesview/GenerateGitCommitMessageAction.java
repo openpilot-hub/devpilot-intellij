@@ -98,7 +98,7 @@ public class GenerateGitCommitMessageAction extends AnAction {
                     ((EditorEx) editor).setCaretVisible(false);
                     DevPilotChatCompletionRequest devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
                     devPilotChatCompletionRequest.setVersion("V240923");
-                    devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage("-1", "GENERATE_COMMIT", Map.of("locale", getLocale(), "diff", diff)));
+                    devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "GENERATE_COMMIT", Map.of("locale", getLocale(), "diff", diff)));
                     devPilotChatCompletionRequest.setStream(Boolean.FALSE);
                     var llmProvider = new LlmProviderFactory().getLlmProvider(project);
                     DevPilotChatCompletionResponse result = llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
