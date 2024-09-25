@@ -180,7 +180,7 @@ public final class DevPilotChatToolWindowService {
         });
     }
 
-    private List<String> codePredict(String content, CodeReferenceModel codeReference, String commandType) {
+    private DevPilotCodePrediction codePredict(String content, CodeReferenceModel codeReference, String commandType) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(1));
         callWebView(this.lastMessage);
@@ -225,27 +225,22 @@ public final class DevPilotChatToolWindowService {
         if (!response.isSuccessful()) {
             return null;
         }
-        var codePrediction = JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
-        if (codePrediction != null) {
-            return codePrediction.getReferences();
-        }
-
-        return null;
+        return JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
     }
 
-    private List<PsiElement> callRag(List<String> references) {
+    private List<PsiElement> callRag(DevPilotCodePrediction codePredict) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(2));
         callWebView(this.lastMessage);
 
         // call local rag
-        if (references == null) {
+        if (codePredict == null) {
             return null;
         }
 
         // todo call remote rag
         return ApplicationManager.getApplication().runReadAction(
-                (Computable<List<PsiElement>>) () -> PsiElementUtils.referenceRecall(project, references)
+                (Computable<List<PsiElement>>) () -> PsiElementUtils.contextRecall(project, codePredict)
         );
     }
 

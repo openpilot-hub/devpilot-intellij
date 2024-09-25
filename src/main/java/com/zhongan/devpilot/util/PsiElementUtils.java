@@ -23,6 +23,7 @@ import com.intellij.psi.impl.source.PsiClassReferenceType;
 import com.intellij.psi.search.GlobalSearchScope;
 import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.psi.util.PropertyUtil;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -30,14 +31,15 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
@@ -385,7 +387,14 @@ public class PsiElementUtils {
         return importedClasses.toString();
     }
 
-    public static List<PsiElement> referenceRecall(Project project, List<String> refs) {
+    public static List<PsiElement> contextRecall(Project project, DevPilotCodePrediction codePrediction) {
+        if (codePrediction == null) {
+            return Collections.emptyList();
+        }
+        List<String> refs = new ArrayList<>();
+        refs.addAll(codePrediction.getInputArgs());
+        refs.addAll(codePrediction.getOutputArgs());
+        refs.addAll(codePrediction.getReferences());
         if (CollectionUtils.isEmpty(refs)) {
             return Collections.emptyList();
         }
@@ -398,7 +407,7 @@ public class PsiElementUtils {
             return Collections.emptyList();
         }
         Set<String> uniqueRefs = new HashSet<>(refs);
-        HashSet<String> res = new LinkedHashSet<>(uniqueRefs);
+        TreeSet<String> res = new TreeSet<>(uniqueRefs);
         uniqueRefs.forEach(ref -> {
             if (StringUtils.contains(ref, "#")) {
                 String[] split = StringUtils.split(ref, "#");
@@ -430,10 +439,12 @@ public class PsiElementUtils {
     }
 
     public static PsiElement classRecall(Project project, String clz) {
-        PsiClass psiClass = JavaPsiFacade.getInstance(project).findClass(clz, GlobalSearchScope.allScope(project));
-        if (psiClass == null) {
+        // this method can find out inner classes in xxx.Innerclass or xxxx$InnerClass format
+        PsiClass[] psiClasses = JavaPsiFacade.getInstance(project).findClasses(clz, GlobalSearchScope.allScope(project));
+        if (ArrayUtils.isEmpty(psiClasses)) {
             return null;
         }
+        PsiClass psiClass = psiClasses[0];
         if (isCompiled(psiClass)) {
             PsiClass sourceMirror = ((ClsClassImpl) psiClass).getSourceMirrorClass();
             if (sourceMirror != null) {

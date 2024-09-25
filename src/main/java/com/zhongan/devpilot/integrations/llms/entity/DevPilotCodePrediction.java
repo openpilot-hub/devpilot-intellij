@@ -1,13 +1,14 @@
 package com.zhongan.devpilot.integrations.llms.entity;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DevPilotCodePrediction {
-    private List<String> inputArgs;
+    private List<String> inputArgs = new ArrayList<>(2);
 
-    private List<String> outputArgs;
+    private List<String> outputArgs = new ArrayList<>(2);
 
-    private List<String> references;
+    private List<String> references = new ArrayList<>();
 
     private String comments;
 
