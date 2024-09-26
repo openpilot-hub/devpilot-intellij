@@ -96,7 +96,7 @@ public final class DevPilotChatToolWindowService {
 
             this.nowStep.set(1);
             DevPilotCodePrediction references = null;
-            if (data != null && StringUtils.equals(data.get(LANGUAGE), "java")) {
+            if (data != null && StringUtils.equalsIgnoreCase(data.get(LANGUAGE), "java")) {
                 references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
             }
 
@@ -152,7 +152,7 @@ public final class DevPilotChatToolWindowService {
 
             this.nowStep.set(1);
             DevPilotCodePrediction references = null;
-            if (messageModel.getCodeRef() != null && StringUtils.equals(messageModel.getCodeRef().getLanguageId(), "java")) {
+            if (messageModel.getCodeRef() != null && StringUtils.equalsIgnoreCase(messageModel.getCodeRef().getLanguageId(), "java")) {
                 references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
             }
 
