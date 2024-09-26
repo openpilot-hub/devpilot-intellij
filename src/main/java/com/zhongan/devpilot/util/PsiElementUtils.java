@@ -453,6 +453,13 @@ public class PsiElementUtils {
             return null;
         }
 
+        if (psiClass.isInterface()) {
+            PsiClass first = ClassInheritorsSearch.search(psiClass).findFirst();
+            if (first != null) {
+                psiClass = first;
+            }
+        }
+
         if (isCompiled(psiClass)) {
             PsiClass sourceMirror = ((ClsClassImpl) psiClass).getSourceMirrorClass();
             if (sourceMirror != null) {
