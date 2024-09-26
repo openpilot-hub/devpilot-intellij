@@ -45,6 +45,7 @@ import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 
+import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
 @Service
@@ -94,7 +95,10 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(1);
-            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
+            DevPilotCodePrediction references = null;
+            if (data != null && StringUtils.equals(data.get(LANGUAGE), "java")) {
+                references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
+            }
 
             // step2 call rag to analyze code
             if (cancel.get()) {
@@ -147,7 +151,10 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(1);
-            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
+            DevPilotCodePrediction references = null;
+            if (messageModel.getCodeRef() != null && StringUtils.equals(messageModel.getCodeRef().getLanguageId(), "java")) {
+                references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
+            }
 
             // step2 call rag to analyze code
             if (cancel.get()) {
@@ -188,7 +195,7 @@ public final class DevPilotChatToolWindowService {
         final Map<String, String> dataMap = new HashMap<>();
 
         if (commandType == null) {
-            if (codeReference == null) {
+            if (codeReference == null || codeReference.getType() == null) {
                 commandType = "PURE_CHAT";
             } else {
                 commandType = codeReference.getType().name();

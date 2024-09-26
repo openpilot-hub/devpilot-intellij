@@ -1,6 +1,5 @@
 package com.zhongan.devpilot.util;
 
-import com.intellij.lang.jvm.JvmParameter;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.roots.ProjectFileIndex;
 import com.intellij.openapi.vfs.LocalFileSystem;
@@ -57,18 +56,6 @@ public class PsiElementUtils {
         return null;
     }
 
-    public static String getRelatedClass(@NotNull PsiElement element) {
-        Set<PsiClass> classSet = new HashSet<>();
-
-        if (element instanceof PsiMethod) {
-            classSet = getMethodRelatedClass(element);
-        } else if (element instanceof PsiClass) {
-            classSet = getClassRelatedClass(element);
-        }
-
-        return transformElementToString(classSet);
-    }
-
     public static <T extends PsiElement> String transformElementToString(Collection<T> elements) {
         var result = new StringBuilder();
 
@@ -96,36 +83,6 @@ public class PsiElementUtils {
         return result.toString();
     }
 
-    private static Set<PsiClass> getClassRelatedClass(@NotNull PsiElement element) {
-        Set<PsiClass> result = new HashSet<>();
-
-        if (element instanceof PsiClass) {
-            var psiClass = (PsiClass) element;
-            var methods = psiClass.getMethods();
-            var fields = psiClass.getFields();
-
-            for (PsiMethod psiMethod : methods) {
-                result.addAll(getMethodRelatedClass(psiMethod));
-            }
-
-            for (PsiField psiField : fields) {
-                result.addAll(getFieldTypeClass(psiField));
-            }
-        }
-
-        return result;
-    }
-
-    private static Set<PsiClass> getMethodRelatedClass(@NotNull PsiElement element) {
-        var parameterClass = getMethodParameterTypeClass(element);
-        var returnClass = getMethodReturnTypeClass(element);
-
-        var result = new HashSet<>(parameterClass);
-        result.addAll(returnClass);
-
-        return result;
-    }
-
     private static List<PsiClass> getMethodReturnTypeClass(@NotNull PsiElement element) {
         var result = new ArrayList<PsiClass>();
 
@@ -136,23 +93,6 @@ public class PsiElementUtils {
                 var referenceType = (PsiClassReferenceType) returnType;
                 result.addAll(getTypeClassAndGenericType(referenceType));
                 return result;
-            }
-        }
-
-        return result;
-    }
-
-    private static List<PsiClass> getMethodParameterTypeClass(@NotNull PsiElement element) {
-        var result = new ArrayList<PsiClass>();
-
-        if (element instanceof PsiMethod) {
-            var params = ((PsiMethod) element).getParameterList().getParameters();
-
-            for (JvmParameter parameter : params) {
-                if (parameter.getType() instanceof PsiClassReferenceType) {
-                    var referenceType = (PsiClassReferenceType) parameter.getType();
-                    result.addAll(getTypeClassAndGenericType(referenceType));
-                }
             }
         }
 
@@ -518,7 +458,7 @@ public class PsiElementUtils {
         }
     }
 
-    private static boolean isCompiled(@NotNull PsiClass psiClass) {
+    public static boolean isCompiled(@NotNull PsiClass psiClass) {
         return psiClass instanceof ClsClassImpl;
     }
 

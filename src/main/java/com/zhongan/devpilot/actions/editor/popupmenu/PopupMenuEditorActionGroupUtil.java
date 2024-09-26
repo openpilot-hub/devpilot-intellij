@@ -146,17 +146,20 @@ public class PopupMenuEditorActionGroupUtil {
                         var codeMessage = MessageModel.buildCodeMessage(
                                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel);
 
-                        var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReferenceModel.getFileUrl());
+                        if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
+                            var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReferenceModel.getFileUrl());
 
-                        if (psiJavaFile != null) {
-                            data.putAll(
-                                    Map.of(
-                                            "imports", PsiElementUtils.getImportInfo(psiJavaFile),
-                                            "package", psiJavaFile.getPackageName(),
-                                            "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                                            "filePath", codeReferenceModel.getFileUrl()
-                                    )
-                            );
+                            if (psiJavaFile != null) {
+                                data.putAll(
+                                        Map.of(
+                                                "imports", PsiElementUtils.getImportInfo(psiJavaFile),
+                                                "package", psiJavaFile.getPackageName(),
+                                                "fields", PsiElementUtils.getFieldList(psiJavaFile),
+                                                "filePath", codeReferenceModel.getFileUrl()
+                                        )
+                                );
+                            }
+
                         }
 
                         service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
