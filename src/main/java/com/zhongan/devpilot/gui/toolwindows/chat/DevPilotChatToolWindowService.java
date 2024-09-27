@@ -19,6 +19,7 @@ import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
@@ -45,7 +46,6 @@ import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 
-import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
 @Service
@@ -95,10 +95,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(1);
-            DevPilotCodePrediction references = null;
-            if (data != null && StringUtils.equalsIgnoreCase(data.get(LANGUAGE), "java")) {
-                references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
-            }
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
 
             // step2 call rag to analyze code
             if (cancel.get()) {
@@ -106,7 +103,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(2);
-            var localRef = callRag(references);
+            var localRef = callRag(references, messageModel.getCodeRef());
 
             // step3 call model to get the final result
             if (cancel.get()) {
@@ -151,10 +148,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(1);
-            DevPilotCodePrediction references = null;
-            if (messageModel.getCodeRef() != null && StringUtils.equalsIgnoreCase(messageModel.getCodeRef().getLanguageId(), "java")) {
-                references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
-            }
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
 
             // step2 call rag to analyze code
             if (cancel.get()) {
@@ -162,7 +156,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(2);
-            var localRef = callRag(references);
+            var localRef = callRag(references, messageModel.getCodeRef());
 
             // step3 call model to get the final result
             if (cancel.get()) {
@@ -206,19 +200,8 @@ public final class DevPilotChatToolWindowService {
 
         if (codeReference != null) {
             ApplicationManager.getApplication().runReadAction(() -> {
-                var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
-
-                if (psiJavaFile != null) {
-                    dataMap.putAll(
-                            Map.of(
-                                    "imports", PsiElementUtils.getImportInfo(psiJavaFile),
-                                    "package", psiJavaFile.getPackageName(),
-                                    "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                                    "selectedCode", codeReference.getSourceCode(),
-                                    "filePath", codeReference.getFileUrl()
-                            )
-                    );
-                }
+                FileAnalyzeProviderFactory.getProvider(codeReference.getLanguageId())
+                        .buildCodePredictDataMap(project, codeReference, dataMap);
             });
         }
 
@@ -235,7 +218,7 @@ public final class DevPilotChatToolWindowService {
         return JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
     }
 
-    private List<PsiElement> callRag(DevPilotCodePrediction codePredict) {
+    private List<PsiElement> callRag(DevPilotCodePrediction codePredict, CodeReferenceModel codeReference) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(2));
         callWebView(this.lastMessage);
@@ -247,7 +230,12 @@ public final class DevPilotChatToolWindowService {
 
         // todo call remote rag
         return ApplicationManager.getApplication().runReadAction(
-                (Computable<List<PsiElement>>) () -> PsiElementUtils.contextRecall(project, codePredict)
+                (Computable<List<PsiElement>>) () -> {
+                    var language = codeReference == null ? null : codeReference.getLanguageId();
+
+                    return FileAnalyzeProviderFactory
+                            .getProvider(language).callLocalRag(project, codePredict);
+                }
         );
     }
 

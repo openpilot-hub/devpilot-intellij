@@ -23,4 +23,20 @@ public class UtFrameworkProviderFactory {
         return null;
     }
 
+    public static UtFrameworkProvider create(String language) {
+
+        if (language == null) {
+            return null;
+        }
+
+        switch (language.toLowerCase(Locale.ROOT)) {
+            case "java":
+                return JavaUtFrameworkProvider.INSTANCE;
+            case "go":
+            case "python":
+        }
+        // todo support other languages test.
+        return null;
+    }
+
 }

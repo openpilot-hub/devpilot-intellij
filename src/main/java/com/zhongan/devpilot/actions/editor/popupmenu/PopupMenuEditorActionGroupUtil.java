@@ -13,22 +13,17 @@ import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.psi.PsiElement;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.constant.DefaultConst;
-import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
-import com.zhongan.devpilot.enums.UtFrameTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
-import com.zhongan.devpilot.provider.ut.UtFrameworkProvider;
-import com.zhongan.devpilot.provider.ut.UtFrameworkProviderFactory;
+import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
-import com.zhongan.devpilot.util.PsiElementUtils;
-import com.zhongan.devpilot.util.PsiFileUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -41,13 +36,9 @@ import java.util.function.Consumer;
 
 import javax.swing.Icon;
 
-import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
 import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
-import static com.zhongan.devpilot.constant.PlaceholderConst.CLASS_FULL_NAME;
 import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
-import static com.zhongan.devpilot.constant.PlaceholderConst.MOCK_FRAMEWORK;
 import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
-import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 
 public class PopupMenuEditorActionGroupUtil {
 
@@ -105,26 +96,8 @@ public class PopupMenuEditorActionGroupUtil {
 
                         EditorInfo editorInfo = new EditorInfo(editor);
                         if (editorActionEnum == EditorActionEnum.GENERATE_TESTS) {
-                            if (language != null && language.isJvmPlatform()
-                                    && PsiFileUtil.isCaretInWebClass(project, editor)) {
-                                data.put(ADDITIONAL_MOCK_PROMPT, PromptConst.MOCK_WEB_MVC);
-                            }
-                            UtFrameworkProvider utFrameworkProvider = UtFrameworkProviderFactory.create(language);
-                            if (utFrameworkProvider != null) {
-                                UtFrameTypeEnum utFramework = utFrameworkProvider.getUTFramework(project, editor);
-                                data.put(TEST_FRAMEWORK, utFramework.getUtFrameType());
-                                data.put(MOCK_FRAMEWORK, utFramework.getMockFrameType());
-                            }
-                        }
-
-                        if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
-                            if (psiElement != null) {
-                                var fullClassName = PsiElementUtils.getFullClassName(psiElement);
-
-                                if (fullClassName != null) {
-                                    data.put(CLASS_FULL_NAME, fullClassName);
-                                }
-                            }
+                            FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
+                                    .buildTestDataMap(project, editor, data);
                         }
 
                         if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
@@ -146,21 +119,8 @@ public class PopupMenuEditorActionGroupUtil {
                         var codeMessage = MessageModel.buildCodeMessage(
                                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel);
 
-                        if (language != null && "java".equalsIgnoreCase(language.getLanguageName())) {
-                            var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReferenceModel.getFileUrl());
-
-                            if (psiJavaFile != null) {
-                                data.putAll(
-                                        Map.of(
-                                                "imports", PsiElementUtils.getImportInfo(psiJavaFile),
-                                                "package", psiJavaFile.getPackageName(),
-                                                "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                                                "filePath", codeReferenceModel.getFileUrl()
-                                        )
-                                );
-                            }
-
-                        }
+                        FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
+                                .buildChatDataMap(project, psiElement, codeReferenceModel, data);
 
                         service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }
