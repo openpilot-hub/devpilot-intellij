@@ -257,7 +257,7 @@ public final class DevPilotChatToolWindowService {
             devPilotChatCompletionRequest.setStream(false);
             devPilotChatCompletionRequest.getMessages().add(userMessage);
         } else {
-            if (message != null && message.startsWith("@repo")) {
+            if (message != null) {
                 clearRequestSession();
             }
             devPilotChatCompletionRequest.setStream(true);
