@@ -44,6 +44,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
@@ -207,7 +208,7 @@ public final class DevPilotChatToolWindowService {
 
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         devPilotChatCompletionRequest.setVersion("V240923");
-        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
+        devPilotChatCompletionRequest.getMessages().addAll(removeRedundantRelatedContext(copyHistoryRequestMessageList(historyRequestMessageList)));
         devPilotChatCompletionRequest.getMessages().add(
                 MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "CODE_PREDICTION", content, dataMap));
         devPilotChatCompletionRequest.setStream(Boolean.FALSE);
@@ -313,6 +314,25 @@ public final class DevPilotChatToolWindowService {
                 this.lastMessage = null;
             }
         }
+    }
+
+    /**
+     * Only used in CODE_PREDICTION for minimizing request data size.
+     * @param devPilotMessages
+     */
+    private List<DevPilotMessage> removeRedundantRelatedContext(List<DevPilotMessage> devPilotMessages) {
+        if (CollectionUtils.isEmpty(devPilotMessages)) {
+            return Collections.emptyList();
+        }
+        ArrayList<DevPilotMessage> copy = new ArrayList<>(devPilotMessages);
+        copy.forEach(
+                msg -> {
+                    if (msg.getPromptData() != null) {
+                        msg.getPromptData().remove("relatedContext");
+                    }
+                }
+        );
+        return copy;
     }
 
     public List<MessageModel> getHistoryMessageList() {
