@@ -47,6 +47,10 @@ import java.util.function.Consumer;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_ONE;
+import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_THREE;
+import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_TWO;
+import static com.zhongan.devpilot.constant.DefaultConst.CODE_PREDICT_PROMPT_VERSION;
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
 @Service
@@ -98,7 +102,7 @@ public final class DevPilotChatToolWindowService {
                 return;
             }
 
-            this.nowStep.set(1);
+            this.nowStep.set(CHAT_STEP_ONE);
             var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
 
             // step2 call rag to analyze code
@@ -106,7 +110,7 @@ public final class DevPilotChatToolWindowService {
                 return;
             }
 
-            this.nowStep.set(2);
+            this.nowStep.set(CHAT_STEP_TWO);
             var localRef = callRag(references, messageModel.getCodeRef());
 
             // step3 call model to get the final result
@@ -114,7 +118,7 @@ public final class DevPilotChatToolWindowService {
                 return;
             }
 
-            this.nowStep.set(3);
+            this.nowStep.set(CHAT_STEP_THREE);
 
             // avoid immutable map
             Map<String, String> newMap;
@@ -151,7 +155,7 @@ public final class DevPilotChatToolWindowService {
                 return;
             }
 
-            this.nowStep.set(1);
+            this.nowStep.set(CHAT_STEP_ONE);
             var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
 
             // step2 call rag to analyze code
@@ -159,7 +163,7 @@ public final class DevPilotChatToolWindowService {
                 return;
             }
 
-            this.nowStep.set(2);
+            this.nowStep.set(CHAT_STEP_TWO);
             var localRef = callRag(references, messageModel.getCodeRef());
 
             // step3 call model to get the final result
@@ -167,7 +171,7 @@ public final class DevPilotChatToolWindowService {
                 return;
             }
 
-            this.nowStep.set(3);
+            this.nowStep.set(CHAT_STEP_THREE);
 
             var data = new HashMap<String, String>();
             final List<CodeReferenceModel>[] localRefs = new List[1];
@@ -218,7 +222,7 @@ public final class DevPilotChatToolWindowService {
         }
 
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        devPilotChatCompletionRequest.setVersion("V240923");
+        devPilotChatCompletionRequest.setVersion(CODE_PREDICT_PROMPT_VERSION);
         devPilotChatCompletionRequest.getMessages().addAll(removeRedundantRelatedContext(copyHistoryRequestMessageList(historyRequestMessageList)));
         devPilotChatCompletionRequest.getMessages().add(
                 MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "CODE_PREDICTION", content, dataMap));

@@ -54,4 +54,16 @@ public class DefaultConst {
 
     public static final int COMPLETION_TRIGGER_INTERVAL = 1000;
 
+    public static final int CHAT_STEP_ONE = 1;
+
+    public static final int CHAT_STEP_TWO = 2;
+
+    public static final int CHAT_STEP_THREE = 3;
+
+    public static final String DEFAULT_PROMPT_VERSION = "V240923";
+
+    public static final String CODE_PREDICT_PROMPT_VERSION = "V240923";
+
+    public static final String GIT_COMMIT_PROMPT_VERSION = "V240923";
+
 }

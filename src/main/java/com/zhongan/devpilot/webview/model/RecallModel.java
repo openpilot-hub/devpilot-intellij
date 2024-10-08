@@ -37,7 +37,7 @@ public class RecallModel {
 
     // 1 - step1 doing; 2 - step2 doing; 3 - step3 doing; 4 - step3 done
     // type: 1 - loading; 2 - terminated
-    public static RecallModel create(int step, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int type) {
+    private static RecallModel create(int step, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int type) {
         var steps = new ArrayList<Step>();
 
         for (int i = 1; i <= step - 1; i++) {
