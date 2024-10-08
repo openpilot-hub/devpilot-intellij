@@ -67,6 +67,8 @@ public final class DevPilotChatToolWindowService {
 
     private final AtomicInteger nowStep = new AtomicInteger(1);
 
+    private volatile String currentMessageId = null;
+
     public DevPilotChatToolWindowService(Project project) {
         this.project = project;
         this.devPilotChatToolWindow = new DevPilotChatToolWindow(project);
@@ -82,6 +84,7 @@ public final class DevPilotChatToolWindowService {
 
     public void smartChat(Integer sessionType, String msgType, Map<String, String> data, String message, Consumer<String> callback, MessageModel messageModel) {
         this.cancel.set(false);
+        this.currentMessageId = messageModel.getId();
 
         callWebView(messageModel);
         addMessage(messageModel);
@@ -91,7 +94,7 @@ public final class DevPilotChatToolWindowService {
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             // step1 call model to do code prediction
-            if (cancel.get()) {
+            if (shouldCancelChat(messageModel)) {
                 return;
             }
 
@@ -99,7 +102,7 @@ public final class DevPilotChatToolWindowService {
             var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
 
             // step2 call rag to analyze code
-            if (cancel.get()) {
+            if (shouldCancelChat(messageModel)) {
                 return;
             }
 
@@ -107,7 +110,7 @@ public final class DevPilotChatToolWindowService {
             var localRef = callRag(references, messageModel.getCodeRef());
 
             // step3 call model to get the final result
-            if (cancel.get()) {
+            if (shouldCancelChat(messageModel)) {
                 return;
             }
 
@@ -144,7 +147,7 @@ public final class DevPilotChatToolWindowService {
 
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             // step1 call model to do code prediction
-            if (cancel.get()) {
+            if (shouldCancelChat(messageModel)) {
                 return;
             }
 
@@ -152,7 +155,7 @@ public final class DevPilotChatToolWindowService {
             var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
 
             // step2 call rag to analyze code
-            if (cancel.get()) {
+            if (shouldCancelChat(messageModel)) {
                 return;
             }
 
@@ -160,7 +163,7 @@ public final class DevPilotChatToolWindowService {
             var localRef = callRag(references, messageModel.getCodeRef());
 
             // step3 call model to get the final result
-            if (cancel.get()) {
+            if (shouldCancelChat(messageModel)) {
                 return;
             }
 
@@ -180,6 +183,14 @@ public final class DevPilotChatToolWindowService {
 
             sendMessage(callback, data, null, localRefs[0]);
         });
+    }
+
+    private boolean shouldCancelChat(MessageModel messageModel) {
+        if (cancel.get()) {
+            return true;
+        }
+
+        return !StringUtils.equals(currentMessageId, messageModel.getId());
     }
 
     private DevPilotCodePrediction codePredict(String content, CodeReferenceModel codeReference, String commandType) {
