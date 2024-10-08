@@ -260,7 +260,7 @@ public final class DevPilotChatToolWindowService {
         } else {
             devPilotChatCompletionRequest.setStream(true);
             historyRequestMessageList.add(userMessage);
-            devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
+            devPilotChatCompletionRequest.getMessages().addAll(removeRedundantRelatedContext(copyHistoryRequestMessageList(historyRequestMessageList)));
         }
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
@@ -287,7 +287,7 @@ public final class DevPilotChatToolWindowService {
 
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         devPilotChatCompletionRequest.setStream(true);
-        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
+        devPilotChatCompletionRequest.getMessages().addAll(removeRedundantRelatedContext(copyHistoryRequestMessageList(historyRequestMessageList)));
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
