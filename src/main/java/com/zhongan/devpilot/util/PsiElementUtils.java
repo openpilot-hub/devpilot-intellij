@@ -6,6 +6,8 @@ import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.JavaPsiFacade;
 import com.intellij.psi.PsiClass;
+import com.intellij.psi.PsiCodeBlock;
+import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
 import com.intellij.psi.PsiField;
 import com.intellij.psi.PsiFile;
@@ -43,6 +45,8 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 
 public class PsiElementUtils {
+    private static final int MAX_LINE_COUNT = 1000;
+
     public static String getFullClassName(@NotNull PsiElement element) {
         if (element instanceof PsiMethod) {
             var psiClass = ((PsiMethod) element).getContainingClass();
@@ -77,7 +81,7 @@ public class PsiElementUtils {
                 }
             }
 
-            result.append(element.getText()).append("\n\n");
+            result.append(simplifyElement(element)).append("\n\n");
         }
 
         return result.toString();
@@ -349,6 +353,71 @@ public class PsiElementUtils {
         }
         List<String> finalRefs = removeDuplicates(refs);
         return doRecall(project, finalRefs);
+    }
+
+    public static String filterLargeElement(PsiElement element) {
+        var lineCount = getLineCount(element);
+        if (lineCount > MAX_LINE_COUNT) {
+            return simplifyElement(element);
+        } else {
+            return element.getText();
+        }
+    }
+
+    public static String simplifyElement(PsiElement element) {
+        if (element instanceof PsiClass) {
+            var psiClass = (PsiClass) element;
+            return simplifyClass(psiClass);
+        } else if (element instanceof PsiMethod) {
+            var psiMethod = (PsiMethod) element;
+            return simplifyMethod(psiMethod);
+        }
+
+        return null;
+    }
+
+    private static String simplifyClass(PsiClass psiClass) {
+        var children = psiClass.getChildren();
+        var result = new StringBuilder();
+
+        for (PsiElement child : children) {
+            if (child instanceof PsiMethod) {
+                result.append(simplifyMethod((PsiMethod) child));
+            } else if (child instanceof PsiClass) {
+                // handle inner class
+                result.append(simplifyClass((PsiClass) child));
+            } else {
+                result.append(child.getText());
+            }
+        }
+
+        return result.toString();
+    }
+
+    private static String simplifyMethod(PsiMethod method) {
+        var children = method.getChildren();
+        var result = new StringBuilder();
+
+        for (PsiElement child : children) {
+            if (!(child instanceof PsiCodeBlock)) {
+                result.append(child.getText());
+            }
+        }
+
+        return result.toString();
+    }
+
+    public static int getLineCount(PsiElement element) {
+        var document = PsiDocumentManager.getInstance(element.getProject()).getDocument(element.getContainingFile());
+
+        if (document != null) {
+            int startOffset = element.getTextRange().getStartOffset();
+            int endOffset = element.getTextRange().getEndOffset();
+
+            return document.getLineNumber(endOffset) - document.getLineNumber(startOffset) + 1;
+        }
+
+        return 0;
     }
 
     private static List<String> removeDuplicates(List<String> refs) {
