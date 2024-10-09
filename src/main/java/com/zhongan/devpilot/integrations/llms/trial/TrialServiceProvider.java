@@ -67,11 +67,17 @@ public final class TrialServiceProvider implements LlmProvider {
         }
 
         try {
+            var requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                service.callErrorInfo("Chat completion failed: request body is null");
+                return "";
+            }
+
             var request = new Request.Builder()
-                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
+                    .url(TRIAL_DEFAULT_HOST + "/v2/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
-                    .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
             this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs, chatType);
@@ -92,11 +98,16 @@ public final class TrialServiceProvider implements LlmProvider {
         Response response;
 
         try {
+            var requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
             var request = new Request.Builder()
-                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
+                    .url(TRIAL_DEFAULT_HOST + "/v2/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
-                    .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
             var call = OkhttpUtils.getClient().newCall(request);
