@@ -66,4 +66,8 @@ public class DefaultConst {
 
     public static final String GIT_COMMIT_PROMPT_VERSION = "V240923";
 
+    public static final int NORMAL_CHAT_TYPE = 1;
+
+    public static final int SMART_CHAT_TYPE = 2;
+
 }

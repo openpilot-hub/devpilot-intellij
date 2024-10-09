@@ -122,7 +122,7 @@ public class PopupMenuEditorActionGroupUtil {
                         FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
                                 .buildChatDataMap(project, psiElement, codeReferenceModel, data);
 
-                        service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
+                        service.chat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }
                 };
                 if (!label.equals(EditorActionEnum.COMMENT_METHOD.getLabel())) {

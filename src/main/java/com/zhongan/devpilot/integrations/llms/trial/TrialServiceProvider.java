@@ -56,7 +56,7 @@ public final class TrialServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
-                                 Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+                                 Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
@@ -74,7 +74,7 @@ public final class TrialServiceProvider implements LlmProvider {
                     .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
                     .build();
 
-            this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs);
+            this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs, chatType);
         } catch (Exception e) {
             service.callErrorInfo("Chat completion failed: " + e.getMessage());
             return "";
@@ -164,8 +164,10 @@ public final class TrialServiceProvider implements LlmProvider {
             if (resultModel != null && !StringUtils.isEmpty(resultModel.getContent())) {
                 resultModel.setStreaming(false);
                 var recall = resultModel.getRecall();
-                var newRecall = RecallModel.createTerminated(3, recall.getRemoteRefs(), recall.getLocalRefs());
-                resultModel.setRecall(newRecall);
+                if (recall != null) {
+                    var newRecall = RecallModel.createTerminated(3, recall.getRemoteRefs(), recall.getLocalRefs());
+                    resultModel.setRecall(newRecall);
+                }
                 toolWindowService.addMessage(resultModel);
             }
 

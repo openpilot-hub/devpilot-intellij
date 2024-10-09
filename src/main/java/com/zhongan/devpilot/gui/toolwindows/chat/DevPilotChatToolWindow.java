@@ -119,7 +119,7 @@ public class DevPilotChatToolWindow {
 
                     var message = service.getUserContentCode(messageModel);
                     var userMessageModel = MessageModel.buildCodeMessage(uuid, time, message.getContent(), username, message.getCodeRef());
-                    service.smartChat(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message.getContent(), null, userMessageModel);
+                    service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", null, message.getContent(), null, userMessageModel);
 
                     return new JBCefJSQuery.Response("success");
                 }

@@ -30,10 +30,12 @@ import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
 
+import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
+
 public interface LlmProvider {
 
     String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
-                          Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs);
+                          Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int type);
 
     DevPilotChatCompletionResponse chatCompletionSync(DevPilotChatCompletionRequest chatCompletionRequest);
 
@@ -72,8 +74,8 @@ public interface LlmProvider {
         DevPilotNotification.upgradePluginNotification(service.getProject());
     }
 
-    default EventSource buildEventSource(Request request, DevPilotChatToolWindowService service,
-                                         Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+    default EventSource buildEventSource(Request request, DevPilotChatToolWindowService service, Consumer<String> callback,
+                                         List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         var time = System.currentTimeMillis();
         var result = new StringBuilder();
         var client = OkhttpUtils.getClient();
@@ -116,7 +118,12 @@ public interface LlmProvider {
                     streaming = !"stop".equals(finishReason);
                 }
 
-                RecallModel recallModel = RecallModel.create(3, remoteRefs, localRefs);
+                RecallModel recallModel = null;
+
+                if (chatType == SMART_CHAT_TYPE) {
+                    recallModel = RecallModel.create(3, remoteRefs, localRefs);
+                }
+
                 var assistantMessage = MessageModel
                         .buildAssistantMessage(response.getId(), time, result.toString(), streaming, recallModel);
 
@@ -124,7 +131,9 @@ public interface LlmProvider {
                 service.callWebView(assistantMessage);
 
                 if (!streaming) {
-                    recallModel = RecallModel.create(4, remoteRefs, localRefs);
+                    if (chatType == SMART_CHAT_TYPE) {
+                        recallModel = RecallModel.create(4, remoteRefs, localRefs);
+                    }
                     assistantMessage = MessageModel
                             .buildAssistantMessage(response.getId(), time, result.toString(), streaming, recallModel);
                     service.callWebView(assistantMessage);
@@ -139,6 +148,9 @@ public interface LlmProvider {
                     if (callback != null) {
                         callback.accept(result.toString());
                     }
+
+                    // clear message cache
+                    restoreMessage(null);
                 }
             }
 

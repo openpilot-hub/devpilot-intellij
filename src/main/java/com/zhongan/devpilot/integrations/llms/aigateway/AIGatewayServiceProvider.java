@@ -59,7 +59,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
     @Override
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
-                                 Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+                                 Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
@@ -88,7 +88,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                     .build();
 
             DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
-            this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs);
+            this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs, chatType);
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
 
@@ -107,8 +107,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             if (resultModel != null && !StringUtils.isEmpty(resultModel.getContent())) {
                 resultModel.setStreaming(false);
                 var recall = resultModel.getRecall();
-                var newRecall = RecallModel.createTerminated(3, recall.getRemoteRefs(), recall.getLocalRefs());
-                resultModel.setRecall(newRecall);
+                if (recall != null) {
+                    var newRecall = RecallModel.createTerminated(3, recall.getRemoteRefs(), recall.getLocalRefs());
+                    resultModel.setRecall(newRecall);
+                }
                 toolWindowService.addMessage(resultModel);
             }
 

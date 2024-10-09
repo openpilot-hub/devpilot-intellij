@@ -51,6 +51,8 @@ import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_ONE;
 import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_THREE;
 import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_TWO;
 import static com.zhongan.devpilot.constant.DefaultConst.CODE_PREDICT_PROMPT_VERSION;
+import static com.zhongan.devpilot.constant.DefaultConst.NORMAL_CHAT_TYPE;
+import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
 @Service
@@ -86,9 +88,11 @@ public final class DevPilotChatToolWindowService {
         return this.project;
     }
 
-    public void smartChat(Integer sessionType, String msgType, Map<String, String> data, String message, Consumer<String> callback, MessageModel messageModel) {
+    public void chat(Integer sessionType, String msgType, Map<String, String> data,
+                     String message, Consumer<String> callback, MessageModel messageModel) {
         this.cancel.set(false);
         this.currentMessageId = messageModel.getId();
+        this.lastMessage = messageModel;
 
         callWebView(messageModel);
         addMessage(messageModel);
@@ -96,6 +100,22 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
+        // todo normal chat should be used in some case
+//        if (messageModel.getCodeRef() == null) {
+//            normalChat(sessionType, msgType, data, message, callback, messageModel);
+//            return;
+//        }
+
+        smartChat(sessionType, msgType, data, message, callback, messageModel);
+    }
+
+    public void normalChat(Integer sessionType, String msgType, Map<String, String> data,
+                           String message, Consumer<String> callback, MessageModel messageModel) {
+        sendMessage(sessionType, msgType, data, message, callback, messageModel, null, null, NORMAL_CHAT_TYPE);
+    }
+
+    public void smartChat(Integer sessionType, String msgType, Map<String, String> data,
+                          String message, Consumer<String> callback, MessageModel messageModel) {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             // step1 call model to do code prediction
             if (shouldCancelChat(messageModel)) {
@@ -138,17 +158,31 @@ public final class DevPilotChatToolWindowService {
                 });
             }
 
-            sendMessage(sessionType, msgType, newMap, message, callback, messageModel, null, localRefs[0]);
+            sendMessage(sessionType, msgType, newMap, message, callback, messageModel, null, localRefs[0], SMART_CHAT_TYPE);
         });
     }
 
-    public void regenerateSmartChat(MessageModel messageModel, Consumer<String> callback) {
+    public void regenerateChat(MessageModel messageModel, Consumer<String> callback) {
         this.cancel.set(false);
 
         callWebView(MessageModel.buildLoadingMessage());
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
+        // todo normal chat should be used in some case
+//        if (messageModel.getCodeRef() == null) {
+//            regenerateNormalChat(messageModel, callback);
+//            return;
+//        }
+
+        regenerateSmartChat(messageModel, callback);
+    }
+
+    public void regenerateNormalChat(MessageModel messageModel, Consumer<String> callback) {
+        sendMessage(callback, null, null, null, NORMAL_CHAT_TYPE);
+    }
+
+    public void regenerateSmartChat(MessageModel messageModel, Consumer<String> callback) {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             // step1 call model to do code prediction
             if (shouldCancelChat(messageModel)) {
@@ -185,7 +219,7 @@ public final class DevPilotChatToolWindowService {
                 });
             }
 
-            sendMessage(callback, data, null, localRefs[0]);
+            sendMessage(callback, data, null, localRefs[0], SMART_CHAT_TYPE);
         });
     }
 
@@ -257,7 +291,7 @@ public final class DevPilotChatToolWindowService {
 
     public String sendMessage(Integer sessionType, String msgType, Map<String, String> data,
                               String message, Consumer<String> callback, MessageModel messageModel,
-                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         DevPilotMessage userMessage;
         if (data == null || data.isEmpty()) {
             userMessage = MessageUtil.createUserMessage(message, msgType, messageModel.getId());
@@ -279,7 +313,7 @@ public final class DevPilotChatToolWindowService {
         }
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs);
+        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
         if (MULTI_TURN.equals(sessionTypeEnum) &&
                 devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
@@ -290,7 +324,8 @@ public final class DevPilotChatToolWindowService {
         return chatCompletion;
     }
 
-    public String sendMessage(Consumer<String> callback, Map<String, String> data, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
+    public String sendMessage(Consumer<String> callback, Map<String, String> data,
+                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         // if data is not empty, the data should add into last history request message
         if (data != null && !data.isEmpty() && !historyMessageList.isEmpty()) {
             var lastHistoryRequestMessage = historyRequestMessageList.get(historyRequestMessageList.size() - 1);
@@ -306,7 +341,7 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs);
+        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
         if (devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
             historyRequestMessageList.add(
@@ -318,7 +353,7 @@ public final class DevPilotChatToolWindowService {
 
     public void interruptSend() {
         this.cancel.set(true);
-        if (this.nowStep.get() >= 3) {
+        if (this.lastMessage.getRecall() == null || this.nowStep.get() >= 3) {
             this.llmProvider.interruptSend();
         } else {
             if (this.lastMessage != null) {
@@ -429,7 +464,7 @@ public final class DevPilotChatToolWindowService {
             return;
         }
 
-        regenerateSmartChat(lastMessage, null);
+        regenerateChat(lastMessage, null);
     }
 
     public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement) {
