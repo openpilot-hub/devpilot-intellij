@@ -34,7 +34,7 @@ jobs:
         run: ./gradlew buildPlugin
 
       - name: Upload plugin artifact
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: DevPilot-local
           path: build/distributions/DevPilot-*.zip
