@@ -9,6 +9,7 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.zhongan.devpilot.enums.EditorActionEnum.COMMENT_METHOD;
 import static com.zhongan.devpilot.enums.EditorActionEnum.EXPLAIN_CODE;
 import static com.zhongan.devpilot.enums.EditorActionEnum.FIX_CODE;
 import static com.zhongan.devpilot.enums.EditorActionEnum.GENERATE_COMMENTS;
@@ -28,6 +29,7 @@ public class EditorActionConfigurationState implements PersistentStateComponent<
         defaultActions.add(FIX_CODE.getLabel());
         defaultActions.add(GENERATE_COMMENTS.getLabel());
         defaultActions.add(GENERATE_TESTS.getLabel());
+        defaultActions.add(COMMENT_METHOD.getLabel());
     }
 
     public static EditorActionConfigurationState getInstance() {

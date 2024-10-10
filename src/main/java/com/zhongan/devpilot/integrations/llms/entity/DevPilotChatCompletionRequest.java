@@ -3,9 +3,11 @@ package com.zhongan.devpilot.integrations.llms.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.zhongan.devpilot.constant.DefaultConst.DEFAULT_PROMPT_VERSION;
+
 public class DevPilotChatCompletionRequest {
 
-    String version = "V240801";
+    String version = DEFAULT_PROMPT_VERSION;
 
     String encoding = null;
 

@@ -18,12 +18,16 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.GatewayRequestUtils;
+import com.zhongan.devpilot.util.GatewayRequestV2Utils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
+import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+import com.zhongan.devpilot.webview.model.RecallModel;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 
@@ -51,7 +55,8 @@ public final class TrialServiceProvider implements LlmProvider {
     private MessageModel resultModel = new MessageModel();
 
     @Override
-    public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
+    public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
+                                 Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
@@ -62,14 +67,20 @@ public final class TrialServiceProvider implements LlmProvider {
         }
 
         try {
+            var requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                service.callErrorInfo("Chat completion failed: request body is null");
+                return "";
+            }
+
             var request = new Request.Builder()
-                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
+                    .url(TRIAL_DEFAULT_HOST + "/v2/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
-                    .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
-            this.es = this.buildEventSource(request, service, callback);
+            this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs, chatType);
         } catch (Exception e) {
             service.callErrorInfo("Chat completion failed: " + e.getMessage());
             return "";
@@ -87,11 +98,16 @@ public final class TrialServiceProvider implements LlmProvider {
         Response response;
 
         try {
+            var requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
             var request = new Request.Builder()
-                    .url(TRIAL_DEFAULT_HOST + "/v1/chat/completions")
+                    .url(TRIAL_DEFAULT_HOST + "/v2/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", "wx")
-                    .post(RequestBody.create(GatewayRequestUtils.chatRequestJson(chatCompletionRequest), MediaType.parse("application/json")))
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
             var call = OkhttpUtils.getClient().newCall(request);
@@ -158,6 +174,11 @@ public final class TrialServiceProvider implements LlmProvider {
             // remember the broken message
             if (resultModel != null && !StringUtils.isEmpty(resultModel.getContent())) {
                 resultModel.setStreaming(false);
+                var recall = resultModel.getRecall();
+                if (recall != null) {
+                    var newRecall = RecallModel.createTerminated(3, recall.getRemoteRefs(), recall.getLocalRefs());
+                    resultModel.setRecall(newRecall);
+                }
                 toolWindowService.addMessage(resultModel);
             }
 
@@ -200,6 +221,40 @@ public final class TrialServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                     .getError()
                     .getMessage());
+        }
+    }
+
+    @Override
+    public DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest) {
+        if (!LoginUtils.isLogin()) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: please login <a href=\"" + LoginUtils.loginUrl() + "\">Wechat Login</a>");
+        }
+
+        Response response;
+
+        try {
+            var requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
+            var request = new Request.Builder()
+                    .url(TRIAL_DEFAULT_HOST + "/v2/chat/completions")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", "wx")
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            var call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+
+        try {
+            return parseResult(chatCompletionRequest, response);
+        } catch (Exception e) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
     }
 }

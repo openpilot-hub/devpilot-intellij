@@ -6,21 +6,15 @@ import com.intellij.codeInsight.hints.presentation.InlayPresentation;
 import com.intellij.codeInsight.hints.presentation.PresentationFactory;
 import com.intellij.codeInsight.hints.presentation.SequencePresentation;
 import com.intellij.icons.AllIcons;
-import com.intellij.openapi.actionSystem.ActionManager;
-import com.intellij.openapi.actionSystem.AnAction;
-import com.intellij.openapi.actionSystem.AnActionEvent;
-import com.intellij.openapi.actionSystem.DataContext;
-import com.intellij.openapi.actionSystem.Presentation;
-import com.intellij.openapi.actionSystem.impl.SimpleDataContext;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.CaretModel;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileTypes.FileType;
 import com.intellij.openapi.fileTypes.FileTypeManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.roots.FileIndexFacade;
 import com.intellij.openapi.ui.popup.JBPopup;
 import com.intellij.openapi.ui.popup.JBPopupFactory;
 import com.intellij.openapi.ui.popup.PopupStep;
@@ -72,7 +66,7 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             return true;
         }
 
-        boolean isSourceCode = isSourceCode(editor);
+        boolean isSourceCode = isSourceCode(psiElement, editor);
         var elementType = PsiUtilCore.getElementType(psiElement).toString();
 
         if ("CLASS".equals(elementType)) {
@@ -174,14 +168,15 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
         return options;
     }
 
-    public static boolean isSourceCode(Editor editor) {
+    public static boolean isSourceCode(PsiElement psiElement, Editor editor) {
         Document document = editor.getDocument();
-        VirtualFile file = FileDocumentManager.getInstance().getFile(document);
-        if (file == null || !file.isWritable()) {
+        VirtualFile virtualFile = PsiUtilCore.getVirtualFile(psiElement);
+        if (virtualFile == null || !virtualFile.isWritable()) {
             return false;
         }
-        FileType fileType = FileTypeManager.getInstance().getFileTypeByFileName(file.getName());
-        return !fileType.isBinary() && !document.getText().trim().isEmpty();
+        FileIndexFacade indexFacade = FileIndexFacade.getInstance(psiElement.getProject());
+        FileType fileType = FileTypeManager.getInstance().getFileTypeByFileName(virtualFile.getName());
+        return !fileType.isBinary() && !document.getText().trim().isEmpty() && (!indexFacade.isInLibrarySource(virtualFile) && !indexFacade.isInLibraryClasses(virtualFile));
     }
 
     private InlayPresentation buildClickableInlayPresentation(String displayPrefixText, String displaySuffixText, EditorActionEnum actionEnum, PsiElement psiElement) {
@@ -197,13 +192,10 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
         if (EditorActionEnum.COMMENT_METHOD.equals(actionEnum)) {
             ApplicationManager.getApplication().invokeLater(() -> {
                 moveCareToPreviousLineStart(editor, textRange.getStartOffset());
-                AnAction action = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.generate.method.comments");
-                DataContext context = SimpleDataContext.getProjectContext(editor.getProject());
-                action.actionPerformed(new AnActionEvent(null, context, "", new Presentation(), ActionManager.getInstance(), 0));
             });
-        } else {
-            service.handleActions(actionEnum, psiElement);
         }
+
+        service.handleActions(actionEnum, psiElement);
     }
 
     private static int getAnchorOffset(@NotNull PsiElement psiElement) {

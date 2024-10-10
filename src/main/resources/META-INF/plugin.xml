@@ -197,10 +197,6 @@
                     id="DevPilot.GenerateGitCommitMessage"
                     class="com.zhongan.devpilot.actions.changesview.GenerateGitCommitMessageAction" />
         </group>
-
-        <action class="com.zhongan.devpilot.actions.editor.GenerateMethodCommentAction"
-                id="com.zhongan.devpilot.actions.editor.generate.method.comments" text="Generate Method Comments">
-        </action>
     </actions>
 
     <applicationListeners>
