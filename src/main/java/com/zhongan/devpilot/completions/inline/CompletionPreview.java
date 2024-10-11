@@ -55,7 +55,7 @@ public class CompletionPreview implements Disposable {
         devPilotInlay = DevPilotInlay.create(this);
     }
 
-    public static DevPilotCompletion createInstance(
+    public static synchronized DevPilotCompletion createInstance(
         Editor editor, List<DevPilotCompletion> completions, int offset) {
         CompletionPreview preview = getInstance(editor);
 
