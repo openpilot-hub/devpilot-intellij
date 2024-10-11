@@ -189,6 +189,11 @@ public final class TrialServiceProvider implements LlmProvider {
     }
 
     @Override
+    public void restoreMessage(MessageModel messageModel) {
+        this.resultModel = messageModel;
+    }
+
+    @Override
     public void handleNoAuth(DevPilotChatToolWindowService service) {
         LoginUtils.logout();
         service.callErrorInfo("Chat completion failed: No auth, please login");

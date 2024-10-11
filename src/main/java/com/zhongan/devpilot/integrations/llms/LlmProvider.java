@@ -185,6 +185,14 @@ public interface LlmProvider {
                         return;
                     }
 
+                    if (t.getMessage().contains("stream was reset: CANCEL")) {
+                        return;
+                    }
+
+                    if (t.getMessage().contains("Canceled")) {
+                        return;
+                    }
+
                     message = "Chat completion failed: " + t.getMessage();
                 }
 
