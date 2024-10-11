@@ -7,6 +7,7 @@ import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.util.ui.EdtInvocationManager;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.util.CommentUtil;
 
@@ -174,13 +175,15 @@ public class CompletionUtils {
                 new TimerTask() {
                     @Override
                     public void run() {
-                        singletonOfInlineCompletionHandler().retrieveAndShowCompletion(
-                                editor,
-                                offset,
-                                lastShownSuggestion,
-                                userInput,
-                                completionAdjustment,
-                                completionType);
+                        EdtInvocationManager.invokeAndWaitIfNeeded(
+                                () ->
+                                        singletonOfInlineCompletionHandler().retrieveAndShowCompletion(
+                                                editor,
+                                                offset,
+                                                lastShownSuggestion,
+                                                userInput,
+                                                completionAdjustment,
+                                                completionType));
                     }
                 }, getTriggerInterval());
         lastTriggerInfo.setTimer(timer);
