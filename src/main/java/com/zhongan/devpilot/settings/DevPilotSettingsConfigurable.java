@@ -13,7 +13,6 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
-import com.zhongan.devpilot.util.EditorUtils;
 
 import javax.swing.JComponent;
 
@@ -72,10 +71,6 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         var chatShortcutSettings = ChatShortcutSettingState.getInstance();
         var methodInlayPresentationDisplayIndex = settingsComponent.getMethodInlayPresentationDisplayIndex();
-        // if inlay presentation display mode changed, refresh editor
-        if (!methodInlayPresentationDisplayIndex.equals(chatShortcutSettings.getDisplayIndex())) {
-            EditorUtils.refreshInlayPresentationDisplay(methodInlayPresentationDisplayIndex);
-        }
         chatShortcutSettings.setDisplayIndex(methodInlayPresentationDisplayIndex);
 
         PopupMenuEditorActionGroupUtil.refreshActions(null);

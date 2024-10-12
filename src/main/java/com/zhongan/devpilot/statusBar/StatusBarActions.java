@@ -22,8 +22,6 @@ import javax.swing.Icon;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 
-import static com.zhongan.devpilot.util.EditorUtils.refreshInlayPresentationDisplay;
-
 public class StatusBarActions {
 
     public static DefaultActionGroup buildStatusBarActionsGroup() {
@@ -74,7 +72,6 @@ public class StatusBarActions {
                     event -> {
                         ChatShortcutSettingState.getInstance().setEnable(false);
                         ChatShortcutSettingState.getInstance().setDisplayIndex(NumberUtils.INTEGER_ZERO);
-
                     }
             );
         } else {
@@ -83,7 +80,6 @@ public class StatusBarActions {
                     event -> {
                         ChatShortcutSettingState.getInstance().setEnable(true);
                         ChatShortcutSettingState.getInstance().setDisplayIndex(NumberUtils.INTEGER_ONE);
-                        refreshInlayPresentationDisplay(NumberUtils.INTEGER_ONE);
                     }
             );
         }
