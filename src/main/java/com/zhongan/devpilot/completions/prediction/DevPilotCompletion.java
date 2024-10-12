@@ -231,6 +231,15 @@ public class DevPilotCompletion implements Completion {
         return lineStateItems.getLineStates().get(lineStateItems.getIndex() - 1).getOffset();
     }
 
+    public String getCurrentCompletionCode() {
+        int size = lineStateItems.getLineStates().size();
+        if (lineStateItems.getIndex() >= size || lineStateItems.getIndex() <= 0) {
+            return "";
+        }
+
+        return lineStateItems.getLineStates().get(lineStateItems.getIndex() - 1).getLine() + "\n";
+    }
+
     public void clear() {
         lineStateItems.clear();
     }

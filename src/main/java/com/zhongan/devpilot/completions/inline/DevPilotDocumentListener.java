@@ -58,7 +58,8 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         }
         DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
         CompletionPreview completionPreview = CompletionPreview.getInstance(editor);
-        if (completionPreview != null && completionPreview.isByLineChange()) {
+
+        if (completionPreview != null && completionPreview.isByLineAcceptDocumentChange(event)) {
             return;
         }
         CompletionPreview.clear(editor);

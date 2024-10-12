@@ -7,11 +7,14 @@ import com.intellij.openapi.editor.Caret;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.LogicalPosition;
+import com.intellij.openapi.editor.event.CaretEvent;
+import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.ex.util.EditorUtil;
 import com.intellij.openapi.editor.impl.EditorImpl;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
+import com.intellij.openapi.util.TextRange;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
@@ -229,10 +232,10 @@ public class CompletionPreview implements Disposable {
             line = completion.getNextUnacceptLineState().getLine();
         }
         if (completion.getLineStateItems().getIndex() > 0) {
-            insertionOffset += "\n".length();
+            insertionOffset += "\n".length();  // can't remove
         }
-        document.insertString(insertionOffset, line + "\n");
         completion.acceptLine(insertionOffset + line.length());
+        document.insertString(insertionOffset, line + "\n");  // offset don't change
         editor.getCaretModel().moveToOffset(insertionOffset + line.length());
         Objects.requireNonNull(CompletionPreview.getInstance(editor)).continuePreview();
         PsiFile fileAfterCompletion = PsiDocumentManager.getInstance(project).getPsiFile(editor.getDocument());
@@ -265,12 +268,22 @@ public class CompletionPreview implements Disposable {
         }
     }
 
-    public boolean isByLineChange() {
-        LogicalPosition logicalPosition = editor.getCaretModel().getLogicalPosition();
-        int newOffset = editor.logicalPositionToOffset(logicalPosition);
+    public boolean isByLineAcceptCaretChange(CaretEvent caretEvent) {
+        int newOffset = editor.logicalPositionToOffset(caretEvent.getNewPosition());
         DevPilotCompletion completion = completions.get(currentIndex);
         int currentCompletionPosition = completion.getCurrentCompletionPosition();
         return newOffset == currentCompletionPosition;
+    }
+
+    public boolean isByLineAcceptDocumentChange(DocumentEvent documentEvent) {
+        int previousOffset = documentEvent.getOffset();
+        int newOffset = previousOffset + documentEvent.getNewLength();
+        if (newOffset < 0 || previousOffset > newOffset) return false;
+        String addedText = editor.getDocument().getText(new TextRange(previousOffset, newOffset));
+
+        DevPilotCompletion completion = completions.get(currentIndex);
+        String completionCode = completion.getCurrentCompletionCode();
+        return StringUtils.equals(addedText, completionCode);
     }
 
     private static AutoImportHandler getAutoImportHandler(Editor editor, PsiFile file, int startOffset, int endOffset) {
