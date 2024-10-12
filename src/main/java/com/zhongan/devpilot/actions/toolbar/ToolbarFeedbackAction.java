@@ -4,6 +4,7 @@ import com.intellij.ide.BrowserUtil;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
 import com.zhongan.devpilot.DevPilotIcons;
+import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.LoginUtils;
 
@@ -20,6 +21,8 @@ public class ToolbarFeedbackAction extends AnAction {
 
     @Override
     public void actionPerformed(@NotNull AnActionEvent e) {
-        BrowserUtil.browse(LoginUtils.buildAuthUrl(FEEDBACK_URL));
+//        BrowserUtil.browse(LoginUtils.buildAuthUrl(FEEDBACK_URL));
+        var service = e.getProject().getService(DevPilotChatToolWindowService.class);
+        service.getDevPilotChatToolWindow().jbCefBrowser().openDevtools();
     }
 }

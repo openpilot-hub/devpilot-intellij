@@ -35,7 +35,7 @@ public class EditorUtils {
             return;
         }
 
-        Editor editor = FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, codeFile), true);
+        Editor editor = FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, codeFile), false);
         if (editor != null) {
             if (startColumn == null) {
                 startColumn = 0;
