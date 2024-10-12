@@ -81,7 +81,7 @@ public class PsiElementUtils {
                 }
             }
 
-            result.append(simplifyElement(element)).append("\n\n");
+            result.append(filterLargeElement(element)).append("\n\n");
         }
 
         return result.toString();
