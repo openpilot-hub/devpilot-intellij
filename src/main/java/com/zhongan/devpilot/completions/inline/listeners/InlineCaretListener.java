@@ -32,8 +32,7 @@ public class InlineCaretListener implements CaretListener, Disposable {
     }
 
     private boolean isSingleOffsetChange(CaretEvent event) {
-        return event.getOldPosition().line == event.getNewPosition().line
-                && event.getOldPosition().column + 1 == event.getNewPosition().column;
+        return event.getOldPosition().line == event.getNewPosition().line;
     }
 
     @Override
