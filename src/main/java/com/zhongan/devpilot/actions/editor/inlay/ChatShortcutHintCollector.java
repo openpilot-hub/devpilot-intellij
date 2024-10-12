@@ -120,18 +120,15 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
         int offset = getAnchorOffset(psiElement);
         int line = document.getLineNumber(offset);
         int startOffset = document.getLineStartOffset(line);
-
         InlayPresentation finalPresentation = createPopupPresentation(factory, editor, psiElement, startOffset, offset);
         inlayHintsSink.addBlockElement(startOffset, true, true, 300, finalPresentation);
     }
 
     private InlayPresentation createPopupPresentation(PresentationFactory factory, Editor editor,
                                                       PsiElement psiElement, int startOffset, int offset) {
-        String linePrefix = editor.getDocument().getText(new TextRange(startOffset, offset));
-        int column = offset - startOffset + findOffsetBySpace(editor, linePrefix);
-
+        int gap = computeInitialWhitespace(editor, psiElement);
         List<InlayPresentation> presentations = new SmartList<>();
-        presentations.add(factory.textSpacePlaceholder(column, true));
+        presentations.add(factory.textSpacePlaceholder(gap, true));
         presentations.add(factory.smallScaledIcon(DevPilotIcons.SYSTEM_ICON_INLAY));
         presentations.add(factory.smallScaledIcon(AllIcons.Actions.FindAndShowNextMatchesSmall));
         presentations.add(factory.textSpacePlaceholder(1, true));
@@ -208,18 +205,6 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             }
         }
         return anchorOffset;
-    }
-
-    private int findOffsetBySpace(@NotNull Editor editor, String linePrefix) {
-        int tabWidth = editor.getSettings().getTabSize(editor.getProject());
-        int totalOffset = 0;
-
-        for (int i = 0; i < linePrefix.length(); ++i) {
-            if (linePrefix.charAt(i) == '\t') {
-                totalOffset += tabWidth;
-            }
-        }
-        return totalOffset;
     }
 
     private int computeInitialWhitespace(Editor editor, PsiElement psiElement) {
