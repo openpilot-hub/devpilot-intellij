@@ -1,14 +1,10 @@
 package com.zhongan.devpilot.completions.inline.render;
 
-import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorCustomElementRenderer;
 import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.markup.TextAttributes;
-import com.intellij.openapi.keymap.KeymapUtil;
-import com.intellij.openapi.util.text.StringUtil;
-import com.zhongan.devpilot.completions.inline.AcceptDevPilotInlineCompletionByLineAction;
-import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.completions.inline.CompletionPreview;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -26,18 +22,21 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
 
     private Color color;
 
-    public BlockElementRenderer(Editor editor, List<String> blockText, boolean deprecated) {
+    private final boolean needHintInBlock;
+
+    public BlockElementRenderer(Editor editor, List<String> blockText, boolean deprecated, boolean needHintInBlock) {
         this.editor = editor;
         this.blockText = blockText;
         this.deprecated = deprecated;
+        this.needHintInBlock = needHintInBlock;
     }
 
     @Override
     public int calcWidthInPixels(Inlay inlay) {
         String firstLine = blockText.get(0);
         boolean hint = blockText.size() > 1;
-        if (hint) {
-            firstLine = firstLine + "       " + hintText();
+        if (needHintInBlock && hint) {
+            firstLine = firstLine + "       " + CompletionPreview.byLineAcceptHintText();
         }
         return editor.getContentComponent()
                 .getFontMetrics(GraphicsUtils.getFont(editor, firstLine)).stringWidth(firstLine);
@@ -55,8 +54,8 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
         g.setColor(color);
         for (int i = 0; i < blockText.size(); i++) {
             String line = blockText.get(i);
-            if (i == 0 && hint) {
-                line = line + "       " + hintText();
+            if (needHintInBlock && i == 0 && hint) {
+                line = line + "       " + CompletionPreview.byLineAcceptHintText();
                 hint = false;
             }
             g.setFont(GraphicsUtils.getFont(editor, line));
@@ -66,17 +65,6 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
                     targetRegion.y + i * editor.getLineHeight() + editor.getAscent()
             );
         }
-    }
-
-    private String hintText() {
-        String acceptShortcut = getShortcutText();
-        return String.format("%s %s", acceptShortcut, DevPilotMessageBundle.get("completion.apply.partial.tooltips"));
-    }
-
-    private String getShortcutText() {
-        return StringUtil.defaultIfEmpty(
-                KeymapUtil.getFirstKeyboardShortcutText(ActionManager.getInstance().getAction(AcceptDevPilotInlineCompletionByLineAction.ACTION_ID)),
-                "Missing shortcut key");
     }
 
     @TestOnly

@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.completions.inline;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Caret;
@@ -11,10 +12,12 @@ import com.intellij.openapi.editor.event.CaretEvent;
 import com.intellij.openapi.editor.event.DocumentEvent;
 import com.intellij.openapi.editor.ex.util.EditorUtil;
 import com.intellij.openapi.editor.impl.EditorImpl;
+import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.text.StringUtil;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiFile;
 import com.intellij.refactoring.rename.inplace.InplaceRefactoring;
@@ -23,6 +26,7 @@ import com.zhongan.devpilot.completions.inline.listeners.InlineCaretListener;
 import com.zhongan.devpilot.completions.inline.render.DevPilotInlay;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.treesitter.TreeSitterParser;
+import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.TelemetryUtils;
 
 import java.util.Collections;
@@ -288,5 +292,16 @@ public class CompletionPreview implements Disposable {
 
     private static AutoImportHandler getAutoImportHandler(Editor editor, PsiFile file, int startOffset, int endOffset) {
         return new AutoImportHandler(startOffset, endOffset, editor, file);
+    }
+
+    public static String byLineAcceptHintText() {
+        String acceptShortcut = getByLineAcceptShortcutText();
+        return String.format("%s %s", acceptShortcut, DevPilotMessageBundle.get("completion.apply.partial.tooltips"));
+    }
+
+    private static String getByLineAcceptShortcutText() {
+        return StringUtil.defaultIfEmpty(
+                KeymapUtil.getFirstKeyboardShortcutText(ActionManager.getInstance().getAction(AcceptDevPilotInlineCompletionByLineAction.ACTION_ID)),
+                "Missing shortcut key");
     }
 }
