@@ -24,7 +24,6 @@ import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
-import com.zhongan.devpilot.util.PsiElementUtils;
 import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.EmbeddedModel;
@@ -151,9 +150,9 @@ public final class DevPilotChatToolWindowService {
 
             if (localRef != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var relatedCode = PsiElementUtils.transformElementToString(localRef);
-                    newMap.put("relatedContext", relatedCode);
-                    // newMap.put("additionalRelatedContext", null);
+                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    FileAnalyzeProviderFactory.getProvider(language)
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), localRef, null, data);
                     localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, EditorActionEnum.getEnumByName(msgType));
                 });
             }
@@ -212,9 +211,9 @@ public final class DevPilotChatToolWindowService {
 
             if (localRef != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var relatedCode = PsiElementUtils.transformElementToString(localRef);
-                    data.put("relatedContext", relatedCode);
-//                    data.put("additionalRelatedContext", null);
+                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    FileAnalyzeProviderFactory.getProvider(language)
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), localRef, null, data);
                     localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, messageModel.getCodeRef().getType());
                 });
             }
