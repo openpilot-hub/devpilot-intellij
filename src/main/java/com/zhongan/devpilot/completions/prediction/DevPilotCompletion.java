@@ -132,7 +132,7 @@ public class DevPilotCompletion implements Completion {
                     result.add(lineState.line);
                 }
             }
-            return "\n" + String.join("\n", result);
+            return "\n" + String.join("\n", result);  // must add "\n", otherwise block preview will occur change line issue.
         }
 
         public void init(List<LineState> lineStates) {
@@ -216,6 +216,10 @@ public class DevPilotCompletion implements Completion {
 
     public LineStateItems.LineState getNextUnacceptLineState() {
         return lineStateItems.getLineStates().get(lineStateItems.index);
+    }
+
+    public String getUnacceptedLines() {
+        return this.lineStateItems.getUnacceptedLines().substring(1);   // skip first \n to avoid extra lines count in accept telemetry
     }
 
     public void acceptLine(int offset) {

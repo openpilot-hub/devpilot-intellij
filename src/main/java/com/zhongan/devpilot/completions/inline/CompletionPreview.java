@@ -138,7 +138,6 @@ public class CompletionPreview implements Disposable {
 
     public void dispose() {
         editor.putUserData(INLINE_COMPLETION_PREVIEW, null);
-        completions.forEach(DevPilotCompletion::clear);
     }
 
     public void applyPreview(@Nullable Caret caret) {
@@ -196,7 +195,7 @@ public class CompletionPreview implements Disposable {
             getAutoImportHandler(editor, fileAfterCompletion, startOffset, endOffset).invoke();
         });
 
-        TelemetryUtils.completionAccept(completion.id, file);
+        TelemetryUtils.completionAccept(completion.id, file, completion.getUnacceptedLines());
     }
 
     public void applyPreviewByLine(@Nullable Caret caret) {
@@ -248,7 +247,7 @@ public class CompletionPreview implements Disposable {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             getAutoImportHandler(editor, fileAfterCompletion, startOffset, endOffset).invoke();
         });
-        TelemetryUtils.completionAccept(completion.id, file);
+        TelemetryUtils.completionAccept(completion.id, file, line);
     }
 
     public void continuePreview() {
