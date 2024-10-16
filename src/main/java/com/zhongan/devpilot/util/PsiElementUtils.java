@@ -38,6 +38,7 @@ import java.util.TreeSet;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.Manifest;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -46,6 +47,8 @@ import org.jetbrains.annotations.NotNull;
 
 public class PsiElementUtils {
     private static final int MAX_LINE_COUNT = 1000;
+
+    private static final int MAX_CODE_SNIPPET_COUNT = 10;
 
     public static String getFullClassName(@NotNull PsiElement element) {
         if (element instanceof PsiMethod) {
@@ -60,13 +63,12 @@ public class PsiElementUtils {
         return null;
     }
 
-    public static <T extends PsiElement> String transformElementToString(Collection<T> elements) {
+    public static String transformElementToString(Collection<PsiElement> elements, String packageName) {
         var result = new StringBuilder();
 
-        for (T element : elements) {
-            if (shouldIgnorePsiElement(element)) {
-                continue;
-            }
+        var filteredElements = filterElements(elements, packageName);
+
+        for (var element : filteredElements) {
             if (element instanceof PsiClass) {
                 PsiClass psiClass = (PsiClass) element;
                 result.append("Class: ").append(psiClass.getQualifiedName()).append("\n\n");
@@ -355,7 +357,61 @@ public class PsiElementUtils {
         return doRecall(project, finalRefs);
     }
 
-    public static String filterLargeElement(PsiElement element) {
+    // filter elements when elements amount larger than MAX_CODE_SNIPPET_COUNT
+    private static Collection<PsiElement> filterElements(Collection<PsiElement> elements, String packageName) {
+        if (CollectionUtils.isEmpty(elements)) {
+            return elements;
+        }
+
+        elements = elements.stream()
+                .filter(element -> !shouldIgnorePsiElement(element)).collect(Collectors.toList());
+
+        if (elements.size() <= MAX_CODE_SNIPPET_COUNT) {
+            return elements;
+        }
+
+        if (StringUtils.isEmpty(packageName)) {
+            return elements.stream().limit(MAX_CODE_SNIPPET_COUNT).collect(Collectors.toList());
+        }
+
+        var resultList = new ArrayList<>(elements);
+
+        // Sort elements by the length of the common prefix with the package name
+        // The longer the common prefix, the higher the priority
+        resultList.sort((o1, o2) -> {
+            var m1 = maxCommonPrefixLength(o1, packageName);
+            var m2 = maxCommonPrefixLength(o2, packageName);
+            return m2 - m1;
+        });
+
+        return resultList.stream().limit(MAX_CODE_SNIPPET_COUNT).collect(Collectors.toList());
+    }
+
+    private static int maxCommonPrefixLength(PsiElement element, String packageName) {
+        String elementPackage = null;
+        if (element instanceof PsiClass) {
+            elementPackage = ((PsiClass) element).getQualifiedName();
+        } else if (element instanceof PsiMethod) {
+            var method = ((PsiMethod) element);
+            if (method.getContainingClass() != null) {
+                elementPackage = method.getContainingClass().getQualifiedName();
+            }
+        }
+
+        if (StringUtils.isEmpty(elementPackage) || StringUtils.isEmpty(packageName)) {
+            return 0;
+        }
+
+        var minLength = Math.min(elementPackage.length(), packageName.length());
+        for (int i = 0; i < minLength; i++) {
+            if (elementPackage.charAt(i) != packageName.charAt(i)) {
+                return i;
+            }
+        }
+        return minLength;
+    }
+
+    private static String filterLargeElement(PsiElement element) {
         var lineCount = getLineCount(element);
         if (lineCount > MAX_LINE_COUNT) {
             return simplifyElement(element);
@@ -364,7 +420,7 @@ public class PsiElementUtils {
         }
     }
 
-    public static String simplifyElement(PsiElement element) {
+    private static String simplifyElement(PsiElement element) {
         if (element instanceof PsiClass) {
             var psiClass = (PsiClass) element;
             return simplifyClass(psiClass);

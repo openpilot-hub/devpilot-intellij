@@ -20,5 +20,7 @@ public interface FileAnalyzeProvider {
 
     void buildTestDataMap(Project project, Editor editor, Map<String, String> data);
 
+    void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference, List<PsiElement> localRef, List<PsiElement> remoteRef, Map<String, String> data);
+
     List<PsiElement> callLocalRag(Project project, DevPilotCodePrediction codePrediction);
 }
