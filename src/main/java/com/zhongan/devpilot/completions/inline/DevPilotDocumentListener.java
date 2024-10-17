@@ -53,10 +53,15 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         }
         Document document = event.getDocument();
         Editor editor = getActiveEditor(document);
-        if (editor == null || !EditorUtils.isMainEditor(editor)) {
+        if (editor == null || !EditorUtils.isMainEditor(editor) || editor.getCaretModel().getCaretCount() > 1) {
             return;
         }
         DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
+        CompletionPreview completionPreview = CompletionPreview.getInstance(editor);
+
+        if (completionPreview != null && completionPreview.isByLineAcceptDocumentChange(event)) {
+            return;
+        }
         CompletionPreview.clear(editor);
         int offset = event.getOffset() + event.getNewLength();
 
