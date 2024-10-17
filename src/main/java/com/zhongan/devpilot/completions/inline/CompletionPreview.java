@@ -281,7 +281,7 @@ public class CompletionPreview implements Disposable {
     public boolean isByLineAcceptDocumentChange(DocumentEvent documentEvent) {
         int previousOffset = documentEvent.getOffset();
         int newOffset = previousOffset + documentEvent.getNewLength();
-        if (newOffset < 0 || previousOffset > newOffset) return false;
+        if (newOffset < 0 || previousOffset >= newOffset) return false; // previousOffset == newOffset   ctr + z
         String addedText = editor.getDocument().getText(new TextRange(previousOffset, newOffset));
 
         DevPilotCompletion completion = completions.get(currentIndex);
