@@ -53,7 +53,7 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         }
         Document document = event.getDocument();
         Editor editor = getActiveEditor(document);
-        if (editor == null || !EditorUtils.isMainEditor(editor)) {
+        if (editor == null || !EditorUtils.isMainEditor(editor) || editor.getCaretModel().getCaretCount() > 1) {
             return;
         }
         DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
