@@ -87,6 +87,22 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
     }
 
     @Override
+    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference, List<PsiElement> localRef, List<PsiElement> remoteRef, Map<String, String> data) {
+        String packageName = null;
+
+        if (codeReference != null && codeReference.getFileUrl() != null) {
+            var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+            if (psiJavaFile != null) {
+                packageName = psiJavaFile.getPackageName();
+            }
+        }
+
+        var relatedCode = PsiElementUtils.transformElementToString(localRef, packageName);
+        data.put("relatedContext", relatedCode);
+//        data.put("additionalRelatedContext", null);
+    }
+
+    @Override
     public List<PsiElement> callLocalRag(Project project, DevPilotCodePrediction codePrediction) {
         return PsiElementUtils.contextRecall(project, codePrediction);
     }
