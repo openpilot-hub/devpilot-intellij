@@ -71,7 +71,7 @@ public class TelemetryUtils {
         sendMessage(url, requestJson);
     }
 
-    public static void completionAccept(String id, PsiFile file) {
+    public static void completionAccept(String id, PsiFile file, String acceptLines) {
         if (!isTelemetryTurnOn()) {
             return;
         }
@@ -87,10 +87,10 @@ public class TelemetryUtils {
             language = lang.getLanguageName();
         }
 
-        completionAccept(id, language);
+        completionAccept(id, language, acceptLines);
     }
 
-    public static void completionAccept(String id, String language) {
+    public static void completionAccept(String id, String language, String acceptLines) {
         if (!isTelemetryTurnOn()) {
             return;
         }
@@ -100,7 +100,7 @@ public class TelemetryUtils {
             language = "text";
         }
 
-        var completionAcceptRequest = new CompletionAcceptRequest(language.toLowerCase(Locale.ROOT));
+        var completionAcceptRequest = new CompletionAcceptRequest(language.toLowerCase(Locale.ROOT), acceptLines);
         var requestJson = JsonUtils.toJson(completionAcceptRequest);
 
         if (requestJson == null) {
@@ -201,8 +201,11 @@ public class TelemetryUtils {
     static class CompletionAcceptRequest {
         private String language;
 
-        CompletionAcceptRequest(String language) {
+        private String acceptLines;
+
+        CompletionAcceptRequest(String language, String acceptLines) {
             this.language = language;
+            this.acceptLines = acceptLines;
         }
 
         public String getLanguage() {
@@ -212,5 +215,14 @@ public class TelemetryUtils {
         public void setLanguage(String language) {
             this.language = language;
         }
+
+        public String getAcceptLines() {
+            return acceptLines;
+        }
+
+        public void setAcceptLines(String acceptLines) {
+            this.acceptLines = acceptLines;
+        }
+
     }
 }
