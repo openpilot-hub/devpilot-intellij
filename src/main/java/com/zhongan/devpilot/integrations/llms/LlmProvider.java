@@ -21,6 +21,7 @@ import java.util.UUID;
 import java.util.function.Consumer;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -115,7 +116,18 @@ public interface LlmProvider {
                     if (choice.getDelta().getContent() != null) {
                         result.append(choice.getDelta().getContent());
                     }
-                    streaming = !"stop".equals(finishReason);
+
+                    if (!StringUtils.isEmpty(finishReason)) {
+                        streaming = Boolean.FALSE;
+
+                        if (finishReason.contains("length")) {
+                            DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.stop.length"));
+                        }
+
+                        if (finishReason.contains("content_filter")) {
+                            DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.stop.filterContent"));
+                        }
+                    }
                 }
 
                 RecallModel recallModel = null;
