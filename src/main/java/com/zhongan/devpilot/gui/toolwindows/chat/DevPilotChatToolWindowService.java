@@ -501,18 +501,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     public MessageModel getUserContentCode(MessageModel messageModel) {
-        var message = messageModel.getContent();
-
         if (messageModel.getCodeRef() != null) {
-            var codeRef = messageModel.getCodeRef();
-            var sourceCode = codeRef.getSourceCode();
-            var language = codeRef.getLanguageId();
-            if (language == null) {
-                language = "";
-            }
-            var codeFormat = String.format("```%s\n%s\n```\n", language, sourceCode);
-            codeRef.setVisible(false);
-            messageModel.setContent(message + "\n" + codeFormat);
             return messageModel;
         }
 
@@ -533,10 +522,6 @@ public final class DevPilotChatToolWindowService {
         }
 
         var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo[0], null);
-        codeReference.setVisible(false);
-        var codeFormat = String.format("```%s\n%s\n```\n", codeReference.getLanguageId(), codeReference.getSourceCode());
-
-        messageModel.setContent(message + "\n" + codeFormat);
         messageModel.setCodeRef(codeReference);
 
         return messageModel;

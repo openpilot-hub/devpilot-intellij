@@ -28,8 +28,8 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
     @Override
     public Integer getOffset() {
         return beforeSuffixInlay != null ? beforeSuffixInlay.getOffset() :
-            afterSuffixInlay != null ? afterSuffixInlay.getOffset() :
-                blockInlay != null ? blockInlay.getOffset() : null;
+                afterSuffixInlay != null ? afterSuffixInlay.getOffset() :
+                        blockInlay != null ? blockInlay.getOffset() : null;
     }
 
     @Override
@@ -80,17 +80,20 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
         int endIndex = firstLine.indexOf(completion.getOldSuffix());
 
         RenderingInstructions instructions = InlineStringProcessor.determineRendering(lines, completion.getOldSuffix());
-
+        boolean needHintInBlock = true;
         switch (instructions.getFirstLine()) {
             case NoSuffix:
-                renderNoSuffix(editor, firstLine, completion, offset);
+                needHintInBlock = false;
+                renderNoSuffix(editor, firstLine, completion, offset, lines.size() > 1);
                 break;
 
             case SuffixOnly:
+                needHintInBlock = false;
                 renderAfterSuffix(endIndex, completion, firstLine, editor, offset);
                 break;
 
             case BeforeAndAfterSuffix:
+                needHintInBlock = false;
                 renderBeforeSuffix(firstLine, endIndex, editor, completion, offset);
                 renderAfterSuffix(endIndex, completion, firstLine, editor, offset);
                 break;
@@ -101,7 +104,7 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
 
         if (instructions.shouldRenderBlock()) {
             List<String> otherLines = lines.stream().skip(1).collect(Collectors.toList());
-            renderBlock(otherLines, editor, completion, offset);
+            renderBlock(otherLines, editor, completion, offset, needHintInBlock);
         }
 
         if (instructions.getFirstLine() != FirstLineRendering.None) {
@@ -109,9 +112,9 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
         }
     }
 
-    private void renderBlock(List<String> lines, Editor editor, DevPilotCompletion completion, int offset) {
+    private void renderBlock(List<String> lines, Editor editor, DevPilotCompletion completion, int offset, boolean needHintInBlock) {
         BlockElementRenderer blockElementRenderer = new BlockElementRenderer(editor, lines, completion.getCompletionMetadata() != null ?
-            completion.getCompletionMetadata().getIsDeprecated() : false);
+                completion.getCompletionMetadata().getIsDeprecated() : false, needHintInBlock);
         Inlay<?> element = editor.getInlayModel().addBlockElement(offset, true, false, 1, blockElementRenderer);
         if (element != null) {
             Disposer.register(this, element);
@@ -131,17 +134,22 @@ public class DefaultDevPilotInlay implements DevPilotInlay {
         beforeSuffixInlay = renderInline(editor, beforeSuffix, completion, offset);
     }
 
-    private void renderNoSuffix(Editor editor, String firstLine, DevPilotCompletion completion, int offset) {
-        beforeSuffixInlay = renderInline(editor, firstLine, completion, offset);
+    private void renderNoSuffix(Editor editor, String firstLine, DevPilotCompletion completion, int offset, boolean needHint) {
+        beforeSuffixInlay = renderInline(editor, firstLine, completion, offset, needHint);
     }
 
-    private Inlay<?> renderInline(Editor editor, String before, DevPilotCompletion completion, int offset) {
+    private Inlay<?> renderInline(Editor editor, String before, DevPilotCompletion completion, int offset, boolean needHint) {
         InlineElementRenderer element = new InlineElementRenderer(editor, before, completion.getCompletionMetadata() != null ?
-            completion.getCompletionMetadata().getIsDeprecated() : false);
+                completion.getCompletionMetadata().getIsDeprecated() : false, needHint);
         Inlay<InlineElementRenderer> inlay = editor.getInlayModel().addInlineElement(offset, true, element);
         if (inlay != null) {
             Disposer.register(this, inlay);
         }
         return inlay;
     }
+
+    private Inlay<?> renderInline(Editor editor, String before, DevPilotCompletion completion, int offset) {
+        return this.renderInline(editor, before, completion, offset, false);
+    }
+
 }

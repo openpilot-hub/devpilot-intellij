@@ -1,20 +1,49 @@
 package com.zhongan.devpilot.completions.inline.render;
 
+import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.editor.colors.EditorColorsScheme;
 import com.intellij.openapi.editor.colors.EditorFontType;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.codeStyle.CommonCodeStyleSettings;
 import com.intellij.ui.JBColor;
+import com.intellij.util.ui.UIUtil;
 
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.font.TextAttribute;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.swing.JTextArea;
+
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import static java.awt.font.TextAttribute.POSTURE_OBLIQUE;
 
 public class GraphicsUtils {
+
+    private static final @Nullable Method getEditorFontSize2DMethod;
+
+    private static Font editFont;
+
+    static {
+        Method method = null;
+        if (ApplicationInfo.getInstance().getBuild().getBaselineVersion() >= 221) {
+            try {
+                method = EditorColorsScheme.class.getMethod("getEditorFontSize2D");
+            } catch (NoSuchMethodException var2) {
+            }
+        }
+
+        getEditorFontSize2DMethod = method;
+        JTextArea area = new JTextArea();
+        editFont = area.getFont();
+    }
+
     public static Font getFont(Editor editor, boolean deprecated) {
         Font font = editor.getColorsScheme().getFont(EditorFontType.ITALIC);
 
@@ -36,6 +65,25 @@ public class GraphicsUtils {
         Map<TextAttribute, Object> attributes = new HashMap<>(font.getAttributes());
         attributes.put(TextAttribute.STRIKETHROUGH, TextAttribute.STRIKETHROUGH_ON);
         return new Font(attributes);
+    }
+
+    public static Font getFont(@NotNull Editor editor, @NotNull String text) {
+
+        Font font = editor.getColorsScheme().getFont(EditorFontType.PLAIN).deriveFont(2);
+        Font fallbackFont = UIUtil.getFontWithFallbackIfNeeded(font, text);
+        return fallbackFont.deriveFont(fontSize(editor));
+    }
+
+    public static float fontSize(@NotNull Editor editor) {
+
+        EditorColorsScheme scheme = editor.getColorsScheme();
+        if (getEditorFontSize2DMethod != null) {
+            try {
+                return (Float) getEditorFontSize2DMethod.invoke(scheme);
+            } catch (InvocationTargetException | IllegalAccessException var3) {
+            }
+        }
+        return (float) scheme.getEditorFontSize();
     }
 
     public static Color getColor() {
