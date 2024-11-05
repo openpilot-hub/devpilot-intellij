@@ -190,6 +190,7 @@ public class InlineCompletionHandler {
         }
 
         return createCompletions(
+            editor,
             completionsResponse,
             editor.getDocument(),
             offset,
@@ -249,6 +250,8 @@ public class InlineCompletionHandler {
     }
 
     private List<DevPilotCompletion> createCompletions(
+        @NotNull Editor editor,
+        @NotNull
         AutocompleteResponse completions,
         @NotNull Document document,
         int offset,
@@ -257,6 +260,7 @@ public class InlineCompletionHandler {
             .mapToObj(
                 index ->
                     CompletionUtils.createDevpilotCompletion(
+                            editor,
                         document,
                         offset,
                         completions.oldPrefix,

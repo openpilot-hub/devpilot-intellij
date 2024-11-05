@@ -19,6 +19,7 @@ import java.util.List;
 
 import javax.swing.Icon;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class StatusBarActions {
@@ -38,13 +39,13 @@ public class StatusBarActions {
     private static DumbAwareAction createCompletionsAction() {
         if (CompletionSettingsState.getInstance().getEnable()) {
             return DumbAwareAction.create(
-                DevPilotMessageBundle.get("devpilot.settings.service.code.completion.disabled.desc"),
-                event -> CompletionSettingsState.getInstance().setEnable(false)
+                    DevPilotMessageBundle.get("devpilot.settings.service.code.completion.disabled.desc"),
+                    event -> CompletionSettingsState.getInstance().setEnable(false)
             );
         } else {
             return DumbAwareAction.create(
-                DevPilotMessageBundle.get("devpilot.settings.service.code.completion.enable.desc"),
-                event -> CompletionSettingsState.getInstance().setEnable(true)
+                    DevPilotMessageBundle.get("devpilot.settings.service.code.completion.enable.desc"),
+                    event -> CompletionSettingsState.getInstance().setEnable(true)
             );
         }
     }
@@ -67,13 +68,19 @@ public class StatusBarActions {
     private static DumbAwareAction createChatShortcutSwitchAction() {
         if (ChatShortcutSettingState.getInstance().getEnable()) {
             return DumbAwareAction.create(
-                DevPilotMessageBundle.get("devpilot.settings.service.chat.shortcut.disabled.desc"),
-                event -> ChatShortcutSettingState.getInstance().setEnable(false)
+                    DevPilotMessageBundle.get("devpilot.settings.service.chat.shortcut.disabled.desc"),
+                    event -> {
+                        ChatShortcutSettingState.getInstance().setEnable(false);
+                        ChatShortcutSettingState.getInstance().setDisplayIndex(NumberUtils.INTEGER_ZERO);
+                    }
             );
         } else {
             return DumbAwareAction.create(
-                DevPilotMessageBundle.get("devpilot.settings.service.chat.shortcut.enable.desc"),
-                event -> ChatShortcutSettingState.getInstance().setEnable(true)
+                    DevPilotMessageBundle.get("devpilot.settings.service.chat.shortcut.enable.desc"),
+                    event -> {
+                        ChatShortcutSettingState.getInstance().setEnable(true);
+                        ChatShortcutSettingState.getInstance().setDisplayIndex(NumberUtils.INTEGER_ONE);
+                    }
             );
         }
     }

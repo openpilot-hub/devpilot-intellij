@@ -6,6 +6,8 @@ import com.intellij.openapi.actionSystem.PlatformDataKeys;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.NlsActions;
+import com.intellij.psi.PsiElement;
+import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 
 import javax.swing.Icon;
 
@@ -22,18 +24,18 @@ public abstract class BasicEditorAction extends AnAction {
         PopupMenuEditorActionGroupUtil.registerOrReplaceAction(this);
     }
 
-    protected abstract void actionPerformed(Project project, Editor editor, String selectedText);
+    protected abstract void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel);
 
     public void actionPerformed(@NotNull AnActionEvent event) {
         var project = event.getProject();
         var editor = event.getData(PlatformDataKeys.EDITOR);
         if (editor != null && project != null) {
-            actionPerformed(project, editor, editor.getSelectionModel().getSelectedText());
+            actionPerformed(project, editor, editor.getSelectionModel().getSelectedText(), null, null);
         }
     }
 
-    public void fastAction(Project project, Editor editor, String selectedText) {
-        actionPerformed(project, editor, selectedText);
+    public void fastAction(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel) {
+        actionPerformed(project, editor, selectedText, psiElement, codeReferenceModel);
     }
 
     public void update(AnActionEvent event) {

@@ -22,7 +22,8 @@ public class EditorUtils {
     // repo和根目录的映射关系，用于打开文件时快速定位到根目录
     private static final Map<String, VirtualFile> repoMapping = new HashMap<>();
 
-    public static void openFileAndSelectLines(@NotNull Project project, String fileUrl, int startLine, int endLine) {
+    public static void openFileAndSelectLines(@NotNull Project project, String fileUrl,
+                                              int startLine, Integer startColumn, int endLine, Integer endColumn) {
 
         VirtualFile codeFile = LocalFileSystem.getInstance().refreshAndFindFileByPath(fileUrl);
         if (codeFile == null || !codeFile.exists()) {
@@ -30,11 +31,19 @@ public class EditorUtils {
             return;
         }
 
-        Editor editor = FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, codeFile), true);
+        Editor editor = FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, codeFile), false);
         if (editor != null) {
+            if (startColumn == null) {
+                startColumn = 0;
+            }
+
+            if (endColumn == null) {
+                endColumn = 0;
+            }
+
             SelectionModel selectionModel = editor.getSelectionModel();
-            int startOffset = editor.getDocument().getLineStartOffset(startLine - 1);
-            int endOffset = editor.getDocument().getLineEndOffset(endLine - 1);
+            int startOffset = editor.getDocument().getLineStartOffset(startLine) + startColumn;
+            int endOffset = editor.getDocument().getLineStartOffset(endLine) + endColumn;
             selectionModel.setSelection(startOffset, endOffset);
 
             ScrollingModel scrollingModel = editor.getScrollingModel();
@@ -72,4 +81,5 @@ public class EditorUtils {
 
         FileEditorManager.getInstance(project).openTextEditor(new OpenFileDescriptor(project, file), true);
     }
+
 }

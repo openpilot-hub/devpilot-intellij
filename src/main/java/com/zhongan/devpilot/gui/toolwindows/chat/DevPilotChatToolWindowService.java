@@ -7,31 +7,52 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
+import com.intellij.openapi.util.Computable;
+import com.intellij.psi.PsiElement;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
-import com.zhongan.devpilot.constant.PromptConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
+import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
 import com.zhongan.devpilot.util.TokenUtils;
+import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.EmbeddedModel;
 import com.zhongan.devpilot.webview.model.JavaCallModel;
 import com.zhongan.devpilot.webview.model.LocaleModel;
 import com.zhongan.devpilot.webview.model.LoginModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+import com.zhongan.devpilot.webview.model.RecallModel;
 import com.zhongan.devpilot.webview.model.ThemeModel;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+
+import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_ONE;
+import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_THREE;
+import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_TWO;
+import static com.zhongan.devpilot.constant.DefaultConst.CODE_PREDICT_PROMPT_VERSION;
+import static com.zhongan.devpilot.constant.DefaultConst.NORMAL_CHAT_TYPE;
+import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
+import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
 @Service
 public final class DevPilotChatToolWindowService {
@@ -44,6 +65,14 @@ public final class DevPilotChatToolWindowService {
     private final List<MessageModel> historyMessageList = new ArrayList<>();
 
     private final List<DevPilotMessage> historyRequestMessageList = new ArrayList<>();
+
+    private final AtomicBoolean cancel = new AtomicBoolean(false);
+
+    private MessageModel lastMessage = new MessageModel();
+
+    private final AtomicInteger nowStep = new AtomicInteger(1);
+
+    private volatile String currentMessageId = null;
 
     public DevPilotChatToolWindowService(Project project) {
         this.project = project;
@@ -58,28 +87,11 @@ public final class DevPilotChatToolWindowService {
         return this.project;
     }
 
-    public String sendMessage(Integer sessionType, String message, Consumer<String> callback, MessageModel messageModel) {
-        var userMessage = MessageUtil.createUserMessage(message, messageModel.getId());
-        // check session type,default multi session
-        var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        var sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
-        if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
-            // independent message can not update, just readonly
-            devPilotChatCompletionRequest.getMessages().add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
-            devPilotChatCompletionRequest.getMessages().add(userMessage);
-        } else {
-            if (historyRequestMessageList.isEmpty()) {
-                historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
-            }
-            devPilotChatCompletionRequest.setStream(Boolean.TRUE);
-            if (message.startsWith("@repo")) {
-                clearRequestSession();
-                historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
-            }
-            historyRequestMessageList.add(userMessage);
-            buildConversationWindowMemory();
-            devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
-        }
+    public void chat(Integer sessionType, String msgType, Map<String, String> data,
+                     String message, Consumer<String> callback, MessageModel messageModel) {
+        this.cancel.set(false);
+        this.currentMessageId = messageModel.getId();
+        this.lastMessage = messageModel;
 
         callWebView(messageModel);
         addMessage(messageModel);
@@ -87,8 +99,221 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback);
-        if (SessionTypeEnum.MULTI_TURN.equals(sessionTypeEnum) &&
+        // todo normal chat should be used in some case
+//        if (messageModel.getCodeRef() == null) {
+//            normalChat(sessionType, msgType, data, message, callback, messageModel);
+//            return;
+//        }
+
+        smartChat(sessionType, msgType, data, message, callback, messageModel);
+    }
+
+    public void normalChat(Integer sessionType, String msgType, Map<String, String> data,
+                           String message, Consumer<String> callback, MessageModel messageModel) {
+        sendMessage(sessionType, msgType, data, message, callback, messageModel, null, null, NORMAL_CHAT_TYPE);
+    }
+
+    public void smartChat(Integer sessionType, String msgType, Map<String, String> data,
+                          String message, Consumer<String> callback, MessageModel messageModel) {
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            // step1 call model to do code prediction
+            if (shouldCancelChat(messageModel)) {
+                return;
+            }
+
+            this.nowStep.set(CHAT_STEP_ONE);
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
+
+            // step2 call rag to analyze code
+            if (shouldCancelChat(messageModel)) {
+                return;
+            }
+
+            this.nowStep.set(CHAT_STEP_TWO);
+            var localRef = callRag(references, messageModel.getCodeRef());
+
+            // step3 call model to get the final result
+            if (shouldCancelChat(messageModel)) {
+                return;
+            }
+
+            this.nowStep.set(CHAT_STEP_THREE);
+
+            // avoid immutable map
+            Map<String, String> newMap;
+            if (data != null) {
+                newMap = new HashMap<>(data);
+            } else {
+                newMap = new HashMap<>();
+            }
+            final List<CodeReferenceModel>[] localRefs = new List[1];
+
+            if (localRef != null) {
+                ApplicationManager.getApplication().runReadAction(() -> {
+                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    FileAnalyzeProviderFactory.getProvider(language)
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), localRef, null, data);
+                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, EditorActionEnum.getEnumByName(msgType));
+                });
+            }
+
+            sendMessage(sessionType, msgType, newMap, message, callback, messageModel, null, localRefs[0], SMART_CHAT_TYPE);
+        });
+    }
+
+    public void regenerateChat(MessageModel messageModel, Consumer<String> callback) {
+        this.cancel.set(false);
+
+        callWebView(MessageModel.buildLoadingMessage());
+
+        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+
+        // todo normal chat should be used in some case
+//        if (messageModel.getCodeRef() == null) {
+//            regenerateNormalChat(messageModel, callback);
+//            return;
+//        }
+
+        regenerateSmartChat(messageModel, callback);
+    }
+
+    public void regenerateNormalChat(MessageModel messageModel, Consumer<String> callback) {
+        sendMessage(callback, null, null, null, NORMAL_CHAT_TYPE);
+    }
+
+    public void regenerateSmartChat(MessageModel messageModel, Consumer<String> callback) {
+        ApplicationManager.getApplication().executeOnPooledThread(() -> {
+            // step1 call model to do code prediction
+            if (shouldCancelChat(messageModel)) {
+                return;
+            }
+
+            this.nowStep.set(CHAT_STEP_ONE);
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
+
+            // step2 call rag to analyze code
+            if (shouldCancelChat(messageModel)) {
+                return;
+            }
+
+            this.nowStep.set(CHAT_STEP_TWO);
+            var localRef = callRag(references, messageModel.getCodeRef());
+
+            // step3 call model to get the final result
+            if (shouldCancelChat(messageModel)) {
+                return;
+            }
+
+            this.nowStep.set(CHAT_STEP_THREE);
+
+            var data = new HashMap<String, String>();
+            final List<CodeReferenceModel>[] localRefs = new List[1];
+
+            if (localRef != null) {
+                ApplicationManager.getApplication().runReadAction(() -> {
+                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    FileAnalyzeProviderFactory.getProvider(language)
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), localRef, null, data);
+                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, messageModel.getCodeRef().getType());
+                });
+            }
+
+            sendMessage(callback, data, null, localRefs[0], SMART_CHAT_TYPE);
+        });
+    }
+
+    private boolean shouldCancelChat(MessageModel messageModel) {
+        if (cancel.get()) {
+            return true;
+        }
+
+        return !StringUtils.equals(currentMessageId, messageModel.getId());
+    }
+
+    private DevPilotCodePrediction codePredict(String content, CodeReferenceModel codeReference, String commandType) {
+        this.lastMessage = MessageModel
+                .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(1));
+        callWebView(this.lastMessage);
+
+        final Map<String, String> dataMap = new HashMap<>();
+
+        if (commandType == null) {
+            if (codeReference == null || codeReference.getType() == null) {
+                commandType = "PURE_CHAT";
+            } else {
+                commandType = codeReference.getType().name();
+            }
+        }
+
+        dataMap.put("commandTypeFor", commandType);
+
+        if (codeReference != null) {
+            ApplicationManager.getApplication().runReadAction(() -> {
+                FileAnalyzeProviderFactory.getProvider(codeReference.getLanguageId())
+                        .buildCodePredictDataMap(project, codeReference, dataMap);
+            });
+        }
+
+        var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
+        devPilotChatCompletionRequest.setVersion(CODE_PREDICT_PROMPT_VERSION);
+        devPilotChatCompletionRequest.getMessages().addAll(removeRedundantRelatedContext(copyHistoryRequestMessageList(historyRequestMessageList)));
+        devPilotChatCompletionRequest.getMessages().add(
+                MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "CODE_PREDICTION", content, dataMap));
+        devPilotChatCompletionRequest.setStream(Boolean.FALSE);
+        var response = this.llmProvider.codePrediction(devPilotChatCompletionRequest);
+        if (!response.isSuccessful()) {
+            return null;
+        }
+        return JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
+    }
+
+    private List<PsiElement> callRag(DevPilotCodePrediction codePredict, CodeReferenceModel codeReference) {
+        this.lastMessage = MessageModel
+                .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(2));
+        callWebView(this.lastMessage);
+
+        // call local rag
+        if (codePredict == null) {
+            return null;
+        }
+
+        // todo call remote rag
+        return ApplicationManager.getApplication().runReadAction(
+                (Computable<List<PsiElement>>) () -> {
+                    var language = codeReference == null ? null : codeReference.getLanguageId();
+
+                    return FileAnalyzeProviderFactory
+                            .getProvider(language).callLocalRag(project, codePredict);
+                }
+        );
+    }
+
+    public String sendMessage(Integer sessionType, String msgType, Map<String, String> data,
+                              String message, Consumer<String> callback, MessageModel messageModel,
+                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
+        DevPilotMessage userMessage;
+        if (data == null || data.isEmpty()) {
+            userMessage = MessageUtil.createUserMessage(message, msgType, messageModel.getId());
+        } else {
+            userMessage = MessageUtil.createPromptMessage(messageModel.getId(), msgType, message, data);
+        }
+
+        // check session type,default multi session
+        var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
+        var sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
+        if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
+            // independent message can not update, just readonly
+            devPilotChatCompletionRequest.setStream(false);
+            devPilotChatCompletionRequest.getMessages().add(userMessage);
+        } else {
+            devPilotChatCompletionRequest.setStream(true);
+            historyRequestMessageList.add(userMessage);
+            devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
+        }
+
+        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
+        if (MULTI_TURN.equals(sessionTypeEnum) &&
                 devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
             historyRequestMessageList.add(
@@ -98,20 +323,24 @@ public final class DevPilotChatToolWindowService {
         return chatCompletion;
     }
 
-    public String sendMessage(Consumer<String> callback) {
-        // check session type,default multi session
-        var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        if (historyRequestMessageList.isEmpty()) {
-            historyRequestMessageList.add(MessageUtil.createSystemMessage(PromptConst.RESPONSE_FORMAT));
+    public String sendMessage(Consumer<String> callback, Map<String, String> data,
+                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
+        // if data is not empty, the data should add into last history request message
+        if (data != null && !data.isEmpty() && !historyMessageList.isEmpty()) {
+            var lastHistoryRequestMessage = historyRequestMessageList.get(historyRequestMessageList.size() - 1);
+            if (lastHistoryRequestMessage.getPromptData() == null) {
+                lastHistoryRequestMessage.setPromptData(new HashMap<>());
+            }
+            lastHistoryRequestMessage.getPromptData().putAll(data);
         }
-        devPilotChatCompletionRequest.setStream(Boolean.TRUE);
-        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
 
-        callWebView(MessageModel.buildLoadingMessage());
+        var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
+        devPilotChatCompletionRequest.setStream(true);
+        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback);
+        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
         if (devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
             historyRequestMessageList.add(
@@ -122,9 +351,37 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void interruptSend() {
-        if (this.llmProvider != null) {
+        this.cancel.set(true);
+        if (this.lastMessage.getRecall() == null || this.nowStep.get() >= 3) {
             this.llmProvider.interruptSend();
+        } else {
+            if (this.lastMessage != null) {
+                this.lastMessage.setStreaming(false);
+                this.lastMessage.setRecall(RecallModel.createTerminated(this.nowStep.get()));
+                addMessage(this.lastMessage);
+                callWebView();
+                this.lastMessage = null;
+            }
         }
+    }
+
+    /**
+     * Only used in CODE_PREDICTION for minimizing request data size.
+     * @param devPilotMessages
+     */
+    private List<DevPilotMessage> removeRedundantRelatedContext(List<DevPilotMessage> devPilotMessages) {
+        if (CollectionUtils.isEmpty(devPilotMessages)) {
+            return Collections.emptyList();
+        }
+        ArrayList<DevPilotMessage> copy = new ArrayList<>(devPilotMessages);
+        copy.forEach(
+                msg -> {
+                    if (msg.getPromptData() != null) {
+                        msg.getPromptData().remove("relatedContext");
+                    }
+                }
+        );
+        return copy;
     }
 
     public List<MessageModel> getHistoryMessageList() {
@@ -198,11 +455,18 @@ public final class DevPilotChatToolWindowService {
         var id = lastMessage.getId();
         historyMessageList.removeIf(item -> item.getId().equals(id));
         historyRequestMessageList.removeIf(item -> item.getId().equals(id));
+
         // todo handle real callback
-        sendMessage(null);
+        lastMessage = historyMessageList.get(historyMessageList.size() - 1);
+
+        if (!lastMessage.getRole().equals("user")) {
+            return;
+        }
+
+        regenerateChat(lastMessage, null);
     }
 
-    public void handleActions(EditorActionEnum actionEnum) {
+    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement) {
         ActionManager actionManager = ActionManager.getInstance();
         BasicEditorAction myAction = (BasicEditorAction) actionManager
                 .getAction(DevPilotMessageBundle.get(actionEnum.getLabel()));
@@ -212,8 +476,54 @@ public final class DevPilotChatToolWindowService {
                 BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
-            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText());
+            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement, null);
         });
+    }
+
+    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement) {
+        if (codeReferenceModel == null || StringUtils.isEmpty(codeReferenceModel.getSourceCode())) {
+            handleActions(actionEnum, psiElement);
+            return;
+        }
+
+        ActionManager actionManager = ActionManager.getInstance();
+        BasicEditorAction myAction = (BasicEditorAction) actionManager
+                .getAction(DevPilotMessageBundle.get(actionEnum.getLabel()));
+        ApplicationManager.getApplication().invokeLater(() -> {
+            Editor editor = FileEditorManager.getInstance(project).getSelectedTextEditor();
+            if (editor == null) {
+                BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
+                return;
+            }
+            myAction.fastAction(project, editor, codeReferenceModel.getSourceCode(), psiElement, codeReferenceModel);
+        });
+    }
+
+    public MessageModel getUserContentCode(MessageModel messageModel) {
+        if (messageModel.getCodeRef() != null) {
+            return messageModel;
+        }
+
+        final Editor[] editor = new Editor[1];
+        final EditorInfo[] editorInfo = new EditorInfo[1];
+
+        ApplicationManager.getApplication().invokeAndWait(() -> {
+            editor[0] = FileEditorManager.getInstance(project).getSelectedTextEditor();
+            if (editor[0] == null || !editor[0].getSelectionModel().hasSelection()) {
+                editorInfo[0] = null;
+                return;
+            }
+            editorInfo[0] = new EditorInfo(editor[0]);
+        });
+
+        if (editorInfo[0] == null || editorInfo[0].getSourceCode() == null) {
+            return messageModel;
+        }
+
+        var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo[0], null);
+        messageModel.setCodeRef(codeReference);
+
+        return messageModel;
     }
 
     // get user message by assistant message id
@@ -275,8 +585,10 @@ public final class DevPilotChatToolWindowService {
         List<DevPilotMessage> copiedList = new ArrayList<>();
         for (DevPilotMessage message : historyRequestMessageList) {
             DevPilotMessage copiedMessage = new DevPilotMessage();
-            copiedMessage.setContent(message.getContent());
             copiedMessage.setRole(message.getRole());
+            copiedMessage.setPromptData(message.getPromptData());
+            copiedMessage.setContent(message.getContent());
+            copiedMessage.setCommandType(message.getCommandType());
             copiedMessage.setId(message.getId());
             copiedList.add(copiedMessage);
         }
@@ -352,6 +664,14 @@ public final class DevPilotChatToolWindowService {
         JavaCallModel javaCallModel = new JavaCallModel();
         javaCallModel.setCommand("PresentCodeEmbeddedState");
         javaCallModel.setPayload(new EmbeddedModel(isEmbedded, repoName));
+
+        callWebView(javaCallModel);
+    }
+
+    public void referenceCode(CodeReferenceModel referenceModel) {
+        var javaCallModel = new JavaCallModel();
+        javaCallModel.setCommand("ReferenceCode");
+        javaCallModel.setPayload(referenceModel);
 
         callWebView(javaCallModel);
     }

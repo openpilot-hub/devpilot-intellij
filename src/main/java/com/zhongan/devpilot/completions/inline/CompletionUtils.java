@@ -1,16 +1,31 @@
 package com.zhongan.devpilot.completions.inline;
 
+import com.intellij.lang.Language;
+import com.intellij.lang.LanguageUtil;
+import com.intellij.openapi.command.CommandProcessor;
 import com.intellij.openapi.editor.Document;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.util.ui.EdtInvocationManager;
+import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.util.CommentUtil;
 
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import static com.zhongan.devpilot.completions.general.DependencyContainer.singletonOfInlineCompletionHandler;
+import static com.zhongan.devpilot.constant.DefaultConst.COMPLETION_TRIGGER_INTERVAL;
 
 public class CompletionUtils {
     private static final Pattern END_OF_LINE_VALID_PATTERN = Pattern.compile("^\\s*[)}\\]\"'`]*\\s*[:{;,]?\\s*$");
+
+    private static TriggerInfo lastTriggerInfo = new TriggerInfo();
 
     public static boolean isValidDocumentChange(Document document, int newOffset, int previousOffset) {
         if (newOffset < 0 || previousOffset > newOffset) return false;
@@ -38,9 +53,16 @@ public class CompletionUtils {
         return newText.trim().length() <= 1;
     }
 
-    // 代码-单行仅空字符或者仅换行忽略请求，注释-单行除换行全部忽略请求
-    public static VerifyResult ignoreTrigger(String newText, String currentLineText) {
-        boolean isPreComment = CommentUtil.containsComment(currentLineText);
+    // Limit trigger condition, avoid too much unnecessary request
+    public static VerifyResult ignoreTrigger(String newText, String currentLineText, Language language) {
+        // Check if the current line ends with ";" or "；"(Chinese semicolon is wrong input)
+        if (StringUtils.endsWith(StringUtils.trim(newText), ";") || StringUtils.endsWith(StringUtils.trim(newText), "；")) {
+            return VerifyResult.create(true);
+        }
+        boolean isPreComment = CommentUtil.containsComment(StringUtils.trim(currentLineText), language);
+
+        // code end with "{"
+        boolean endWithLBrace = StringUtils.endsWith(StringUtils.trim(currentLineText), "{");
 
         // only contains empty and tab
         boolean emptyAndTabChar = StringUtils.isEmpty(StringUtils.trim(newText));
@@ -50,12 +72,13 @@ public class CompletionUtils {
         }
 
         boolean newlineChar = StringUtils.startsWith(newText, "\n");
-        if (newlineChar && isPreComment) {
-            return VerifyResult.createComment(false);
-        }
 
-        if (newlineChar || isPreComment) {
-            return VerifyResult.create(true);
+        if (newlineChar) {
+            if (endWithLBrace || isPreComment) {
+                return VerifyResult.createComment(false);
+            } else {
+                return VerifyResult.create(true);
+            }
         }
 
         return VerifyResult.create(false);
@@ -64,11 +87,20 @@ public class CompletionUtils {
     public static VerifyResult isValidChange(Editor editor, Document document, int newOffset, int previousOffset) {
         if (newOffset < 0 || previousOffset > newOffset) return VerifyResult.create(false);
         String addedText = document.getText(new TextRange(previousOffset, newOffset));
+
+        if (isCodeReFormatOrPastAction()) {
+            return VerifyResult.create(false);
+        }
+
         int currentLine = editor.getCaretModel().getLogicalPosition().line;
-        String currentLineText = currentLine < 0 ? null : document.getText(
+        String currentLogicalLineText = currentLine < 0 ? null : document.getText(
                 new TextRange(document.getLineStartOffset(currentLine), document.getLineEndOffset(currentLine)));
 
-        VerifyResult result = ignoreTrigger(addedText, currentLineText);
+        var language = LanguageUtil.getFileLanguage(FileDocumentManager.getInstance().getFile(document));
+        VerifyResult result = ignoreTrigger(addedText, currentLogicalLineText, language);
+        if (result.isValid()) {
+            return VerifyResult.create(!result.isValid(), result.getCompletionType());
+        }
 
         boolean valid = isValidMidlinePosition(document, newOffset) &&
                 isValidNonEmptyChange(addedText.length(), addedText) &&
@@ -76,6 +108,85 @@ public class CompletionUtils {
                 !result.isValid();
 
         return VerifyResult.create(valid, result.getCompletionType());
+    }
+
+    private static boolean isCodeReFormatOrPastAction() {
+        CommandProcessor commandProcessor = CommandProcessor.getInstance();
+        String currentCommandName = commandProcessor.getCurrentCommandName();
+        return StringUtils.equals(currentCommandName, "Reformat Code") || StringUtils.equals(currentCommandName, "Paste");
+    }
+
+    public static boolean checkTriggerTime(@NotNull Editor editor,
+                                           int offset,
+                                           @Nullable DevPilotCompletion lastShownSuggestion,
+                                           @NotNull String userInput,
+                                           @NotNull CompletionAdjustment completionAdjustment,
+                                           String completionType) {
+        boolean isConsistentWrite = System.currentTimeMillis() - lastTriggerInfo.getTriggerTime() < getTriggerInterval();
+        Timer previousTimer = lastTriggerInfo.getTimer();
+        if (previousTimer != null) {
+            previousTimer.cancel();
+        }
+        if (isConsistentWrite) {
+            buildDelayTrigger(editor, offset, lastShownSuggestion, userInput, completionAdjustment, completionType);
+            return false;
+        } else {
+            lastTriggerInfo.setTriggerTime(System.currentTimeMillis());
+            return true;
+        }
+    }
+
+    private static int getTriggerInterval() {
+        return COMPLETION_TRIGGER_INTERVAL;
+    }
+
+    public static class TriggerInfo {
+
+        private long triggerTime;
+
+        private Timer timer;
+
+        public Timer getTimer() {
+            return timer;
+        }
+
+        public void setTimer(Timer timer) {
+            this.timer = timer;
+        }
+
+        public long getTriggerTime() {
+            return triggerTime;
+        }
+
+        public void setTriggerTime(long triggerTime) {
+            this.triggerTime = triggerTime;
+        }
+    }
+
+    private static void buildDelayTrigger(@NotNull Editor editor,
+                                          int offset,
+                                          @Nullable DevPilotCompletion lastShownSuggestion,
+                                          @NotNull String userInput,
+                                          @NotNull CompletionAdjustment completionAdjustment,
+                                          String completionType) {
+        lastTriggerInfo.setTriggerTime(System.currentTimeMillis());
+        Timer timer = new Timer("delay-trigger");
+        timer.schedule(
+                new TimerTask() {
+                    @Override
+                    public void run() {
+                        EdtInvocationManager.invokeAndWaitIfNeeded(
+                                () ->
+                                        singletonOfInlineCompletionHandler().retrieveAndShowCompletion(
+                                                editor,
+                                                offset,
+                                                lastShownSuggestion,
+                                                userInput,
+                                                completionAdjustment,
+                                                completionType));
+                    }
+                }, getTriggerInterval());
+        lastTriggerInfo.setTimer(timer);
     }
 
     public static class VerifyResult {
@@ -121,6 +232,7 @@ public class CompletionUtils {
         public static VerifyResult createComment(boolean valid) {
             return new VerifyResult(valid, "comment");
         }
+
     }
 }
 

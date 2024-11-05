@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.zhongan"
-version = "2.4.2"
+version = "2.6.0"
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ intellij {
     version.set("2022.1.4")
     type.set("IC") // Target IDE Platform
 
-    plugins.set(listOf("com.intellij.java","Git4Idea"))
+    plugins.set(listOf("com.intellij.java", "org.jetbrains.idea.maven", "Git4Idea"))
 }
 
 dependencies {
@@ -27,7 +27,12 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp-sse:4.10.0")
     implementation("com.vladsch.flexmark:flexmark-all:0.64.8")
     implementation("org.apache.commons:commons-text:1.10.0")
+    implementation("io.github.bonede:tree-sitter:0.22.6")
+    implementation("io.github.bonede:tree-sitter-java:0.21.0a")
+    implementation("io.github.bonede:tree-sitter-python:0.21.0a")
+    implementation("io.github.bonede:tree-sitter-go:0.21.0a")
     implementation("com.knuddels:jtokkit:1.0.0")
+    implementation("org.apache.maven.shared:maven-shared-utils:3.4.2")
     compileOnly("com.puppycrawl.tools:checkstyle:10.9.1")
     testImplementation("org.mockito:mockito-core:5.7.0")
 }
@@ -42,7 +47,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("212")
-        untilBuild.set("241.*")
+        untilBuild.set("242.*")
 
         pluginDescription.set(provider { file("description.html").readText() })
     }

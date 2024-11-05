@@ -8,10 +8,14 @@ import java.io.IOException;
 import java.util.Locale;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 
+import okhttp3.Call;
+import okhttp3.Callback;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okhttp3.Response;
 
 import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_CHAT_ACCEPT_PATH;
 import static com.zhongan.devpilot.constant.DefaultConst.TELEMETRY_COMPLETION_ACCEPT_PATH;
@@ -67,7 +71,7 @@ public class TelemetryUtils {
         sendMessage(url, requestJson);
     }
 
-    public static void completionAccept(String id, PsiFile file) {
+    public static void completionAccept(String id, PsiFile file, String acceptLines) {
         if (!isTelemetryTurnOn()) {
             return;
         }
@@ -83,10 +87,10 @@ public class TelemetryUtils {
             language = lang.getLanguageName();
         }
 
-        completionAccept(id, language);
+        completionAccept(id, language, acceptLines);
     }
 
-    public static void completionAccept(String id, String language) {
+    public static void completionAccept(String id, String language, String acceptLines) {
         if (!isTelemetryTurnOn()) {
             return;
         }
@@ -96,7 +100,7 @@ public class TelemetryUtils {
             language = "text";
         }
 
-        var completionAcceptRequest = new CompletionAcceptRequest(language.toLowerCase(Locale.ROOT));
+        var completionAcceptRequest = new CompletionAcceptRequest(language.toLowerCase(Locale.ROOT), acceptLines);
         var requestJson = JsonUtils.toJson(completionAcceptRequest);
 
         if (requestJson == null) {
@@ -112,8 +116,6 @@ public class TelemetryUtils {
     public static void sendMessage(String url, String requestJson) {
         var client = OkhttpUtils.getClient();
 
-        okhttp3.Response response = null;
-
         try {
             var request = new Request.Builder()
                     .url(url)
@@ -122,14 +124,19 @@ public class TelemetryUtils {
                     .put(RequestBody.create(requestJson, MediaType.parse("application/json")))
                     .build();
 
-            var call = client.newCall(request);
-            response = call.execute();
-        } catch (IOException e) {
+            client.newCall(request).enqueue(new Callback() {
+                @Override
+                public void onFailure(@NotNull Call call, @NotNull IOException e) {
+                    // ignore failure
+                }
+
+                @Override
+                public void onResponse(@NotNull Call call, @NotNull Response response) throws IOException {
+                    response.close();
+                }
+            });
+        } catch (Exception e) {
             // ignore error
-        } finally {
-            if (response != null) {
-                response.close();
-            }
         }
     }
 
@@ -194,8 +201,11 @@ public class TelemetryUtils {
     static class CompletionAcceptRequest {
         private String language;
 
-        CompletionAcceptRequest(String language) {
+        private String acceptLines;
+
+        CompletionAcceptRequest(String language, String acceptLines) {
             this.language = language;
+            this.acceptLines = acceptLines;
         }
 
         public String getLanguage() {
@@ -205,5 +215,14 @@ public class TelemetryUtils {
         public void setLanguage(String language) {
             this.language = language;
         }
+
+        public String getAcceptLines() {
+            return acceptLines;
+        }
+
+        public void setAcceptLines(String acceptLines) {
+            this.acceptLines = acceptLines;
+        }
+
     }
 }

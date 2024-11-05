@@ -6,15 +6,14 @@ import com.intellij.openapi.components.State;
 import com.intellij.openapi.components.Storage;
 import com.intellij.util.xmlb.XmlSerializerUtil;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
-import static com.zhongan.devpilot.enums.EditorActionEnum.EXPLAIN_THIS;
-import static com.zhongan.devpilot.enums.EditorActionEnum.FIX_THIS;
+import static com.zhongan.devpilot.enums.EditorActionEnum.COMMENT_METHOD;
+import static com.zhongan.devpilot.enums.EditorActionEnum.EXPLAIN_CODE;
+import static com.zhongan.devpilot.enums.EditorActionEnum.FIX_CODE;
 import static com.zhongan.devpilot.enums.EditorActionEnum.GENERATE_COMMENTS;
 import static com.zhongan.devpilot.enums.EditorActionEnum.GENERATE_TESTS;
-import static com.zhongan.devpilot.enums.EditorActionEnum.PERFORMANCE_CHECK;
-import static com.zhongan.devpilot.enums.EditorActionEnum.REVIEW_CODE;
 
 @State(
     name = "com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState",
@@ -22,16 +21,15 @@ import static com.zhongan.devpilot.enums.EditorActionEnum.REVIEW_CODE;
 )
 public class EditorActionConfigurationState implements PersistentStateComponent<EditorActionConfigurationState> {
 
-    private final Map<String, String> defaultActions;
+    private final List<String> defaultActions;
 
     {
-        defaultActions = new LinkedHashMap<>();
-        defaultActions.put(EXPLAIN_THIS.getLabel(), EXPLAIN_THIS.getPrompt());
-        defaultActions.put(FIX_THIS.getLabel(), FIX_THIS.getPrompt());
-        defaultActions.put(PERFORMANCE_CHECK.getLabel(), PERFORMANCE_CHECK.getPrompt());
-        defaultActions.put(GENERATE_COMMENTS.getLabel(), GENERATE_COMMENTS.getPrompt());
-        defaultActions.put(GENERATE_TESTS.getLabel(), GENERATE_TESTS.getPrompt());
-        defaultActions.put(REVIEW_CODE.getLabel(), REVIEW_CODE.getPrompt());
+        defaultActions = new ArrayList<>();
+        defaultActions.add(EXPLAIN_CODE.getLabel());
+        defaultActions.add(FIX_CODE.getLabel());
+        defaultActions.add(GENERATE_COMMENTS.getLabel());
+        defaultActions.add(GENERATE_TESTS.getLabel());
+        defaultActions.add(COMMENT_METHOD.getLabel());
     }
 
     public static EditorActionConfigurationState getInstance() {
@@ -48,7 +46,7 @@ public class EditorActionConfigurationState implements PersistentStateComponent<
         XmlSerializerUtil.copyBean(state, this);
     }
 
-    public Map<String, String> getDefaultActions() {
+    public List<String> getDefaultActions() {
         return defaultActions;
     }
 

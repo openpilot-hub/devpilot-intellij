@@ -35,4 +35,8 @@ public class DevPilotChatCompletionResponse {
         return new DevPilotChatCompletionResponse(Boolean.FALSE, content);
     }
 
+    public static DevPilotChatCompletionResponse warn(String content) {
+        return new DevPilotChatCompletionResponse(Boolean.TRUE, content);
+    }
+
 }

@@ -4,6 +4,7 @@ import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.editor.EditorCustomElementRenderer;
 import com.intellij.openapi.editor.Inlay;
 import com.intellij.openapi.editor.markup.TextAttributes;
+import com.zhongan.devpilot.completions.inline.CompletionPreview;
 
 import java.awt.Color;
 import java.awt.Graphics;
@@ -21,17 +22,24 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
 
     private Color color;
 
-    public BlockElementRenderer(Editor editor, List<String> blockText, boolean deprecated) {
+    private final boolean needHintInBlock;
+
+    public BlockElementRenderer(Editor editor, List<String> blockText, boolean deprecated, boolean needHintInBlock) {
         this.editor = editor;
         this.blockText = blockText;
         this.deprecated = deprecated;
+        this.needHintInBlock = needHintInBlock;
     }
 
     @Override
     public int calcWidthInPixels(Inlay inlay) {
         String firstLine = blockText.get(0);
+        boolean hint = blockText.size() > 1;
+        if (needHintInBlock && hint) {
+            firstLine = firstLine + "       " + CompletionPreview.byLineAcceptHintText();
+        }
         return editor.getContentComponent()
-            .getFontMetrics(GraphicsUtils.getFont(editor, deprecated)).stringWidth(firstLine);
+                .getFontMetrics(GraphicsUtils.getFont(editor, firstLine)).stringWidth(firstLine);
     }
 
     @Override
@@ -41,16 +49,20 @@ public class BlockElementRenderer implements EditorCustomElementRenderer {
 
     @Override
     public void paint(Inlay inlay, Graphics g, Rectangle targetRegion, TextAttributes textAttributes) {
+        boolean hint = blockText.size() > 1;
         color = color != null ? color : GraphicsUtils.getColor();
         g.setColor(color);
-        g.setFont(GraphicsUtils.getFont(editor, deprecated));
-
         for (int i = 0; i < blockText.size(); i++) {
             String line = blockText.get(i);
+            if (needHintInBlock && i == 0 && hint) {
+                line = line + "       " + CompletionPreview.byLineAcceptHintText();
+                hint = false;
+            }
+            g.setFont(GraphicsUtils.getFont(editor, line));
             g.drawString(
-                line,
-                0,
-                targetRegion.y + i * editor.getLineHeight() + editor.getAscent()
+                    line,
+                    0,
+                    targetRegion.y + i * editor.getLineHeight() + editor.getAscent()
             );
         }
     }

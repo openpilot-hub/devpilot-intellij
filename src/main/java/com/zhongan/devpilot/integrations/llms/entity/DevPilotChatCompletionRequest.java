@@ -3,20 +3,24 @@ package com.zhongan.devpilot.integrations.llms.entity;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.zhongan.devpilot.constant.DefaultConst.DEFAULT_PROMPT_VERSION;
+
 public class DevPilotChatCompletionRequest {
 
-    String model;
+    String version = DEFAULT_PROMPT_VERSION;
+
+    String encoding = null;
+
+    boolean stream = true;
 
     List<DevPilotMessage> messages = new ArrayList<>();
 
-    boolean stream = Boolean.FALSE;
-
-    public String getModel() {
-        return model;
+    public boolean getStream() {
+        return stream;
     }
 
-    public void setModel(String model) {
-        this.model = model;
+    public void setStream(boolean stream) {
+        this.stream = stream;
     }
 
     public List<DevPilotMessage> getMessages() {
@@ -27,12 +31,19 @@ public class DevPilotChatCompletionRequest {
         this.messages = messages;
     }
 
-    public boolean isStream() {
-        return stream;
+    public String getVersion() {
+        return version;
     }
 
-    public void setStream(boolean stream) {
-        this.stream = stream;
+    public void setVersion(String version) {
+        this.version = version;
     }
 
+    public String getEncoding() {
+        return encoding;
+    }
+
+    public void setEncoding(String encoding) {
+        this.encoding = encoding;
+    }
 }

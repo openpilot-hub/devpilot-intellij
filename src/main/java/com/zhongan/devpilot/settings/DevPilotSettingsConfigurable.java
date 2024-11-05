@@ -5,7 +5,8 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
-import com.zhongan.devpilot.enums.LoginTypeEnum;
+import com.zhongan.devpilot.settings.state.AvailabilityCheck;
+import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -40,12 +41,17 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
     public boolean isModified() {
         var settings = DevPilotLlmSettingsState.getInstance();
         var languageSettings = LanguageSettingsState.getInstance();
+        var chatShortcutSettings = ChatShortcutSettingState.getInstance();
         var languageIndex = settingsComponent.getLanguageIndex();
+        var methodInlayPresentationDisplayIndex = settingsComponent.getMethodInlayPresentationDisplayIndex();
         var completionEnable = CompletionSettingsState.getInstance().getEnable();
+        Boolean enable = AvailabilityCheck.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !languageIndex.equals(languageSettings.getLanguageIndex())
-                || !settingsComponent.getCompletionEnabled() == (completionEnable);
+                || !methodInlayPresentationDisplayIndex.equals(chatShortcutSettings.getDisplayIndex())
+                || !settingsComponent.getCompletionEnabled() == (completionEnable)
+                || !settingsComponent.getStatusCheckEnabled() == (enable);
     }
 
     @Override
@@ -63,23 +69,20 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         languageSettings.setLanguageIndex(languageIndex);
 
+        var chatShortcutSettings = ChatShortcutSettingState.getInstance();
+        var methodInlayPresentationDisplayIndex = settingsComponent.getMethodInlayPresentationDisplayIndex();
+        chatShortcutSettings.setDisplayIndex(methodInlayPresentationDisplayIndex);
+
         PopupMenuEditorActionGroupUtil.refreshActions(null);
 
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
-        
-        checkCodeCompletionConfig(LoginTypeEnum.getLoginTypeEnum(settings.getLoginType()));
+
+        AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
+        availabilityCheck.setEnable(settingsComponent.getStatusCheckEnabled());
     }
 
     @Override
     public void dispose() {
     }
-
-    private void checkCodeCompletionConfig(LoginTypeEnum loginType) {
-        if (!(LoginTypeEnum.ZA.equals(loginType) || LoginTypeEnum.ZA_TI.equals(loginType))
-                && CompletionSettingsState.getInstance().getEnable()) {
-            CompletionSettingsState.getInstance().setEnable(false);
-        }
-    }
-
 }

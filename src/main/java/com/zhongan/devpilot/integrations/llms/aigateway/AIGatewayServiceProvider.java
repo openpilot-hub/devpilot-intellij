@@ -3,18 +3,11 @@ package com.zhongan.devpilot.integrations.llms.aigateway;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
-import com.intellij.lang.Language;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
-import com.intellij.openapi.editor.Document;
-import com.intellij.openapi.editor.Editor;
-import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
-import com.intellij.openapi.vfs.VirtualFile;
-import com.intellij.psi.PsiDocumentManager;
+import com.intellij.openapi.project.ProjectUtil;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
-import com.zhongan.devpilot.enums.ModelTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -26,15 +19,16 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
-import com.zhongan.devpilot.util.EditorUtils;
-import com.zhongan.devpilot.util.GitUtil;
+import com.zhongan.devpilot.util.GatewayRequestUtils;
+import com.zhongan.devpilot.util.GatewayRequestV2Utils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
+import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+import com.zhongan.devpilot.webview.model.RecallModel;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,7 +44,6 @@ import okhttp3.Response;
 import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
-import static com.zhongan.devpilot.util.VirtualFileUtil.getRelativeFilePath;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
@@ -65,7 +58,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     private MessageModel resultModel = new MessageModel();
 
     @Override
-    public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest, Consumer<String> callback) {
+    public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
+                                 Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
@@ -83,29 +77,24 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return "";
         }
 
-        var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
-        chatCompletionRequest.setModel(modelTypeEnum.getCode());
-
         try {
+            String requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                service.callErrorInfo("Chat completion failed: request body is null");
+                return "";
+            }
+
             var requestBuilder = new Request.Builder()
-                    .url(host + "/devpilot/v1/chat/completions")
+                    .url(host + "/devpilot/v2/chat/completions")
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", LoginUtils.getLoginType());
 
-            if (isLatestUserContentContainsRepo(chatCompletionRequest)) {
-                String repoName = EditorUtils.getCurrentEditorRepositoryName(project);
-                if (repoName != null && GitUtil.isRepoEmbedded(repoName)) {
-                    requestBuilder.header("Embedded-Repos-V2", repoName);
-                    requestBuilder.header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US");
-                    chatCompletionRequest.setModel(null);
-                }
-            }
             var request = requestBuilder
-                    .post(RequestBody.create(objectMapper.writeValueAsString(chatCompletionRequest), MediaType.parse("application/json")))
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
             DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
-            this.es = this.buildEventSource(request, service, callback);
+            this.es = this.buildEventSource(request, service, callback, remoteRefs, localRefs, chatType);
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
 
@@ -123,6 +112,11 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             // remember the broken message
             if (resultModel != null && !StringUtils.isEmpty(resultModel.getContent())) {
                 resultModel.setStreaming(false);
+                var recall = resultModel.getRecall();
+                if (recall != null) {
+                    var newRecall = RecallModel.createTerminated(3, recall.getRemoteRefs(), recall.getLocalRefs());
+                    resultModel.setRecall(newRecall);
+                }
                 toolWindowService.addMessage(resultModel);
             }
 
@@ -153,17 +147,18 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
         }
 
-        var modelTypeEnum = ModelTypeEnum.fromName(selectedModel);
-        chatCompletionRequest.setModel(modelTypeEnum.getCode());
-
         Response response;
 
         try {
-            String requestBody = objectMapper.writeValueAsString(chatCompletionRequest);
+            String requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
             var request = new Request.Builder()
-                .url(host + "/devpilot/v1/chat/completions")
+                .url(host + "/devpilot/v2/chat/completions")
                 .header("User-Agent", UserAgentUtils.buildUserAgent())
                 .header("Auth-Type", LoginUtils.getLoginType())
                 .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
@@ -205,6 +200,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } else if (response.code() == 401) {
             LoginUtils.logout();
             return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + LoginUtils.loginUrl() + "\">" + "sso" + "</a>");
+        } else if (isPluginVersionTooLowResp(resolveJsonBody(result))) {
+            handlePluginVersionTooLow(ProjectUtil.currentOrDefaultProject(null).getService(DevPilotChatToolWindowService.class), false);
+            return DevPilotChatCompletionResponse.warn(DevPilotMessageBundle.get("devpilot.notification.version.message"));
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
                 .getError()
@@ -227,33 +225,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return null;
         }
 
-        int offset = instructCompletionRequest.getOffset();
-        Editor editor = instructCompletionRequest.getEditor();
-        final Document[] document = new Document[1];
-        final Language[] language = new Language[1];
-        final VirtualFile[] virtualFile = new VirtualFile[1];
-
-        ApplicationManager.getApplication().runReadAction(() -> {
-            document[0] = editor.getDocument();
-            language[0] = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(document[0]).getLanguage();
-            virtualFile[0] = FileDocumentManager.getInstance().getFile(document[0]);
-        });
-
-        String text = document[0].getText();
-        String relativePath = getRelativeFilePath(editor.getProject(), virtualFile[0]);
-
-        Map<String, String> map = new HashMap<>();
-        map.put("document", text);
-        map.put("position", String.valueOf(offset));
-        map.put("language", language[0].getID());
-        map.put("filePath", relativePath);
-        map.put("completionType", instructCompletionRequest.getCompletionType());
-        ObjectMapper objectMapper = new ObjectMapper();
-
         Response response;
-        String json;
+        String json = GatewayRequestUtils.completionRequestJson(instructCompletionRequest);
         try {
-            json = objectMapper.writeValueAsString(map);
             var request = new Request.Builder()
                 .url(host + AI_GATEWAY_INSTRUCT_COMPLETION)
                 .header("User-Agent", UserAgentUtils.buildUserAgent())
@@ -280,6 +254,12 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         DevPilotMessage devPilotMessage = null;
         try (response) {
             String responseBody = response.body().string();
+            if (!response.isSuccessful()) {
+                if (isPluginVersionTooLowResp(resolveJsonBody(responseBody))) {
+                    handlePluginVersionTooLow(ProjectUtil.currentOrDefaultProject(null).getService(DevPilotChatToolWindowService.class), false);
+                    return null;
+                }
+            }
             Gson gson = new Gson();
             devPilotMessage = gson.fromJson(responseBody, DevPilotMessage.class);
         } catch (IOException e) {
@@ -306,7 +286,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setId(id);
             devPilotMessage.setRole("assistant");
-            devPilotMessage.setContent(content);
             return devPilotMessage;
         }
         DevPilotNotification.debug("SSO Type:" + LoginUtils.getLoginType() + ", Status Code:" + response.code() + ".");
@@ -324,7 +303,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         for (int i = messages.size() - 1; i >= 0; i--) {
             if (messages.get(i).getRole().equals("user")) {
                 String content = messages.get(i).getContent();
-                if (content.startsWith("@repo")) {
+                if (!StringUtils.isEmpty(content) && content.startsWith("@repo")) {
                     messages.get(i).setContent(content.substring(5));
                     return Boolean.TRUE;
                 }
@@ -332,5 +311,46 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             }
         }
         return false;
+    }
+
+    @Override
+    public DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest) {
+        var selectedModel = AIGatewaySettingsState.getInstance().getSelectedModel();
+        var host = AIGatewaySettingsState.getInstance().getModelBaseHost(selectedModel);
+
+        if (StringUtils.isEmpty(host)) {
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
+        }
+
+        Response response;
+
+        try {
+            String requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
+            DevPilotNotification.debug("Send Request :[" + requestBody + "].");
+
+            var request = new Request.Builder()
+                    .url(host + "/devpilot/v2/chat/completions")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", LoginUtils.getLoginType())
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            Call call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+
+        try {
+            return parseCompletionsResult(chatCompletionRequest, response);
+        } catch (IOException e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
     }
 }

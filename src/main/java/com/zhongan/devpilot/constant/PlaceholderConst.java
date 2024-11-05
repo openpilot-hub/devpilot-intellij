@@ -6,10 +6,16 @@ public class PlaceholderConst {
 
     public final static String LANGUAGE = "language";
 
+    public final static String ANSWER_LANGUAGE = "answerLanguage";
+
     public final static String TEST_FRAMEWORK = "testFramework";
 
     public final static String MOCK_FRAMEWORK = "mockFramework";
 
     public final static String ADDITIONAL_MOCK_PROMPT = "additionalMockPrompt";
+
+    public final static String RELATED_CLASS = "relatedClass";
+
+    public final static String CLASS_FULL_NAME = "classFullName";
 
 }

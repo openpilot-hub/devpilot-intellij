@@ -1,7 +1,6 @@
 package com.zhongan.devpilot.util;
 
 import com.google.common.collect.Lists;
-import com.intellij.diff.DiffContentFactory;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.command.WriteCommandAction;
 import com.intellij.openapi.editor.Document;
@@ -24,8 +23,6 @@ public class DocumentUtil {
     public static final Pattern CHINESE_PATTERN = Pattern.compile("[\u4e00-\u9fa5]");
 
     public static final Pattern ENGLISH_PATTERN = Pattern.compile("[a-zA-Z]");
-
-    private static final DiffContentFactory diffContentFactory = DiffContentFactory.getInstance();
 
     /**
      * insert comment and format code

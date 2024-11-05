@@ -38,7 +38,36 @@ public class DefaultConst {
 
     public static final String RAG_DEFAULT_HOST = ConfigBundleUtils.getConfig("devpilot.rag.host", "http://localhost:8085") + "/devpilot/v1/rag/git_repo/embedding_info/";
 
+    public static final String OFFICIAL_WEBSITE_URL = ConfigBundleUtils.getConfig("devpilot.official.website.host", "http://localhost:8085");
+
+    public static final String FEEDBACK_URL = OFFICIAL_WEBSITE_URL + "/feedback";
+
+    public static final String PROFILE_URL = OFFICIAL_WEBSITE_URL + "/profile";
+
+    public static final String AUTH_INFO_BUILD_TEMPLATE = "authType=%s&token=%s&userId=%s&timestamp=%s";
+
     public static final boolean AUTH_ON = true;
 
     public static final boolean TELEMETRY_ON = true;
+
+    public static final boolean REQUEST_ENCODING_ON = true;
+
+    public static final int COMPLETION_TRIGGER_INTERVAL = 1000;
+
+    public static final int CHAT_STEP_ONE = 1;
+
+    public static final int CHAT_STEP_TWO = 2;
+
+    public static final int CHAT_STEP_THREE = 3;
+
+    public static final String DEFAULT_PROMPT_VERSION = "V240923";
+
+    public static final String CODE_PREDICT_PROMPT_VERSION = "V240923";
+
+    public static final String GIT_COMMIT_PROMPT_VERSION = "V240923";
+
+    public static final int NORMAL_CHAT_TYPE = 1;
+
+    public static final int SMART_CHAT_TYPE = 2;
+
 }

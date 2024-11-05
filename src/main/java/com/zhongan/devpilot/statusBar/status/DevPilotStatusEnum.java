@@ -11,7 +11,8 @@ import org.jetbrains.annotations.NotNull;
 public enum DevPilotStatusEnum {
     LoggedIn,
     NotLoggedIn,
-    InCompletion;
+    InCompletion,
+    Disconnected;
 
     public @NotNull Icon getIcon() {
         switch (this) {
@@ -30,6 +31,8 @@ public enum DevPilotStatusEnum {
                 return DevPilotMessageBundle.get("devpilot.status.loggedIn");
             case InCompletion:
                 return DevPilotMessageBundle.get("devpilot.status.inCompletion");
+            case Disconnected:
+                return DevPilotMessageBundle.get("devpilot.notification.network.message");
             default:
                 return DevPilotMessageBundle.get("devpilot.status.notLoggedIn");
         }

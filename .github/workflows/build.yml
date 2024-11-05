@@ -27,7 +27,7 @@ jobs:
 
       - name: Collect Tests Result
         if: ${{ failure() }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tests-result
           path: ${{ github.workspace }}/build/reports/tests

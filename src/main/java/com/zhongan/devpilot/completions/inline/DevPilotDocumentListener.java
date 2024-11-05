@@ -53,10 +53,15 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
         }
         Document document = event.getDocument();
         Editor editor = getActiveEditor(document);
-        if (editor == null || !EditorUtils.isMainEditor(editor)) {
+        if (editor == null || !EditorUtils.isMainEditor(editor) || editor.getCaretModel().getCaretCount() > 1) {
             return;
         }
         DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
+        CompletionPreview completionPreview = CompletionPreview.getInstance(editor);
+
+        if (completionPreview != null && completionPreview.isByLineAcceptDocumentChange(event)) {
+            return;
+        }
         CompletionPreview.clear(editor);
         int offset = event.getOffset() + event.getNewLength();
 
@@ -67,6 +72,14 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
             return;
         }
 
+        if (!CompletionUtils.checkTriggerTime(editor,
+                offset,
+                lastShownCompletion,
+                event.getNewFragment().toString(),
+                new DefaultCompletionAdjustment(),
+                result.getCompletionType())) {
+            return;
+        }
         handler.retrieveAndShowCompletion(
                 editor,
                 offset,
@@ -103,7 +116,6 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
 
         CompletionUtils.VerifyResult result = CompletionUtils
                 .isValidChange(editor, document, offset, event.getOffset());
-
         return CompletionUtils.VerifyResult.create(!result.isValid(), result.getCompletionType());
     }
 
