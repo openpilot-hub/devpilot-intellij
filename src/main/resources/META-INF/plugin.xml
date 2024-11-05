@@ -164,6 +164,7 @@
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CodeLlamaSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AIGatewaySettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.ChatShortcutSettingState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState"/>
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
@@ -221,5 +222,7 @@
 
     <applicationListeners>
         <listener class="com.zhongan.devpilot.listener.ThemeChangeListener" topic="com.intellij.ide.ui.LafManagerListener"/>
+        <listener class="com.zhongan.devpilot.listener.MultiProjectManagerListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 </idea-plugin>

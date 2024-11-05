@@ -12,6 +12,7 @@ import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JComponent;
@@ -33,6 +34,8 @@ public class DevPilotSettingsComponent {
 
     private Integer methodInlayPresentationDisplayIndex;
 
+    private final JBTextField localStorageField;
+
     public DevPilotSettingsComponent(DevPilotSettingsConfigurable devPilotSettingsConfigurable, DevPilotLlmSettingsState settings) {
         fullNameField = new JBTextField(settings.getFullName(), 20);
 
@@ -50,6 +53,9 @@ public class DevPilotSettingsComponent {
         methodInlayPresentationDisplayIndex = ChatShortcutSettingState.getInstance().getDisplayIndex();
         Integer inlayPresentationDisplayIndex = ChatShortcutSettingState.getInstance().getDisplayIndex();
 
+        var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
+        localStorageField = new JBTextField(personalAdvancedSettings.getLocalStorage(), 20);
+
         mainPanel = FormBuilder.createFormBuilder()
                 .addComponent(UI.PanelFactory.panel(fullNameField)
                         .withLabel(DevPilotMessageBundle.get("devpilot.setting.displayNameFieldLabel"))
@@ -57,6 +63,10 @@ public class DevPilotSettingsComponent {
                         .createPanel())
                 .addComponent(createLanguageSectionPanel(languageIndex))
                 .addComponent(createMethodShortcutDisplayModeSectionPanel(inlayPresentationDisplayIndex))
+                .addComponent(UI.PanelFactory.panel(localStorageField)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel"))
+                        .resizeX(false)
+                        .createPanel())
                 .addComponent(new TitledSeparator(
                         DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
                 .addComponent(autoCompletionRadio)
@@ -133,6 +143,10 @@ public class DevPilotSettingsComponent {
 
     public boolean getStatusCheckEnabled() {
         return statusCheckRadio.isSelected();
+    }
+
+    public String getLocalStoragePath() {
+        return localStorageField.getText();
     }
 
 }
