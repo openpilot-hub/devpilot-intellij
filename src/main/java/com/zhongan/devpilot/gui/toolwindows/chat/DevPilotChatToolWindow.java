@@ -12,6 +12,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefBrowserBase;
 import com.intellij.ui.jcef.JBCefJSQuery;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
@@ -30,14 +31,14 @@ import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.JsCallModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
-import java.awt.Toolkit;
+import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.swing.JComponent;
+import javax.swing.*;
 
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
@@ -46,6 +47,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefLoadHandler;
 import org.cef.network.CefRequest;
 
+import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
 
 public class DevPilotChatToolWindow {
@@ -133,6 +135,11 @@ public class DevPilotChatToolWindow {
                             FileAnalyzeProviderFactory.getProvider(message.getCodeRef().getLanguageId())
                                     .buildChatDataMap(project, null, message.getCodeRef(), data);
                         });
+                    } else {
+                        var language = DevPilotVersion.getDefaultLanguage();
+                        if (language != null) {
+                            data.put(LANGUAGE, language);
+                        }
                     }
 
                     service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", data, message.getContent(), null, userMessageModel);

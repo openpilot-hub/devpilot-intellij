@@ -48,6 +48,22 @@ public class CodeReferenceModel {
                 editorInfo.getSelectedStartColumn(), editorInfo.getSelectedEndLine(), editorInfo.getSelectedEndColumn(), actionEnum);
     }
 
+    public static List<CodeReferenceModel> getCodeRefFromString(Collection<String> codeList, String languageId) {
+        if (codeList == null) {
+            return null;
+        }
+
+        var result = new ArrayList<CodeReferenceModel>();
+
+        for (String code : codeList) {
+            var ref = new CodeReferenceModel(languageId, null,
+                    null, code, null, null, null, null, null);
+            result.add(ref);
+        }
+
+        return result;
+    }
+
     public static List<CodeReferenceModel> getCodeRefListFromPsiElement(Collection<PsiElement> list, EditorActionEnum actionEnum) {
         if (list == null) {
             return null;

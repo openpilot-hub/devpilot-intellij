@@ -7,6 +7,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionReque
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
@@ -25,13 +27,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
+
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
-
-import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
 
 public interface LlmProvider {
 
@@ -43,6 +45,8 @@ public interface LlmProvider {
     DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest);
 
     DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest);
+
+    List<DevPilotRagResponse> ragCompletion(DevPilotRagRequest ragRequest);
 
     void interruptSend();
 
