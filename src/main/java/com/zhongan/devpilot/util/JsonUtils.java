@@ -3,6 +3,8 @@ package com.zhongan.devpilot.util;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.util.List;
+
 public class JsonUtils {
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
@@ -21,6 +23,14 @@ public class JsonUtils {
     public static <T> T fromJson(String json, Class<T> clazz) {
         try {
             return objectMapper.readValue(json, clazz);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static <T> List<T> fromJsonList(String json, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
         } catch (Exception e) {
             return null;
         }

@@ -15,12 +15,15 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRespo
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.GatewayRequestUtils;
 import com.zhongan.devpilot.util.GatewayRequestV2Utils;
+import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
@@ -36,14 +39,15 @@ import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_HOST;
+
 import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
-
-import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
@@ -352,5 +356,40 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
+    }
+
+    @Override
+    public List<DevPilotRagResponse> ragCompletion(DevPilotRagRequest ragRequest) {
+        Response response;
+
+        try {
+            String requestBody = JsonUtils.toJson(ragRequest);
+            if (requestBody == null) {
+                return null;
+            }
+
+            DevPilotNotification.debug("Send Request :[" + requestBody + "].");
+
+            var request = new Request.Builder()
+                    .url(REMOTE_RAG_DEFAULT_HOST)
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", LoginUtils.getLoginType())
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            Call call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+
+            if (response.isSuccessful()) {
+                var result = response.body().string();
+                return JsonUtils.fromJsonList(result, DevPilotRagResponse.class);
+            }
+
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return null;
+        }
+
+        return null;
     }
 }

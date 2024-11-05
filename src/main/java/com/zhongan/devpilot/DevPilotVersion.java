@@ -16,6 +16,24 @@ public class DevPilotVersion {
         return null;
     }
 
+    public static String getDefaultLanguage() {
+        var name = getVersionName();
+
+        if (name.contains("idea")) {
+            return "java";
+        } else if (name.contains("pycharm")) {
+            return "python";
+        } else if (name.contains("webstorm")) {
+            return "javascript";
+        } else if (name.contains("phpstorm")) {
+            return "php";
+        } else if (name.contains("goland")) {
+            return "go";
+        }
+
+        return null;
+    }
+
     public static String getIdeaVersion() {
         return ApplicationInfo.getInstance().getFullVersion();
     }

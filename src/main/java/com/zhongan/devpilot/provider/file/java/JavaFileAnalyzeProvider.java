@@ -16,10 +16,7 @@ import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import java.util.List;
 import java.util.Map;
 
-import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
-import static com.zhongan.devpilot.constant.PlaceholderConst.CLASS_FULL_NAME;
-import static com.zhongan.devpilot.constant.PlaceholderConst.MOCK_FRAMEWORK;
-import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
+import static com.zhongan.devpilot.constant.PlaceholderConst.*;
 
 public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
     @Override
@@ -59,7 +56,8 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
                             "imports", PsiElementUtils.getImportInfo(psiJavaFile),
                             "package", psiJavaFile.getPackageName(),
                             "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                            "filePath", codeReference.getFileUrl()
+                            "filePath", codeReference.getFileUrl(),
+                            "language", "java"
                     )
             );
         }
@@ -87,7 +85,8 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
     }
 
     @Override
-    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference, List<PsiElement> localRef, List<PsiElement> remoteRef, Map<String, String> data) {
+    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference,
+                                           List<PsiElement> localRef, List<String> remoteRef, Map<String, String> data) {
         String packageName = null;
 
         if (codeReference != null && codeReference.getFileUrl() != null) {
@@ -97,9 +96,14 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
             }
         }
 
-        var relatedCode = PsiElementUtils.transformElementToString(localRef, packageName);
-        data.put("relatedContext", relatedCode);
-//        data.put("additionalRelatedContext", null);
+        if (localRef != null && !localRef.isEmpty()) {
+            var relatedCode = PsiElementUtils.transformElementToString(localRef, packageName);
+            data.put("relatedContext", relatedCode);
+        }
+
+        if (remoteRef != null && !remoteRef.isEmpty()) {
+            data.put("additionalRelatedContext", String.join("\n", remoteRef));
+        }
     }
 
     @Override
