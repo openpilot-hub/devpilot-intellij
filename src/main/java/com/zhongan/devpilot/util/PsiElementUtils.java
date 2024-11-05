@@ -286,7 +286,7 @@ public class PsiElementUtils {
         return null;
     }
 
-    private static PsiClass getPsiClassByFile(PsiJavaFile psiJavaFile) {
+    public static PsiClass getPsiClassByFile(PsiJavaFile psiJavaFile) {
         var classes = psiJavaFile.getClasses();
         if (classes.length > 0) {
             return classes[0];

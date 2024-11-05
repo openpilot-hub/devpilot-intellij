@@ -10,6 +10,7 @@ import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
@@ -43,6 +44,8 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var languageSettings = LanguageSettingsState.getInstance();
         var chatShortcutSettings = ChatShortcutSettingState.getInstance();
         var languageIndex = settingsComponent.getLanguageIndex();
+        var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
+
         var methodInlayPresentationDisplayIndex = settingsComponent.getMethodInlayPresentationDisplayIndex();
         var completionEnable = CompletionSettingsState.getInstance().getEnable();
         Boolean enable = AvailabilityCheck.getInstance().getEnable();
@@ -51,7 +54,8 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !languageIndex.equals(languageSettings.getLanguageIndex())
                 || !methodInlayPresentationDisplayIndex.equals(chatShortcutSettings.getDisplayIndex())
                 || !settingsComponent.getCompletionEnabled() == (completionEnable)
-                || !settingsComponent.getStatusCheckEnabled() == (enable);
+                || !settingsComponent.getStatusCheckEnabled() == (enable)
+                || !settingsComponent.getLocalStoragePath().equals(personalAdvancedSettings.getLocalStorage());
     }
 
     @Override
@@ -75,12 +79,18 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         PopupMenuEditorActionGroupUtil.refreshActions(null);
 
+        var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
+        personalAdvancedSettings.setLocalStorage(settingsComponent.getLocalStoragePath());
+        // TODO
+
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
 
         AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
         availabilityCheck.setEnable(settingsComponent.getStatusCheckEnabled());
     }
+
+    // TODO：：Reset场景
 
     @Override
     public void dispose() {

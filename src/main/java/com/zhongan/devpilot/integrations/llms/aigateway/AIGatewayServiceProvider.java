@@ -7,7 +7,9 @@ import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
+import com.intellij.openapi.util.Pair;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
+import com.zhongan.devpilot.agents.DevPilotAgentsRunner;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -41,6 +43,7 @@ import org.apache.commons.lang3.StringUtils;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
 import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_HOST;
+import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_PATH;
 
 import okhttp3.Call;
 import okhttp3.MediaType;
@@ -370,8 +373,14 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
+            Pair<Integer, Long> portPId = DevPilotAgentsRunner.retrieveAlivePort();
+            String url = StringUtils.EMPTY;
+            if (null != portPId) {
+                url = REMOTE_RAG_DEFAULT_HOST + portPId.first + REMOTE_RAG_DEFAULT_PATH;
+            }
+
             var request = new Request.Builder()
-                    .url(REMOTE_RAG_DEFAULT_HOST)
+                    .url(url)
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", LoginUtils.getLoginType())
                     .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
