@@ -66,13 +66,6 @@ tasks {
         systemProperty("devpilot.env", "test")
     }
 
-    buildPlugin {
-        from(".") {
-            include("agents/**")
-        }
-        into("DevPilot/")
-    }
-
     checkstyle {
         configFile = rootProject.file("checkstyle.xml")
         maxWarnings = 0
