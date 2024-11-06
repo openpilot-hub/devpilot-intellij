@@ -31,7 +31,7 @@ public class DevPilotVersion {
             return "go";
         }
 
-        return null;
+        return "java";
     }
 
     public static String getIdeaVersion() {
