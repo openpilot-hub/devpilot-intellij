@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
@@ -299,7 +300,7 @@ public final class DevPilotChatToolWindowService {
             List<PsiElement> localRag = null;
             List<String> remoteRag = null;
 
-            var language = codeReference == null ? null : codeReference.getLanguageId();
+            var language = codeReference == null ? DevPilotVersion.getDefaultLanguage() : codeReference.getLanguageId();
 
             // call local rag
             if (codePredict != null) {
