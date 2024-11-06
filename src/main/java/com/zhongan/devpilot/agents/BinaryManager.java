@@ -1,39 +1,87 @@
 package com.zhongan.devpilot.agents;
 
+import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.util.system.CpuArch;
-import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
+import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
+import com.zhongan.devpilot.util.ProcessUtils;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 
 public class BinaryManager {
+    private static final Logger LOG = Logger.getInstance(BinaryManager.class);
 
     public static final BinaryManager INSTANCE = new BinaryManager();
+
+    public static final String COMPATIBLE_ARCH;
+
+    static {
+        COMPATIBLE_ARCH = String.format("%s_%s", getSystemArch(), getPlatformName());
+    }
 
     @Contract(pure = true)
     private BinaryManager() {
     }
 
+    public File getHomeDir() {
+        File homeDir = getHomeDirectory().toFile();
+        if (!homeDir.exists() && !homeDir.mkdirs()) {
+            LOG.warn("Failed to create home directory." + homeDir.getName());
+            return null;
+        } else {
+            return homeDir;
+        }
+    }
 
-    public synchronized void initBinary(File homeDir) throws Exception {
+    public String getBinaryPath(@NotNull File workDirectory) {
+        File root = getBinaryRoot(workDirectory);
+        if (root == null) {
+            return null;
+        } else {
+            return getDefaultBinaryPath(root);
+        }
+    }
+
+    public synchronized void postProcessBeforeRunning(File homeDir) throws Exception {
+        findProcessAndKill(homeDir);
+
+        File binaryRoot = getBinaryRoot(homeDir);
+        if (null == binaryRoot) {
+            LOG.warn("Exception occurred while creating binary root.");
+            return;
+        }
+
+        initBinary(binaryRoot);
+    }
+
+    public void initBinary(File homeDir) throws Exception {
         File zipTmpDir = new File(System.getProperty("java.io.tmpdir"), String.format("devpilot_%d", System.currentTimeMillis()));
         try {
             File archDir = unZipBinary(zipTmpDir.getAbsolutePath());
             if (archDir == null || !archDir.exists()) {
-                DevPilotNotification.warn("fail to unzip binary for " + VALID_ARCH);
+                LOG.warn("Fail to unzip binary for " + COMPATIBLE_ARCH);
                 return;
             }
 
@@ -55,17 +103,208 @@ public class BinaryManager {
                 }
             }
         } catch (FileExistsException e) {
-            DevPilotNotification.debug("Error occurred while initial file.");
+            LOG.warn("Error occurred while coping file.", e);
         } finally {
             try {
                 FileUtils.deleteDirectory(zipTmpDir);
             } catch (IOException ex) {
-                DevPilotNotification.debug("Error occurred while deleting file.");
+                LOG.warn("Error occurred while deleting file.", ex);
             }
         }
     }
 
-    public File unZipBinary(String destDirPath) throws Exception {
+    public Pair<Integer, Long> retrieveAlivePort() {
+        File homeDir = getHomeDir();
+        if (homeDir != null) {
+            File infoFile = new File(homeDir, ".info");
+            if (infoFile.exists()) {
+                return checkInfoFile(infoFile);
+            }
+        }
+        return null;
+    }
+
+    public void findProcessAndKill() {
+        File homeDir = getHomeDir();
+        if (null != homeDir) {
+            findProcessAndKill(homeDir);
+        }
+    }
+
+    private void findProcessAndKill(File homeDir) {
+        Pair<Integer, Long> infoPair = readProcessInfoFile(homeDir);
+        if (infoPair != null && infoPair.second != null) {
+            killProcessAndDeleteInfoFile(infoPair.second);
+        } else {
+            LOG.info("Pid not exist when trying to kill process, skip process killing");
+        }
+    }
+
+    private Pair<Integer, Long> readProcessInfoFile(File homeDir) {
+        int maxRetryTimes = NumberUtils.INTEGER_ONE;
+        File infoFile = new File(homeDir, ".info");
+        for (int i = 0; i < maxRetryTimes; i++) {
+            Pair<Integer, Long> infoPair = checkInfoFile(infoFile);
+            if (infoPair != null) {
+                return infoPair;
+            }
+
+            try {
+                Thread.sleep(1000L);
+            } catch (InterruptedException e) {
+                LOG.info("Thread sleep is interrupted when waiting for .info file");
+            }
+
+            if (shouldExtendRetries(i, maxRetryTimes)) {
+                maxRetryTimes = extendRetries(maxRetryTimes);
+            }
+        }
+
+        return findProcessAndPortByName();
+    }
+
+    private boolean shouldExtendRetries(int currentAttempt, int maxAttempts) {
+        return SystemInfo.isWindows && currentAttempt == maxAttempts - 1 && !CollectionUtils.isEmpty(ProcessUtils.findDevPilotAgentPidList());
+    }
+
+    private int extendRetries(int maxRetryTimes) {
+        List<Long> pidList = ProcessUtils.findDevPilotAgentPidList();
+        String pidListStr = StringUtils.join(pidList, ",");
+        LOG.info(String.format("Found pid list: %s, delay max retry times", StringUtils.defaultString(pidListStr, "null")));
+        return maxRetryTimes * 3;
+    }
+
+    private void killProcessAndDeleteInfoFile(Long pid) {
+        if (pid > 0L && ProcessUtils.isProcessAlive(pid)) {
+            LOG.info(String.format("Try to kill %d.", pid));
+            ProcessUtils.killProcess(pid);
+        }
+
+        this.deleteInfoFile();
+    }
+
+    private void deleteInfoFile() {
+        File homeDir = this.getHomeDir();
+        if (homeDir != null) {
+            File infoFile = new File(homeDir, ".info");
+            if (infoFile.exists()) {
+                try {
+                    infoFile.delete();
+                    LOG.info("Delete .info file success.");
+                } catch (Exception e) {
+                    LOG.warn("Delete .info file encountered exception", e);
+                }
+            }
+        }
+    }
+
+    private static Pair<Integer, Long> checkInfoFile(@NotNull File infoFile) {
+        if (infoFile.exists()) {
+            try {
+                String rawText = FileUtils.readFileToString(infoFile, StandardCharsets.UTF_8);
+                if (rawText != null && !rawText.isEmpty()) {
+                    String[] lines = rawText.split("\r\n|\n");
+
+                    int port = Integer.parseInt(lines[0]);
+                    Long pid = Long.valueOf(lines[1]);
+                    LOG.debug("Read.info file get port:" + port + ", pid:" + pid);
+                    return new Pair<>(port, pid);
+                }
+
+                LOG.debug(".info file is empty, check failed");
+                return null;
+            } catch (Throwable e) {
+                LOG.warn("Error occurred while checking .info file.", e);
+            }
+        }
+        return null;
+    }
+
+    private Pair<Integer, Long> findProcessAndPortByName() {
+        List<Long> pidList = ProcessUtils.findDevPilotAgentPidList();
+        String pidListStr = StringUtils.join(pidList, ",");
+        LOG.debug(String.format("Found pid list: %s", pidListStr == null ? "null" : pidListStr));
+        if (CollectionUtils.isNotEmpty(pidList)) {
+            return new Pair<>(3000, pidList.get(0));
+        } else {
+            return ProcessUtils.isWindowsPlatform() ? new Pair<>(3000, 0L) : null;
+        }
+    }
+
+    private String getUserHome() {
+        String userHome = null;
+        String osName = System.getProperty("os.name");
+        if (StringUtils.isNotBlank(osName)) {
+            osName = osName.toLowerCase();
+            if (ProcessUtils.isWindowsPlatform()) {
+                userHome = System.getenv("USERPROFILE");
+            } else if (osName.contains("mac")) {
+                userHome = System.getenv("HOME");
+            } else if (osName.contains("nix") || osName.contains("nux")) {
+                userHome = System.getenv("HOME");
+            }
+        }
+        return StringUtils.isBlank(userHome) ? System.getProperty("user.home") : userHome;
+    }
+
+    private Path getHomeDirectory() {
+        var localStoragePath = PersonalAdvancedSettingsState.getInstance().getLocalStorage();
+        if (StringUtils.isNotBlank(localStoragePath)) {
+            File file = new File(localStoragePath);
+            boolean validPath = true;
+            if (!file.exists()) {
+                validPath = file.mkdirs();
+            }
+
+            if (validPath) {
+                return Paths.get(localStoragePath);
+            }
+        }
+        return Paths.get(getUserHome(), ".DevPilot");
+    }
+
+    private File getBinaryRoot(@NotNull File workDirectory) {
+        File dir = new File(workDirectory, "bin");
+        return !dir.exists() && !dir.mkdirs() ? null : dir;
+    }
+
+    private String getDefaultBinaryPath(File root) {
+        Optional<File> latestDir = Arrays.stream(Optional.ofNullable(root.listFiles()).orElse(new File[]{}))
+                .filter(File::isDirectory)
+                .max(Comparator.comparingLong(File::lastModified));
+
+        if (latestDir.isPresent()) {
+            String dirName = latestDir.get().getName();
+            checkBinaryPermissions(root, dirName);
+            return getBinaryVersionPath(root, dirName);
+        } else {
+            return null;
+        }
+    }
+
+    private void checkBinaryPermissions(File root, String version) {
+        File versionDir = Paths.get(root.getAbsolutePath(), version, COMPATIBLE_ARCH).toFile();
+        if (versionDir.exists()) {
+            versionDir.setExecutable(true);
+        }
+
+        File[] files = versionDir.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                file.setExecutable(true);
+            }
+        }
+    }
+
+    private String getBinaryVersionPath(File root, String version) {
+        return Paths.get(root.getAbsolutePath(), version, COMPATIBLE_ARCH, getExecutableName()).toString();
+    }
+
+    private static String getExecutableName() {
+        return SystemInfo.isWindows ? "devpilot-agents.exe" : "devpilot-agents";
+    }
+
+    private File unZipBinary(String destDirPath) throws Exception {
         Path targetDir = Paths.get(destDirPath);
         if (!Files.exists(targetDir)) {
             Files.createDirectories(targetDir);
@@ -78,7 +317,7 @@ public class BinaryManager {
         }
     }
 
-    public static File unzipFile(InputStream stream, Path targetDir) {
+    private File unzipFile(InputStream stream, Path targetDir) {
         File finalDir = null;
 
         try (ZipInputStream zis = new ZipInputStream(stream)) {
@@ -93,7 +332,7 @@ public class BinaryManager {
 
                 if (entry.isDirectory()) {
                     handleDirectory(targetPath, parts);
-                    if (parts[parts.length - 1].equalsIgnoreCase(VALID_ARCH)) {
+                    if (parts[parts.length - 1].equalsIgnoreCase(COMPATIBLE_ARCH)) {
                         finalDir = targetPath.toFile();
                     }
                 } else {
@@ -101,7 +340,7 @@ public class BinaryManager {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Error unzipping file", e);
+            throw new RuntimeException("Error occurred while unzipping file.", e);
         } finally {
             IOUtils.closeQuietly(stream);
         }
@@ -124,14 +363,8 @@ public class BinaryManager {
         targetPath.toFile().setExecutable(true);
     }
 
-    public static final String VALID_ARCH;
-
-    static {
-        VALID_ARCH = String.format("%s_%s", getSystemArch(), getPlatformName());
-    }
-
     private static boolean needUnzip(String entryName) {
-        return entryName.equalsIgnoreCase(VALID_ARCH) || entryName.equals("extension");
+        return entryName.equalsIgnoreCase(COMPATIBLE_ARCH) || entryName.equals("extension");
     }
 
     private static String getSystemArch() {
@@ -150,10 +383,12 @@ public class BinaryManager {
             platform = "darwin";
         } else {
             if (!SystemInfo.isLinux) {
+                LOG.warn("DevPilot only supports platform Windows, macOS, Linux");
                 throw new RuntimeException("DevPilot only supports platform Windows, macOS, Linux");
             }
             platform = "linux";
         }
         return platform;
     }
+
 }

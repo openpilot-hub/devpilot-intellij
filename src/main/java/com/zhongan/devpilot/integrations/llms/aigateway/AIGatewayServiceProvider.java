@@ -9,7 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectUtil;
 import com.intellij.openapi.util.Pair;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
-import com.zhongan.devpilot.agents.DevPilotAgentsRunner;
+import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
@@ -34,6 +34,7 @@ import com.zhongan.devpilot.webview.model.MessageModel;
 import com.zhongan.devpilot.webview.model.RecallModel;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -373,27 +374,26 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
-            Pair<Integer, Long> portPId = DevPilotAgentsRunner.retrieveAlivePort();
-            String url = StringUtils.EMPTY;
+            Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
             if (null != portPId) {
-                url = REMOTE_RAG_DEFAULT_HOST + portPId.first + REMOTE_RAG_DEFAULT_PATH;
-            }
-
-            var request = new Request.Builder()
+                String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + REMOTE_RAG_DEFAULT_PATH;
+                var request = new Request.Builder()
                     .url(url)
                     .header("User-Agent", UserAgentUtils.buildUserAgent())
                     .header("Auth-Type", LoginUtils.getLoginType())
                     .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
                     .build();
 
-            Call call = OkhttpUtils.getClient().newCall(request);
-            response = call.execute();
+                Call call = OkhttpUtils.getClient().newCall(request);
+                response = call.execute();
 
-            if (response.isSuccessful()) {
-                var result = response.body().string();
-                return JsonUtils.fromJsonList(result, DevPilotRagResponse.class);
+                if (response.isSuccessful()) {
+                    var result = response.body().string();
+                    return JsonUtils.fromJsonList(result, DevPilotRagResponse.class);
+                }
+            } else {
+                return new ArrayList<>();
             }
-
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return null;
