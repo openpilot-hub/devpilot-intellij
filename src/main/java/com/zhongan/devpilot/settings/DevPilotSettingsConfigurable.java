@@ -1,10 +1,14 @@
 package com.zhongan.devpilot.settings;
 
 import com.intellij.openapi.Disposable;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
+import com.zhongan.devpilot.agents.AgentsRunner;
+import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
@@ -15,12 +19,16 @@ import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
+import java.io.File;
+
 import javax.swing.JComponent;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nls;
 import org.jetbrains.annotations.Nullable;
 
 public class DevPilotSettingsConfigurable implements Configurable, Disposable {
+    private static final Logger LOG = Logger.getInstance(DevPilotSettingsConfigurable.class);
 
     private DevPilotSettingsComponent settingsComponent;
 
@@ -58,8 +66,44 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !settingsComponent.getLocalStoragePath().equals(personalAdvancedSettings.getLocalStorage());
     }
 
+    private boolean verifyLocalStorage(String path) {
+        if (StringUtils.isBlank(path)) {
+            DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.blank"));
+            return Boolean.FALSE;
+        }
+
+        File localStoragePathFile = new File(path);
+        if (!localStoragePathFile.exists() && !localStoragePathFile.mkdirs()) {
+            DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.illegal"));
+            return Boolean.FALSE;
+        }
+        try {
+            File testFile = new File(localStoragePathFile, ".permission.txt");
+            testFile.createNewFile();
+            if (!testFile.exists()) {
+                testFile.delete();
+                DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.no.permission"));
+                return Boolean.FALSE;
+            } else {
+                testFile.delete();
+                return Boolean.TRUE;
+            }
+        } catch (Exception e) {
+            LOG.warn("Exception occurred while verifying local storage path.", e);
+            DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.no.permission"));
+        }
+        return Boolean.FALSE;
+    }
+
     @Override
     public void apply() throws ConfigurationException {
+        String localStoragePath = settingsComponent.getLocalStoragePath();
+        // 校验是否是目录，是否有写权限
+        boolean localStorageValidated = verifyLocalStorage(localStoragePath);
+        if (!localStorageValidated) {
+            return;
+        }
+
         var settings = DevPilotLlmSettingsState.getInstance();
         settings.setFullName(settingsComponent.getFullName());
 
@@ -80,8 +124,14 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         PopupMenuEditorActionGroupUtil.refreshActions(null);
 
         var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
-        personalAdvancedSettings.setLocalStorage(settingsComponent.getLocalStoragePath());
-        // TODO
+
+        try {
+            BinaryManager.INSTANCE.findProcessAndKill();
+            personalAdvancedSettings.setLocalStorage(localStoragePath);
+            AgentsRunner.INSTANCE.run();
+        } catch (Exception e) {
+            LOG.warn("Error occurred while running agents.", e);
+        }
 
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         completionSettings.setEnable(settingsComponent.getCompletionEnabled());
@@ -90,7 +140,27 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         availabilityCheck.setEnable(settingsComponent.getStatusCheckEnabled());
     }
 
-    // TODO：：Reset场景
+    @Override
+    public void reset() {
+        var settings = DevPilotLlmSettingsState.getInstance();
+        settingsComponent.setFullName(settings.getFullName());
+
+        var languageSettings = LanguageSettingsState.getInstance();
+        settingsComponent.setLanguageIndex(languageSettings.getLanguageIndex());
+
+        var chatShortcutSettings = ChatShortcutSettingState.getInstance();
+        settingsComponent.setMethodInlayPresentationDisplayIndex(chatShortcutSettings.getDisplayIndex());
+
+        var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
+        String localStorage = personalAdvancedSettings.getLocalStorage();
+        settingsComponent.setLocalStoragePath(StringUtils.defaultString(localStorage, BinaryManager.INSTANCE.getHomeDir().getAbsolutePath()));
+
+        CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
+        settingsComponent.setCompletionEnabled(completionSettings.getEnable());
+
+        AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
+        settingsComponent.setStatusCheckEnabled(availabilityCheck.getEnable());
+    }
 
     @Override
     public void dispose() {

@@ -32,7 +32,11 @@ public class DevPilotSettingsComponent {
 
     private Integer index;
 
+    private ComboBox<String> languageComboBox;
+
     private Integer methodInlayPresentationDisplayIndex;
+
+    private ComboBox<String> methodInlayPresentationDisplayComboBox;
 
     private final JBTextField localStorageField;
 
@@ -80,19 +84,19 @@ public class DevPilotSettingsComponent {
     }
 
     private @NotNull JComponent createMethodShortcutDisplayModeSectionPanel(Integer inlayPresentationDisplayIndex) {
-        var comboBox = new ComboBox<>();
-        comboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutHidden"));
-        comboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutInlineDisplay"));
-        comboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutGroupDisplay"));
-        comboBox.setSelectedIndex(inlayPresentationDisplayIndex);
+        methodInlayPresentationDisplayComboBox = new ComboBox<>();
+        methodInlayPresentationDisplayComboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutHidden"));
+        methodInlayPresentationDisplayComboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutInlineDisplay"));
+        methodInlayPresentationDisplayComboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutGroupDisplay"));
+        methodInlayPresentationDisplayComboBox.setSelectedIndex(inlayPresentationDisplayIndex);
 
-        comboBox.addActionListener(e -> {
+        methodInlayPresentationDisplayComboBox.addActionListener(e -> {
             var box = (ComboBox<?>) e.getSource();
             methodInlayPresentationDisplayIndex = box.getSelectedIndex();
         });
 
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(comboBox)
+                .add(UI.PanelFactory.panel(methodInlayPresentationDisplayComboBox)
                         .withLabel(DevPilotMessageBundle.get("devpilot.settings.methodShortcutDisplayModeLabel"))
                         .resizeX(false))
                 .createPanel();
@@ -101,18 +105,18 @@ public class DevPilotSettingsComponent {
     }
 
     public JPanel createLanguageSectionPanel(Integer languageIndex) {
-        var comboBox = new ComboBox<>();
-        comboBox.addItem("English");
-        comboBox.addItem("中文");
-        comboBox.setSelectedIndex(languageIndex);
+        languageComboBox = new ComboBox<>();
+        languageComboBox.addItem("English");
+        languageComboBox.addItem("中文");
+        languageComboBox.setSelectedIndex(languageIndex);
 
-        comboBox.addActionListener(e -> {
+        languageComboBox.addActionListener(e -> {
             var box = (ComboBox<?>) e.getSource();
             index = box.getSelectedIndex();
         });
 
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(comboBox)
+                .add(UI.PanelFactory.panel(languageComboBox)
                         .withLabel(DevPilotMessageBundle.get("devpilot.setting.language"))
                         .resizeX(false))
                 .createPanel();
@@ -148,5 +152,33 @@ public class DevPilotSettingsComponent {
     public String getLocalStoragePath() {
         return localStorageField.getText();
     }
+
+    // For reset
+    public void setFullName(String text) {
+        fullNameField.setText(text);
+    }
+
+    public void setLanguageIndex(Integer index) {
+        this.index = index;
+        languageComboBox.setSelectedIndex(index);
+    }
+
+    public void setMethodInlayPresentationDisplayIndex(Integer methodInlayPresentationDisplayIndex) {
+        this.methodInlayPresentationDisplayIndex = methodInlayPresentationDisplayIndex;
+        methodInlayPresentationDisplayComboBox.setSelectedIndex(methodInlayPresentationDisplayIndex);
+    }
+
+    public void setCompletionEnabled(boolean selected) {
+        autoCompletionRadio.setSelected(selected);
+    }
+
+    public void setStatusCheckEnabled(boolean selected) {
+        statusCheckRadio.setSelected(selected);
+    }
+
+    public void setLocalStoragePath(String text) {
+        localStorageField.setText(text);
+    }
+
 
 }
