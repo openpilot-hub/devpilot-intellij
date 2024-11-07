@@ -12,10 +12,10 @@ public class ProcessUtils {
     private static final Logger log = Logger.getInstance(ProcessUtils.class);
     public static final String WINDOWS_OS = "win";
     public static final String LINUX_OS = "nux";
-    public static final String LINIX_OS = "nix";
+    public static final String NIX_OS = "nix";
     public static final String MAC_OS = "mac";
 
-    public ProcessUtils() {
+    private ProcessUtils() {
     }
 
     public static boolean isProcessAlive(long pid) {
@@ -25,7 +25,7 @@ public class ProcessUtils {
             log.info(String.format("Check alive Windows mode. Pid: [%d]", pid));
             command = "C:\\Windows\\System32\\cmd.exe /c C:\\Windows\\System32\\tasklist.exe /FI \"PID eq " + pid + "\"";
         } else {
-            if (!osName.contains(LINIX_OS) && !osName.contains(LINUX_OS) && !osName.contains(MAC_OS)) {
+            if (!osName.contains(NIX_OS) && !osName.contains(LINUX_OS) && !osName.contains(MAC_OS)) {
                 log.info(String.format("Unsupported OS: Check alive for Pid: [%d] return false", pid));
                 return false;
             }
@@ -42,29 +42,6 @@ public class ProcessUtils {
         return osName.contains(WINDOWS_OS);
     }
 
-    private static boolean isProcessIdRunning(long pid, String command) {
-        log.info(String.format("Command [%s]", command));
-
-        try {
-            Runtime rt = Runtime.getRuntime();
-            Process pr = rt.exec(command);
-            InputStreamReader isReader = new InputStreamReader(pr.getInputStream());
-            BufferedReader bReader = new BufferedReader(isReader);
-
-            String strLine;
-            do {
-                if ((strLine = bReader.readLine()) == null) {
-                    return false;
-                }
-            } while(!strLine.contains(pid + " "));
-
-            return true;
-        } catch (Exception ex) {
-            log.warn(String.format("Got exception using system command [%s].", command), ex);
-            return true;
-        }
-    }
-
     public static void killProcess(long pid) {
         log.info("Kill devpilot-agents process: " + pid);
         Runtime rt = Runtime.getRuntime();
@@ -75,7 +52,7 @@ public class ProcessUtils {
             if (isWindowsPlatform()) {
                 log.info(String.format("Kill process in Windows mode. Pid: [%d]", pid));
                 process = rt.exec("C:\\Windows\\System32\\taskkill.exe /F /T /PID " + pid);
-            } else if (!osName.contains(LINIX_OS) && !osName.contains(LINUX_OS) && !osName.contains(MAC_OS)) {
+            } else if (!osName.contains(NIX_OS) && !osName.contains(LINUX_OS) && !osName.contains(MAC_OS)) {
                 log.info(String.format("Unsupported OS: Check alive for Pid: [%d] return false", pid));
             } else {
                 log.info(String.format("Kill process in Linux/Unix mode. Pid: [%d]", pid));
@@ -95,7 +72,30 @@ public class ProcessUtils {
         return getPidListFromName("devpilot-agents");
     }
 
-    public static List<Long> getPidListFromName(String name) {
+    private static boolean isProcessIdRunning(long pid, String command) {
+        log.info(String.format("Command [%s]", command));
+
+        try {
+            Runtime rt = Runtime.getRuntime();
+            Process pr = rt.exec(command);
+            InputStreamReader isReader = new InputStreamReader(pr.getInputStream());
+            BufferedReader bReader = new BufferedReader(isReader);
+
+            String strLine;
+            do {
+                if ((strLine = bReader.readLine()) == null) {
+                    return false;
+                }
+            } while (!strLine.contains(pid + " "));
+
+            return true;
+        } catch (Exception ex) {
+            log.warn(String.format("Got exception using system command [%s].", command), ex);
+            return true;
+        }
+    }
+
+    private static List<Long> getPidListFromName(String name) {
         String osName = System.getProperty("os.name").toLowerCase();
         String[] command;
         List<Long> pids;
@@ -113,7 +113,7 @@ public class ProcessUtils {
             }
 
             return pids;
-        } else if (!osName.contains(LINIX_OS) && !osName.contains(LINUX_OS)) {
+        } else if (!osName.contains(NIX_OS) && !osName.contains(LINUX_OS)) {
             if (!osName.contains(MAC_OS)) {
                 log.info(String.format("Unsupported OS: Get pid list for Name: [%s] return empty list", name));
                 return null;
@@ -146,7 +146,7 @@ public class ProcessUtils {
             List<Long> pidList = new ArrayList<>();
 
             String strLine;
-            while((strLine = bReader.readLine()) != null) {
+            while ((strLine = bReader.readLine()) != null) {
                 if (strLine.contains("devpilot-agents")) {
                     String[] outputs = strLine.trim().split("\\s+");
                     if (outputs.length > 0) {
@@ -177,15 +177,14 @@ public class ProcessUtils {
             List<Long> pidList = new ArrayList<>();
 
             String strLine;
-            while((strLine = bReader.readLine()) != null) {
+            while ((strLine = bReader.readLine()) != null) {
                 log.info("windows get pid output:" + strLine);
                 if (strLine.contains("devpilot-agents")) {
                     String[] outputs = strLine.trim().split("[\\s\t]+");
                     if (outputs.length > 0) {
                         try {
                             pidList.add(Long.parseLong(outputs[1]));
-                        } catch (Exception var9) {
-                            Exception e = var9;
+                        } catch (Exception e) {
                             log.warn(String.format("Parse [%s] and add pid list encountered exception: %s", strLine, e.getMessage()));
                         }
                     }
@@ -210,7 +209,7 @@ public class ProcessUtils {
             BufferedReader in = new BufferedReader(new InputStreamReader(process.getInputStream()));
 
             String line;
-            while((line = in.readLine()) != null) {
+            while ((line = in.readLine()) != null) {
                 try {
                     pids.add(Long.parseLong(line.trim()));
                 } catch (Exception e) {
@@ -239,7 +238,7 @@ public class ProcessUtils {
             List<String> lines = new ArrayList<>();
 
             String line;
-            while((line = in.readLine()) != null) {
+            while ((line = in.readLine()) != null) {
                 lines.add(line);
             }
 
@@ -247,7 +246,7 @@ public class ProcessUtils {
             process.waitFor();
             if (lines.size() > 1) {
                 try {
-                    pids.add(Long.parseLong(((String)lines.get(1)).trim()));
+                    pids.add(Long.parseLong(lines.get(1).trim()));
                 } catch (Exception e) {
                     log.warn(String.format("Parse [%s] and add pid list encountered exception: %s", lines, e.getMessage()));
                 }
