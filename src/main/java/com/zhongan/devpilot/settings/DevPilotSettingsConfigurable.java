@@ -6,7 +6,6 @@ import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
-import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.agents.AgentsRunner;
 import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.settings.state.AvailabilityCheck;
@@ -66,42 +65,38 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 || !settingsComponent.getLocalStoragePath().equals(personalAdvancedSettings.getLocalStorage());
     }
 
-    private boolean verifyLocalStorage(String path) {
+    private String verifyLocalStorage(String path) {
         if (StringUtils.isBlank(path)) {
-            DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.blank"));
-            return Boolean.FALSE;
+            return DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.blank");
         }
 
         File localStoragePathFile = new File(path);
         if (!localStoragePathFile.exists() && !localStoragePathFile.mkdirs()) {
-            DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.illegal"));
-            return Boolean.FALSE;
+            return DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.illegal");
         }
         try {
             File testFile = new File(localStoragePathFile, ".permission.txt");
             testFile.createNewFile();
             if (!testFile.exists()) {
                 testFile.delete();
-                DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.no.permission"));
-                return Boolean.FALSE;
+                return DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.no.permission");
             } else {
                 testFile.delete();
-                return Boolean.TRUE;
+                return StringUtils.EMPTY;
             }
         } catch (Exception e) {
             LOG.warn("Exception occurred while verifying local storage path.", e);
-            DevPilotNotification.warn(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.no.permission"));
+            return DevPilotMessageBundle.get("devpilot.settings.localStorageLabel.no.permission");
         }
-        return Boolean.FALSE;
     }
 
     @Override
     public void apply() throws ConfigurationException {
         String localStoragePath = settingsComponent.getLocalStoragePath();
         // 校验是否是目录，是否有写权限
-        boolean localStorageValidated = verifyLocalStorage(localStoragePath);
-        if (!localStorageValidated) {
-            return;
+        String localStorageValidated = verifyLocalStorage(localStoragePath);
+        if (!StringUtils.isEmpty(localStorageValidated)) {
+            throw new ConfigurationException(localStorageValidated);
         }
 
         var settings = DevPilotLlmSettingsState.getInstance();
