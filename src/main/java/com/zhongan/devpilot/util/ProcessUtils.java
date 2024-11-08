@@ -14,9 +14,13 @@ import static com.zhongan.devpilot.agents.BinaryManager.EXECUTABLE_NAME;
 
 public class ProcessUtils {
     private static final Logger log = Logger.getInstance(ProcessUtils.class);
+
     public static final String WINDOWS_OS = "win";
+
     public static final String LINUX_OS = "nux";
+
     public static final String NIX_OS = "nix";
+
     public static final String MAC_OS = "mac";
 
     private ProcessUtils() {

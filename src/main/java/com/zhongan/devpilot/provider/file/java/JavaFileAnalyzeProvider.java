@@ -16,7 +16,10 @@ import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import java.util.List;
 import java.util.Map;
 
-import static com.zhongan.devpilot.constant.PlaceholderConst.*;
+import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
+import static com.zhongan.devpilot.constant.PlaceholderConst.CLASS_FULL_NAME;
+import static com.zhongan.devpilot.constant.PlaceholderConst.MOCK_FRAMEWORK;
+import static com.zhongan.devpilot.constant.PlaceholderConst.TEST_FRAMEWORK;
 
 public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
     @Override
