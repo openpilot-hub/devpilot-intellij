@@ -179,6 +179,4 @@ public class DevPilotSettingsComponent {
     public void setLocalStoragePath(String text) {
         localStorageField.setText(text);
     }
-
-
 }

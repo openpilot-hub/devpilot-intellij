@@ -42,16 +42,16 @@ import java.util.function.Consumer;
 
 import org.apache.commons.lang3.StringUtils;
 
-import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
-import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_HOST;
-import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_PATH;
-
 import okhttp3.Call;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
+
+import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_HOST;
+import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_PATH;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {

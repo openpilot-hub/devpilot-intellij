@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.text.SimpleDateFormat;
-
 import java.util.List;
 
 public class JsonUtils {

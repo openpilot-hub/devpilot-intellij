@@ -27,13 +27,13 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
-
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
 import okhttp3.sse.EventSourceListener;
 import okhttp3.sse.EventSources;
+
+import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
 
 public interface LlmProvider {
 

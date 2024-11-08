@@ -31,14 +31,14 @@ import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.JsCallModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
-import java.awt.*;
+import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.swing.*;
+import javax.swing.JComponent;
 
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;

@@ -4,6 +4,8 @@ import com.intellij.ide.plugins.PluginManagerCore;
 import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.extensions.PluginId;
 
+import java.util.Locale;
+
 public class DevPilotVersion {
     public static String getDevPilotVersion() {
         var pluginId = PluginId.getId("com.zhongan.devPilot");
@@ -17,7 +19,7 @@ public class DevPilotVersion {
     }
 
     public static String getDefaultLanguage() {
-        var name = getVersionName();
+        var name = getVersionName().toLowerCase(Locale.ROOT);
 
         if (name.contains("idea")) {
             return "java";

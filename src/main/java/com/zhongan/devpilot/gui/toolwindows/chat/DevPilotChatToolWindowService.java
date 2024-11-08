@@ -731,9 +731,10 @@ public final class DevPilotChatToolWindowService {
 
     static class Rag {
         private List<PsiElement> localRag;
+
         private List<String> remoteRag;
 
-        public Rag(List<PsiElement> localRag, List<String> remoteRag) {
+        Rag(List<PsiElement> localRag, List<String> remoteRag) {
             this.localRag = localRag;
             this.remoteRag = remoteRag;
         }

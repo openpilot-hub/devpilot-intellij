@@ -9,21 +9,38 @@ import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
-import com.zhongan.devpilot.integrations.llms.entity.*;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
-import com.zhongan.devpilot.util.*;
+import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.GatewayRequestUtils;
+import com.zhongan.devpilot.util.GatewayRequestV2Utils;
+import com.zhongan.devpilot.util.LoginUtils;
+import com.zhongan.devpilot.util.OkhttpUtils;
+import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 import com.zhongan.devpilot.webview.model.RecallModel;
-import okhttp3.*;
-import okhttp3.sse.EventSource;
-
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
+
+import org.apache.commons.lang3.StringUtils;
+
+import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
 import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_HOST;
