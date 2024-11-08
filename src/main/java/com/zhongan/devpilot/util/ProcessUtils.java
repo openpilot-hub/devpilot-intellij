@@ -1,12 +1,16 @@
 package com.zhongan.devpilot.util;
 
 import com.intellij.openapi.diagnostic.Logger;
+import com.zhongan.devpilot.agents.BinaryManager;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static com.zhongan.devpilot.agents.BinaryManager.EXECUTABLE_NAME;
 
 public class ProcessUtils {
     private static final Logger log = Logger.getInstance(ProcessUtils.class);
@@ -69,7 +73,7 @@ public class ProcessUtils {
     }
 
     public static List<Long> findDevPilotAgentPidList() {
-        return getPidListFromName("devpilot-agents");
+        return getPidListFromName(BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
     }
 
     private static boolean isProcessIdRunning(long pid, String command) {
@@ -147,7 +151,7 @@ public class ProcessUtils {
 
             String strLine;
             while ((strLine = bReader.readLine()) != null) {
-                if (strLine.contains("devpilot-agents")) {
+                if (strLine.contains(EXECUTABLE_NAME)) {
                     String[] outputs = strLine.trim().split("\\s+");
                     if (outputs.length > 0) {
                         try {
@@ -179,7 +183,7 @@ public class ProcessUtils {
             String strLine;
             while ((strLine = bReader.readLine()) != null) {
                 log.info("windows get pid output:" + strLine);
-                if (strLine.contains("devpilot-agents")) {
+                if (strLine.contains(EXECUTABLE_NAME)) {
                     String[] outputs = strLine.trim().split("[\\s\t]+");
                     if (outputs.length > 0) {
                         try {

@@ -49,15 +49,15 @@ public class AgentsRunner {
 
     public void writeInfoFile(File homeDir, List<Long> pids, int port) {
         if (homeDir != null) {
-            File infoFile = new File(homeDir, ".info");
+            File infoFile = new File(homeDir, BinaryManager.INSTANCE.getIdeInfoPath());
             try (FileWriter writer = new FileWriter(infoFile)) {
                 writer.write(port + System.lineSeparator());
                 for (Long pid : pids) {
                     writer.write(pid + System.lineSeparator());
                 }
-                LOG.info(String.format("Write .info file to %s with port %s success.", homeDir.getName(), port));
+                LOG.info(String.format("Write info file to %s with port %s success.", homeDir.getName(), port));
             } catch (IOException e) {
-                LOG.warn(String.format("Failed to write .info file: %s.", homeDir.getName()), e);
+                LOG.warn(String.format("Failed to write info file: %s.", homeDir.getName()), e);
             }
         }
     }

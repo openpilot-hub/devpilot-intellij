@@ -4,6 +4,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.util.Pair;
 import com.intellij.openapi.util.SystemInfo;
 import com.intellij.util.system.CpuArch;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
 import com.zhongan.devpilot.util.ProcessUtils;
 
@@ -15,8 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -35,10 +37,27 @@ public class BinaryManager {
 
     public static final BinaryManager INSTANCE = new BinaryManager();
 
-    public static final String COMPATIBLE_ARCH;
+    private static final String COMPATIBLE_ARCH;
+
+    private static final Map<String, String> IDE_INFO_MAP = new HashMap<>();
+
+    public static final String EXECUTABLE_NAME = "devpilot-agents";
 
     static {
         COMPATIBLE_ARCH = String.format("%s_%s", getSystemArch(), getPlatformName());
+        IDE_INFO_MAP.put("type", DevPilotVersion.getVersionName().replace(" ", "_"));
+    }
+
+    public String getIdeInfoPath() {
+        return "." + IDE_INFO_MAP.get("type") + "info";
+    }
+
+    public String getVersion() {
+        return IDE_INFO_MAP.get("version");
+    }
+
+    public String getCompatibleArch() {
+        return COMPATIBLE_ARCH;
     }
 
     @Contract(pure = true)
@@ -65,14 +84,11 @@ public class BinaryManager {
     }
 
     public synchronized void postProcessBeforeRunning(File homeDir) throws Exception {
-        findProcessAndKill(homeDir);
-
         File binaryRoot = getBinaryRoot(homeDir);
         if (null == binaryRoot) {
             LOG.warn("Exception occurred while creating binary root.");
             return;
         }
-
         initBinary(binaryRoot);
     }
 
@@ -86,6 +102,9 @@ public class BinaryManager {
             }
 
             File versionDir = archDir.getParentFile();
+            IDE_INFO_MAP.put("version", versionDir.getName());
+
+            findProcessAndKill(homeDir);
 
             File targetDir = new File(homeDir, versionDir.getName());
             if (targetDir.exists()) {
@@ -116,7 +135,7 @@ public class BinaryManager {
     public Pair<Integer, Long> retrieveAlivePort() {
         File homeDir = getHomeDir();
         if (homeDir != null) {
-            File infoFile = new File(homeDir, ".info");
+            File infoFile = new File(homeDir, getIdeInfoPath());
             if (infoFile.exists()) {
                 return checkInfoFile(infoFile);
             }
@@ -134,6 +153,7 @@ public class BinaryManager {
     private void findProcessAndKill(File homeDir) {
         Pair<Integer, Long> infoPair = readProcessInfoFile(homeDir);
         if (infoPair != null && infoPair.second != null) {
+            LOG.info(String.format("Try to kill process: %s.", infoPair.second));
             killProcessAndDeleteInfoFile(infoPair.second);
         } else {
             LOG.info("Pid not exist when trying to kill process, skip process killing");
@@ -142,7 +162,7 @@ public class BinaryManager {
 
     private Pair<Integer, Long> readProcessInfoFile(File homeDir) {
         int maxRetryTimes = NumberUtils.INTEGER_ONE;
-        File infoFile = new File(homeDir, ".info");
+        File infoFile = new File(homeDir, getIdeInfoPath());
         for (int i = 0; i < maxRetryTimes; i++) {
             Pair<Integer, Long> infoPair = checkInfoFile(infoFile);
             if (infoPair != null) {
@@ -152,7 +172,7 @@ public class BinaryManager {
             try {
                 Thread.sleep(1000L);
             } catch (InterruptedException e) {
-                LOG.info("Thread sleep is interrupted when waiting for .info file");
+                LOG.info("Thread sleep is interrupted when waiting for info file");
             }
 
             if (shouldExtendRetries(i, maxRetryTimes)) {
@@ -186,13 +206,13 @@ public class BinaryManager {
     private void deleteInfoFile() {
         File homeDir = this.getHomeDir();
         if (homeDir != null) {
-            File infoFile = new File(homeDir, ".info");
+            File infoFile = new File(homeDir, getIdeInfoPath());
             if (infoFile.exists()) {
                 try {
                     infoFile.delete();
-                    LOG.info("Delete .info file success.");
+                    LOG.info("Delete info file success.");
                 } catch (Exception e) {
-                    LOG.warn("Delete .info file encountered exception", e);
+                    LOG.warn("Delete info file encountered exception", e);
                 }
             }
         }
@@ -207,14 +227,14 @@ public class BinaryManager {
 
                     int port = Integer.parseInt(lines[0]);
                     Long pid = Long.valueOf(lines[1]);
-                    LOG.debug("Read.info file get port:" + port + ", pid:" + pid);
+                    LOG.debug("Read info file get port:" + port + ", pid:" + pid);
                     return new Pair<>(port, pid);
                 }
 
-                LOG.debug(".info file is empty, check failed");
+                LOG.debug("info file is empty, check failed");
                 return null;
             } catch (Throwable e) {
-                LOG.warn("Error occurred while checking .info file.", e);
+                LOG.warn("Error occurred while checking info file.", e);
             }
         }
         return null;
@@ -269,12 +289,13 @@ public class BinaryManager {
     }
 
     private String getDefaultBinaryPath(File root) {
-        Optional<File> latestDir = Arrays.stream(Optional.ofNullable(root.listFiles()).orElse(new File[]{}))
+        Optional<File> versionDir = Arrays.stream(Optional.ofNullable(root.listFiles()).orElse(new File[]{}))
                 .filter(File::isDirectory)
-                .max(Comparator.comparingLong(File::lastModified));
+                .filter(dir -> dir.getName().equals(IDE_INFO_MAP.get("version")))
+                .findFirst();
 
-        if (latestDir.isPresent()) {
-            String dirName = latestDir.get().getName();
+        if (versionDir.isPresent()) {
+            String dirName = versionDir.get().getName();
             checkBinaryPermissions(root, dirName);
             return getBinaryVersionPath(root, dirName);
         } else {
@@ -301,7 +322,7 @@ public class BinaryManager {
     }
 
     private static String getExecutableName() {
-        return SystemInfo.isWindows ? "devpilot-agents.exe" : "devpilot-agents";
+        return SystemInfo.isWindows ? EXECUTABLE_NAME + ".exe" : EXECUTABLE_NAME;
     }
 
     private File unZipBinary(String destDirPath) throws Exception {
