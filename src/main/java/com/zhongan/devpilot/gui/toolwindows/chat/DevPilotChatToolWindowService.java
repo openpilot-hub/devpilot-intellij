@@ -160,7 +160,7 @@ public final class DevPilotChatToolWindowService {
                     var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
 
                     FileAnalyzeProviderFactory.getProvider(language)
-                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, data);
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, newMap);
 
                     if (rag.localRag != null) {
                         localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(rag.localRag, EditorActionEnum.getEnumByName(msgType));
