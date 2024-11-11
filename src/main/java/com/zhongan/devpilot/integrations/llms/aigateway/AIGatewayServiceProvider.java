@@ -181,7 +181,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         try {
             return parseCompletionsResult(chatCompletionRequest, response);
-        } catch (IOException e) {
+        } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
@@ -356,7 +356,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         try {
             return parseCompletionsResult(chatCompletionRequest, response);
-        } catch (IOException e) {
+        } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
