@@ -157,7 +157,8 @@ public final class DevPilotChatToolWindowService {
 
             if (rag != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    var language = messageModel.getCodeRef() == null ?
+                            DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
 
                     FileAnalyzeProviderFactory.getProvider(language)
                             .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, newMap);
@@ -227,7 +228,8 @@ public final class DevPilotChatToolWindowService {
 
             if (rag != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    var language = messageModel.getCodeRef() == null ?
+                            DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
 
                     FileAnalyzeProviderFactory.getProvider(language)
                             .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, data);
