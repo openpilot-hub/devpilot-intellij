@@ -40,4 +40,12 @@ public class JsonUtils {
             return null;
         }
     }
+
+    public static String fixJson(String json) {
+        int index = json.indexOf("{");
+        if (index != 0) {
+            json = json.substring(index);
+        }
+        return json;
+    }
 }
