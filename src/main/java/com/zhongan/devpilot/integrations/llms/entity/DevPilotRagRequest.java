@@ -9,6 +9,8 @@ public class DevPilotRagRequest {
 
     private String projectName;
 
+    private String predictionComments;
+
     public String getProjectType() {
         return projectType;
     }
@@ -39,5 +41,13 @@ public class DevPilotRagRequest {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public String getPredictionComments() {
+        return predictionComments;
+    }
+
+    public void setPredictionComments(String predictionComments) {
+        this.predictionComments = predictionComments;
     }
 }

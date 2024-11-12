@@ -287,10 +287,10 @@ public final class DevPilotChatToolWindowService {
                 MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "CODE_PREDICTION", content, dataMap));
         devPilotChatCompletionRequest.setStream(Boolean.FALSE);
         var response = this.llmProvider.codePrediction(devPilotChatCompletionRequest);
-        if (!response.isSuccessful()) {
+        if (!response.isSuccessful() || response.getContent() == null) {
             return null;
         }
-        return JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
+        return JsonUtils.fromJson(JsonUtils.fixJson(response.getContent()), DevPilotCodePrediction.class);
     }
 
     private Rag callRag(DevPilotCodePrediction codePredict, CodeReferenceModel codeReference, String message) {
@@ -321,6 +321,10 @@ public final class DevPilotChatToolWindowService {
 
             // calculate md5 of project path as unique id
             request.setProjectName(getProjectPathString());
+
+            if (codePredict != null) {
+                request.setPredictionComments(codePredict.getComments());
+            }
 
             var response = this.llmProvider.ragCompletion(request);
 
