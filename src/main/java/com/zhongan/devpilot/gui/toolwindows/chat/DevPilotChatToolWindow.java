@@ -124,7 +124,8 @@ public class DevPilotChatToolWindow {
                     var uuid = UUID.randomUUID().toString();
 
                     var message = service.getUserContentCode(messageModel);
-                    var userMessageModel = MessageModel.buildCodeMessage(uuid, time, message.getContent(), username, message.getCodeRef());
+                    var userMessageModel = MessageModel.buildCodeMessage(
+                            uuid, time, message.getContent(), username, message.getCodeRef(), message.getMode());
 
                     var data = new HashMap<String, String>();
 
@@ -242,7 +243,7 @@ public class DevPilotChatToolWindow {
                         return new JBCefJSQuery.Response("error");
                     }
 
-                    service.handleActions(messageModel.getCodeRef(), codeActionMap.get(command), null);
+                    service.handleActions(messageModel.getCodeRef(), codeActionMap.get(command), null, messageModel.getMode());
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CopyCode": {

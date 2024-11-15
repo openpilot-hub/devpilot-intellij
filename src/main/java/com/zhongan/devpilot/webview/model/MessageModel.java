@@ -24,8 +24,13 @@ public class MessageModel {
 
     private RecallModel recall;
 
+    /**
+     * 模式，无值则为不带上下文，with-context则为开启上下文
+     */
+    private String mode;
+
     public static MessageModel buildCodeMessage(String id, Long time, String content,
-                                                String username, CodeReferenceModel codeReference) {
+                                                String username, CodeReferenceModel codeReference, String mode) {
         MessageModel messageModel = new MessageModel();
         messageModel.setId(id);
         messageModel.setTime(time);
@@ -35,11 +40,12 @@ public class MessageModel {
         messageModel.setAvatar(null);
         messageModel.setStreaming(false);
         messageModel.setCodeRef(codeReference);
+        messageModel.setMode(mode);
         return messageModel;
     }
 
     public static MessageModel buildUserMessage(String id, Long time, String content, String username) {
-        return buildCodeMessage(id, time, content, username, null);
+        return buildCodeMessage(id, time, content, username, null, null);
     }
 
     public static MessageModel buildInfoMessage(String content) {
@@ -154,5 +160,13 @@ public class MessageModel {
 
     public void setRecall(RecallModel recall) {
         this.recall = recall;
+    }
+
+    public String getMode() {
+        return mode;
+    }
+
+    public void setMode(String mode) {
+        this.mode = mode;
     }
 }

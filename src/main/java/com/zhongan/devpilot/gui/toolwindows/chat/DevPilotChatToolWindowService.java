@@ -105,11 +105,10 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        // todo normal chat should be used in some case
-//        if (messageModel.getCodeRef() == null) {
-//            normalChat(sessionType, msgType, data, message, callback, messageModel);
-//            return;
-//        }
+        if (StringUtils.isEmpty(messageModel.getMode())) {
+            normalChat(sessionType, msgType, data, message, callback, messageModel);
+            return;
+        }
 
         smartChat(sessionType, msgType, data, message, callback, messageModel);
     }
@@ -184,11 +183,10 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        // todo normal chat should be used in some case
-//        if (messageModel.getCodeRef() == null) {
-//            regenerateNormalChat(messageModel, callback);
-//            return;
-//        }
+        if (StringUtils.isEmpty(messageModel.getMode())) {
+            regenerateNormalChat(messageModel, callback);
+            return;
+        }
 
         regenerateSmartChat(messageModel, callback);
     }
@@ -307,6 +305,11 @@ public final class DevPilotChatToolWindowService {
             // call local rag
             if (codePredict != null) {
                 localRag = FileAnalyzeProviderFactory.getProvider(language).callLocalRag(project, codePredict);
+            }
+
+            // menu action will not call remote rag
+            if (codeReference != null && codeReference.getType() != null) {
+                return new Rag(localRag, null);
             }
 
             // call remote rag
@@ -515,7 +518,8 @@ public final class DevPilotChatToolWindowService {
         regenerateChat(lastMessage, null);
     }
 
-    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement) {
+    // called by ide
+    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement, String mode) {
         ActionManager actionManager = ActionManager.getInstance();
         BasicEditorAction myAction = (BasicEditorAction) actionManager
                 .getAction(DevPilotMessageBundle.get(actionEnum.getLabel()));
@@ -525,13 +529,14 @@ public final class DevPilotChatToolWindowService {
                 BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
-            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement, null);
+            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement, null, mode);
         });
     }
 
-    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement) {
+    // called by web view
+    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement, String mode) {
         if (codeReferenceModel == null || StringUtils.isEmpty(codeReferenceModel.getSourceCode())) {
-            handleActions(actionEnum, psiElement);
+            handleActions(actionEnum, psiElement, mode);
             return;
         }
 
@@ -544,7 +549,7 @@ public final class DevPilotChatToolWindowService {
                 BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
-            myAction.fastAction(project, editor, codeReferenceModel.getSourceCode(), psiElement, codeReferenceModel);
+            myAction.fastAction(project, editor, codeReferenceModel.getSourceCode(), psiElement, codeReferenceModel, mode);
         });
     }
 

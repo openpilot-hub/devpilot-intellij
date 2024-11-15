@@ -61,7 +61,7 @@ public class PopupMenuEditorActionGroupUtil {
             defaultActions.forEach((label) -> {
                 var action = new BasicEditorAction(DevPilotMessageBundle.get(label), DevPilotMessageBundle.get(label), ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
-                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel) {
+                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel, String mode) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
                         var editorActionEnum = EditorActionEnum.getEnumByLabel(label);
@@ -117,7 +117,7 @@ public class PopupMenuEditorActionGroupUtil {
                         }
 
                         var codeMessage = MessageModel.buildCodeMessage(
-                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel);
+                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel, mode);
 
                         FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
                                 .buildChatDataMap(project, psiElement, codeReferenceModel, data);
