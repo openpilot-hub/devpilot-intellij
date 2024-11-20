@@ -232,8 +232,13 @@ public final class DevPilotChatToolWindowService {
                     FileAnalyzeProviderFactory.getProvider(language)
                             .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, data);
 
+                    EditorActionEnum type = null;
+                    if (messageModel.getCodeRef() != null) {
+                        type = messageModel.getCodeRef().getType();
+                    }
+
                     if (rag.localRag != null) {
-                        localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(rag.localRag, messageModel.getCodeRef().getType());
+                        localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(rag.localRag, type);
                     }
 
                     if (rag.remoteRag != null) {
