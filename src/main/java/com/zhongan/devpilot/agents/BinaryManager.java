@@ -6,6 +6,7 @@ import com.intellij.openapi.util.SystemInfo;
 import com.intellij.util.system.CpuArch;
 import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
+import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.ProcessUtils;
 
 import java.io.File;
@@ -22,6 +23,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
+
+import okhttp3.Call;
+import okhttp3.Request;
+
+import okhttp3.Response;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileExistsException;
@@ -42,6 +48,8 @@ public class BinaryManager {
     private static final Map<String, String> IDE_INFO_MAP = new HashMap<>();
 
     public static final String EXECUTABLE_NAME = "devpilot-agents";
+
+    private volatile Integer currentPort;
 
     static {
         COMPATIBLE_ARCH = String.format("%s_%s", getSystemArch(), getPlatformName());
@@ -70,7 +78,12 @@ public class BinaryManager {
             LOG.warn("Failed to create home directory." + homeDir.getName());
             return null;
         } else {
-            return homeDir;
+            File realHomeDir = new File(homeDir, IDE_INFO_MAP.get("type"));
+            if (!realHomeDir.exists() && !realHomeDir.mkdirs()) {
+                LOG.warn("Failed to create home directory." + realHomeDir.getName());
+                return null;
+            }
+            return realHomeDir;
         }
     }
 
@@ -83,28 +96,86 @@ public class BinaryManager {
         }
     }
 
-    public synchronized void postProcessBeforeRunning(File homeDir) throws Exception {
+
+    public synchronized boolean postProcessBeforeRunning(File homeDir) throws Exception {
         File binaryRoot = getBinaryRoot(homeDir);
         if (null == binaryRoot) {
             LOG.warn("Exception occurred while creating binary root.");
-            return;
+            return false;
         }
-        initBinary(binaryRoot);
+        boolean initRes = initBinary(binaryRoot);
+        if (!initRes) {
+            LOG.warn("Exception occurred while init binary.");
+            return false;
+        }
+        return true;
     }
 
-    public void initBinary(File homeDir) throws Exception {
+    public synchronized AgentCheckResult checkIfAgentRunning(File homeDir) {
+        Pair<Integer, Long> infoPair = readProcessInfoFile(homeDir);
+        if (infoPair != null && infoPair.second != null) {
+            if (agentAvailable(infoPair.first, infoPair.second)) {
+                LOG.info(String.format("Finding agent is running on port: [%s], pid: [%s]", infoPair.first, infoPair.second));
+                return new AgentCheckResult(true, infoPair.second, infoPair.first);
+            }
+        }
+        return new AgentCheckResult(false, null, null);
+    }
+
+    private boolean agentAvailable(Integer port, Long pid) {
+        if (port == null || pid == null) {
+            return false;
+        }
+        boolean isRunning = ProcessUtils.isProcessAlive(pid);
+        if (!isRunning) {
+            return false;
+        }
+        // Create a URL connection to the health endpoint
+        try {
+            Request request = new Request.Builder().url("http://localhost:" + port + "/health").get().build();
+            Call call = OkhttpUtils.getClient().newCall(request);
+            Response response = call.execute();
+            isRunning = response.isSuccessful();
+        } catch (Exception e) {
+            LOG.warn("Failed to check agent health", e);
+            return false;
+        }
+        return isRunning;
+    }
+
+    public synchronized void clearDataBefore(String oldHomePath) {
+        try {
+            LOG.info("Clearing old homePath data:" + oldHomePath);
+            File oldHomeDir = new File(oldHomePath);
+            if (!oldHomeDir.exists()) {
+                return;
+            }
+            // kill old process
+            File oldInfoFile = new File(oldHomeDir, IDE_INFO_MAP.get("type") + File.separator + getIdeInfoPath());
+            if (oldInfoFile.exists()) {
+                Pair<Integer, Long> oldPortAndPid = checkInfoFile(oldInfoFile);
+                if (oldPortAndPid != null) {
+                    killOldProcess(oldPortAndPid.second);
+                }
+            }
+            FileUtils.deleteDirectory(oldHomeDir);
+        } catch (IOException e) {
+            LOG.warn("Failed to clear old home path data", e);
+        }
+    }
+
+
+    public boolean initBinary(File homeDir) throws Exception {
         File zipTmpDir = new File(System.getProperty("java.io.tmpdir"), String.format("devpilot_%d", System.currentTimeMillis()));
         try {
             File archDir = unZipBinary(zipTmpDir.getAbsolutePath());
             if (archDir == null || !archDir.exists()) {
                 LOG.warn("Fail to unzip binary for " + COMPATIBLE_ARCH);
-                return;
+                return false;
             }
 
             File versionDir = archDir.getParentFile();
             IDE_INFO_MAP.put("version", versionDir.getName());
-
-            findProcessAndKill(homeDir);
 
             File targetDir = new File(homeDir, versionDir.getName());
             if (targetDir.exists()) {
@@ -130,9 +201,13 @@ public class BinaryManager {
                 LOG.warn("Error occurred while deleting file.", ex);
             }
         }
+        return true;
     }
 
     public Pair<Integer, Long> retrieveAlivePort() {
+        if (currentPort != null) {
+            return new Pair<>(currentPort, 0L);
+        }
         File homeDir = getHomeDir();
         if (homeDir != null) {
             File infoFile = new File(homeDir, getIdeInfoPath());
@@ -143,6 +218,10 @@ public class BinaryManager {
         return null;
     }
 
+    public void setCurrentPort(Integer port) {
+        this.currentPort = port;
+    }
+
     public void findProcessAndKill() {
         File homeDir = getHomeDir();
         if (null != homeDir) {
@@ -150,14 +229,23 @@ public class BinaryManager {
         }
     }
 
-    private void findProcessAndKill(File homeDir) {
+
+    public void findProcessAndKill(File homeDir) {
         Pair<Integer, Long> infoPair = readProcessInfoFile(homeDir);
         if (infoPair != null && infoPair.second != null) {
             LOG.info(String.format("Try to kill process: %s.", infoPair.second));
-            killProcessAndDeleteInfoFile(infoPair.second);
+            killProcessAndDeleteInfoFile(infoPair.second, true);
         } else {
             LOG.info("Pid not exist when trying to kill process, skip process killing");
         }
+    }
+
+    public void killOldProcess(Long pid) {
+        if (pid == null) {
+            return;
+        }
+        LOG.info(String.format("Start to kill old process: %s.", pid));
+        killProcessAndDeleteInfoFile(pid, false);
     }
 
     private Pair<Integer, Long> readProcessInfoFile(File homeDir) {
@@ -194,13 +282,14 @@ public class BinaryManager {
         return maxRetryTimes * 3;
     }
 
-    private void killProcessAndDeleteInfoFile(Long pid) {
+    private void killProcessAndDeleteInfoFile(Long pid, boolean needDel) {
         if (pid > 0L && ProcessUtils.isProcessAlive(pid)) {
             LOG.info(String.format("Try to kill %d.", pid));
             ProcessUtils.killProcess(pid);
         }
-
-        this.deleteInfoFile();
+        if (needDel) {
+            this.deleteInfoFile();
+        }
     }
 
     private void deleteInfoFile() {
@@ -396,6 +485,10 @@ public class BinaryManager {
         return arch;
     }
 
+    public String getIdeType() {
+        return IDE_INFO_MAP.get("type");
+    }
+
     private static String getPlatformName() {
         String platform;
         if (SystemInfo.isWindows) {
@@ -410,6 +503,34 @@ public class BinaryManager {
             platform = "linux";
         }
         return platform;
+    }
+
+    public static class AgentCheckResult {
+
+        private final boolean isRunning;
+
+        private final Long pid;
+
+        private final Integer port;
+
+        public AgentCheckResult(boolean isRunning, Long pid, Integer port) {
+            this.isRunning = isRunning;
+            this.pid = pid;
+            this.port = port;
+        }
+
+        public boolean isRunning() {
+            return isRunning;
+        }
+
+        public Long getPid() {
+            return pid;
+        }
+
+        public Integer getPort() {
+            return port;
+        }
+
     }
 
 }

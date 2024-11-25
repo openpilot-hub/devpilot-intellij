@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.options.Configurable;
 import com.intellij.openapi.options.ConfigurationException;
 import com.intellij.openapi.util.NlsContexts;
+import com.intellij.openapi.util.Pair;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
 import com.zhongan.devpilot.agents.AgentsRunner;
 import com.zhongan.devpilot.agents.BinaryManager;
@@ -121,9 +122,19 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
 
         try {
-            BinaryManager.INSTANCE.findProcessAndKill();
-            personalAdvancedSettings.setLocalStorage(localStoragePath);
-            AgentsRunner.INSTANCE.run();
+            if (!settingsComponent.getLocalStoragePath().equals(personalAdvancedSettings.getLocalStorage())) {
+                String oldPath = personalAdvancedSettings.getLocalStorage();
+                boolean shouldClearData = !StringUtils.startsWith(localStoragePath, oldPath);
+                Pair<Integer, Long> integerLongPair = BinaryManager.INSTANCE.retrieveAlivePort();
+                if (integerLongPair != null) {
+                    BinaryManager.INSTANCE.setCurrentPort(integerLongPair.first);
+                }
+                personalAdvancedSettings.setLocalStorage(localStoragePath);
+                boolean success = AgentsRunner.INSTANCE.run(true);
+                if (success && shouldClearData) {
+                    BinaryManager.INSTANCE.clearDataBefore(oldPath);
+                }
+            }
         } catch (Exception e) {
             LOG.warn("Error occurred while running agents.", e);
         }
