@@ -42,6 +42,12 @@ public class JsonUtils {
     }
 
     public static String fixJson(String json) {
+        String jsonWithoutMarkdown = MarkdownUtil.extractContents(json);
+
+        if (jsonWithoutMarkdown != null) {
+            return jsonWithoutMarkdown;
+        }
+
         int index = json.indexOf("{");
         if (index != 0) {
             json = json.substring(index);
