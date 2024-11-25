@@ -159,7 +159,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
         String localStorage = personalAdvancedSettings.getLocalStorage();
-        settingsComponent.setLocalStoragePath(StringUtils.defaultString(localStorage, BinaryManager.INSTANCE.getHomeDir().getAbsolutePath()));
+        settingsComponent.setLocalStoragePath(StringUtils.defaultString(localStorage, BinaryManager.INSTANCE.getDefaultHomePath().toFile().getAbsolutePath()));
 
         CompletionSettingsState completionSettings = CompletionSettingsState.getInstance();
         settingsComponent.setCompletionEnabled(completionSettings.getEnable());
