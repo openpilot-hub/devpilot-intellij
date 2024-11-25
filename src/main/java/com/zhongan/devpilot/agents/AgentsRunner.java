@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -17,14 +20,24 @@ public class AgentsRunner {
 
     public static final AgentsRunner INSTANCE = new AgentsRunner();
 
-    public synchronized boolean run() throws Exception {
+    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+
+    public synchronized boolean run(boolean force) throws Exception {
         File homeDir = BinaryManager.INSTANCE.getHomeDir();
         if (homeDir == null) {
             LOG.warn("Home dir is null, skip running DevPilot-Agents.");
             return false;
         }
-        BinaryManager.INSTANCE.postProcessBeforeRunning(homeDir);
-
+        BinaryManager.AgentCheckResult checkRes = BinaryManager.INSTANCE.checkIfAgentRunning(homeDir);
+        if (!force && checkRes.isRunning()) {
+            LOG.info("Skip running DevPilot-Agents for already running.");
+            return true;
+        }
+        boolean processRes = BinaryManager.INSTANCE.postProcessBeforeRunning(homeDir);
+        if (!processRes) {
+            LOG.info("Skip running DevPilot-Agents for failure of init binary.");
+            return false;
+        }
         int port = getAvailablePort();
         List<String> commands = createCommand(BinaryManager.INSTANCE.getBinaryPath(homeDir), port);
         ProcessBuilder builder = new ProcessBuilder(commands);
@@ -34,8 +47,16 @@ public class AgentsRunner {
         boolean aliveFlag = process.isAlive();
         if (aliveFlag) {
             writeInfoFile(homeDir, ProcessUtils.findDevPilotAgentPidList(), port);
+            BinaryManager.INSTANCE.setCurrentPort(port);
+        }
+        if (aliveFlag && checkRes.isRunning()) {
+            executorService.schedule(() -> BinaryManager.INSTANCE.killOldProcess(checkRes.getPid()), 30, TimeUnit.SECONDS);
         }
         return aliveFlag;
+    }
+
+    public synchronized boolean run() throws Exception {
+       return run(false);
     }
 
     private int getAvailablePort() {
