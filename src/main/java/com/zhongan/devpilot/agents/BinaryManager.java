@@ -72,18 +72,22 @@ public class BinaryManager {
     private BinaryManager() {
     }
 
+    public Path getDefaultHomePath() {
+        return Paths.get(getUserHome(), ".DevPilot");
+    }
+
     public File getHomeDir() {
         File homeDir = getHomeDirectory().toFile();
         if (!homeDir.exists() && !homeDir.mkdirs()) {
-            LOG.warn("Failed to create home directory." + homeDir.getName());
+            LOG.warn("Failed to create parent home directory." + homeDir.getName());
             return null;
         } else {
-            File realHomeDir = new File(homeDir, IDE_INFO_MAP.get("type"));
-            if (!realHomeDir.exists() && !realHomeDir.mkdirs()) {
-                LOG.warn("Failed to create home directory." + realHomeDir.getName());
+            File finalHomeDir = new File(homeDir, IDE_INFO_MAP.get("type"));
+            if (!finalHomeDir.exists() && !finalHomeDir.mkdirs()) {
+                LOG.warn("Failed to create final home directory." + finalHomeDir.getName());
                 return null;
             }
-            return realHomeDir;
+            return finalHomeDir;
         }
     }
 
@@ -369,7 +373,7 @@ public class BinaryManager {
                 return Paths.get(localStoragePath);
             }
         }
-        return Paths.get(getUserHome(), ".DevPilot");
+        return getDefaultHomePath();
     }
 
     private File getBinaryRoot(@NotNull File workDirectory) {
