@@ -18,6 +18,10 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
 
     public void projectOpened(@NotNull Project project) {
         try {
+            Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
+            if (openProjects.length == 1) {
+                BinaryManager.INSTANCE.findProcessAndKill();
+            }
             AgentsRunner.INSTANCE.run();
         } catch (Exception e) {
             LOG.warn("Error occurred while running agents.", e);
