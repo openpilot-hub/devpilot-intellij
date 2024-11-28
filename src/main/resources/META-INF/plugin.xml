@@ -9,6 +9,15 @@
     <version>2.6.0</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.7.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Accept completion by a single line</li>
+        </ul>
+        <h2>Enhancements</h2>
+        <ul>
+          <li>Handle more case for different LLMs</li>
+        </ul>
         <h1>Release 2.6.0</h1>
         <h2>New Features</h2>
         <ul>
