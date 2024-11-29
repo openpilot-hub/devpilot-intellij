@@ -24,11 +24,6 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
-import okhttp3.Call;
-import okhttp3.Request;
-
-import okhttp3.Response;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FileExistsException;
 import org.apache.commons.io.FileUtils;
@@ -37,6 +32,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
+
+import okhttp3.Call;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class BinaryManager {
     private static final Logger LOG = Logger.getInstance(BinaryManager.class);
@@ -99,7 +98,6 @@ public class BinaryManager {
             return getDefaultBinaryPath(root);
         }
     }
-
 
     public synchronized boolean postProcessBeforeRunning(File homeDir) throws Exception {
         File binaryRoot = getBinaryRoot(homeDir);
@@ -168,7 +166,6 @@ public class BinaryManager {
         }
     }
 
-
     public boolean initBinary(File homeDir) throws Exception {
         File zipTmpDir = new File(System.getProperty("java.io.tmpdir"), String.format("devpilot_%d", System.currentTimeMillis()));
         try {
@@ -232,7 +229,6 @@ public class BinaryManager {
             findProcessAndKill(homeDir);
         }
     }
-
 
     public void findProcessAndKill(File homeDir) {
         Pair<Integer, Long> infoPair = readProcessInfoFile(homeDir);
