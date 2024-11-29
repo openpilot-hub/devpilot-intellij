@@ -14,6 +14,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRespo
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
@@ -261,5 +263,10 @@ public final class TrialServiceProvider implements LlmProvider {
         } catch (Exception e) {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
         }
+    }
+
+    @Override
+    public List<DevPilotRagResponse> ragCompletion(DevPilotRagRequest ragRequest) {
+        return null;
     }
 }

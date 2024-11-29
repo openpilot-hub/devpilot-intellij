@@ -12,6 +12,7 @@ import com.intellij.psi.codeStyle.CodeStyleManager;
 import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefBrowserBase;
 import com.intellij.ui.jcef.JBCefJSQuery;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
@@ -46,6 +47,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefLoadHandler;
 import org.cef.network.CefRequest;
 
+import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
 
 public class DevPilotChatToolWindow {
@@ -122,7 +124,8 @@ public class DevPilotChatToolWindow {
                     var uuid = UUID.randomUUID().toString();
 
                     var message = service.getUserContentCode(messageModel);
-                    var userMessageModel = MessageModel.buildCodeMessage(uuid, time, message.getContent(), username, message.getCodeRef());
+                    var userMessageModel = MessageModel.buildCodeMessage(
+                            uuid, time, message.getContent(), username, message.getCodeRef(), message.getMode());
 
                     var data = new HashMap<String, String>();
 
@@ -133,6 +136,11 @@ public class DevPilotChatToolWindow {
                             FileAnalyzeProviderFactory.getProvider(message.getCodeRef().getLanguageId())
                                     .buildChatDataMap(project, null, message.getCodeRef(), data);
                         });
+                    } else {
+                        var language = DevPilotVersion.getDefaultLanguage();
+                        if (language != null) {
+                            data.put(LANGUAGE, language);
+                        }
                     }
 
                     service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", data, message.getContent(), null, userMessageModel);
@@ -235,7 +243,7 @@ public class DevPilotChatToolWindow {
                         return new JBCefJSQuery.Response("error");
                     }
 
-                    service.handleActions(messageModel.getCodeRef(), codeActionMap.get(command), null);
+                    service.handleActions(messageModel.getCodeRef(), codeActionMap.get(command), null, messageModel.getMode());
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CopyCode": {

@@ -7,6 +7,8 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionReque
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
@@ -43,6 +45,8 @@ public interface LlmProvider {
     DevPilotMessage instructCompletion(DevPilotInstructCompletionRequest instructCompletionRequest);
 
     DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest);
+
+    List<DevPilotRagResponse> ragCompletion(DevPilotRagRequest ragRequest);
 
     void interruptSend();
 

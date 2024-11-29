@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.util;
 
 import com.intellij.openapi.command.WriteCommandAction;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.fileEditor.FileEditorManager;
@@ -32,6 +33,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class NewFileUtils {
+    private static final Logger LOG = Logger.getInstance(NewFileUtils.class);
+
     public static void createNewFile(Project project, String generatedText, CodeReferenceModel codeReferenceModel, String lang) {
         String fileExtension = StringUtils.isEmpty(lang) ? ".java" : MarkdownUtil.getFileExtensionFromLanguage(lang);
 
@@ -182,7 +185,9 @@ public class NewFileUtils {
         try {
             Files.createDirectories(Paths.get(dirPath));
         } catch (IOException e) {
-            DevPilotNotification.error(DevPilotMessageBundle.get("devpilot.notification.create.dir.failed"));
+            String message = DevPilotMessageBundle.get("devpilot.notification.create.dir.failed");
+            DevPilotNotification.error(message);
+            LOG.warn(message, e);
         }
         VirtualFile dirVF = LocalFileSystem.getInstance().refreshAndFindFileByPath(dirPath);
         return dirVF == null ? null : PsiDirectoryFactory.getInstance(project).createDirectory(dirVF);

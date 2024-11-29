@@ -40,6 +40,10 @@ public class DefaultConst {
 
     public static final String OFFICIAL_WEBSITE_URL = ConfigBundleUtils.getConfig("devpilot.official.website.host", "http://localhost:8085");
 
+    public static final String REMOTE_RAG_DEFAULT_HOST = ConfigBundleUtils.getConfig("devpilot.remote.rag.host", "http://localhost") + ":";
+
+    public static final String REMOTE_RAG_DEFAULT_PATH = "/rag";
+
     public static final String FEEDBACK_URL = OFFICIAL_WEBSITE_URL + "/feedback";
 
     public static final String PROFILE_URL = OFFICIAL_WEBSITE_URL + "/profile";

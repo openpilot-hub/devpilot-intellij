@@ -12,6 +12,7 @@ import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JComponent;
@@ -31,7 +32,13 @@ public class DevPilotSettingsComponent {
 
     private Integer index;
 
+    private ComboBox<String> languageComboBox;
+
     private Integer methodInlayPresentationDisplayIndex;
+
+    private ComboBox<String> methodInlayPresentationDisplayComboBox;
+
+    private final JBTextField localStorageField;
 
     public DevPilotSettingsComponent(DevPilotSettingsConfigurable devPilotSettingsConfigurable, DevPilotLlmSettingsState settings) {
         fullNameField = new JBTextField(settings.getFullName(), 20);
@@ -50,6 +57,9 @@ public class DevPilotSettingsComponent {
         methodInlayPresentationDisplayIndex = ChatShortcutSettingState.getInstance().getDisplayIndex();
         Integer inlayPresentationDisplayIndex = ChatShortcutSettingState.getInstance().getDisplayIndex();
 
+        var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
+        localStorageField = new JBTextField(personalAdvancedSettings.getLocalStorage(), 20);
+
         mainPanel = FormBuilder.createFormBuilder()
                 .addComponent(UI.PanelFactory.panel(fullNameField)
                         .withLabel(DevPilotMessageBundle.get("devpilot.setting.displayNameFieldLabel"))
@@ -57,6 +67,10 @@ public class DevPilotSettingsComponent {
                         .createPanel())
                 .addComponent(createLanguageSectionPanel(languageIndex))
                 .addComponent(createMethodShortcutDisplayModeSectionPanel(inlayPresentationDisplayIndex))
+                .addComponent(UI.PanelFactory.panel(localStorageField)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel"))
+                        .resizeX(false)
+                        .createPanel())
                 .addComponent(new TitledSeparator(
                         DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
                 .addComponent(autoCompletionRadio)
@@ -70,19 +84,19 @@ public class DevPilotSettingsComponent {
     }
 
     private @NotNull JComponent createMethodShortcutDisplayModeSectionPanel(Integer inlayPresentationDisplayIndex) {
-        var comboBox = new ComboBox<>();
-        comboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutHidden"));
-        comboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutInlineDisplay"));
-        comboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutGroupDisplay"));
-        comboBox.setSelectedIndex(inlayPresentationDisplayIndex);
+        methodInlayPresentationDisplayComboBox = new ComboBox<>();
+        methodInlayPresentationDisplayComboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutHidden"));
+        methodInlayPresentationDisplayComboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutInlineDisplay"));
+        methodInlayPresentationDisplayComboBox.addItem(DevPilotMessageBundle.get("devpilot.settings.methodShortcutGroupDisplay"));
+        methodInlayPresentationDisplayComboBox.setSelectedIndex(inlayPresentationDisplayIndex);
 
-        comboBox.addActionListener(e -> {
+        methodInlayPresentationDisplayComboBox.addActionListener(e -> {
             var box = (ComboBox<?>) e.getSource();
             methodInlayPresentationDisplayIndex = box.getSelectedIndex();
         });
 
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(comboBox)
+                .add(UI.PanelFactory.panel(methodInlayPresentationDisplayComboBox)
                         .withLabel(DevPilotMessageBundle.get("devpilot.settings.methodShortcutDisplayModeLabel"))
                         .resizeX(false))
                 .createPanel();
@@ -91,18 +105,18 @@ public class DevPilotSettingsComponent {
     }
 
     public JPanel createLanguageSectionPanel(Integer languageIndex) {
-        var comboBox = new ComboBox<>();
-        comboBox.addItem("English");
-        comboBox.addItem("中文");
-        comboBox.setSelectedIndex(languageIndex);
+        languageComboBox = new ComboBox<>();
+        languageComboBox.addItem("English");
+        languageComboBox.addItem("中文");
+        languageComboBox.setSelectedIndex(languageIndex);
 
-        comboBox.addActionListener(e -> {
+        languageComboBox.addActionListener(e -> {
             var box = (ComboBox<?>) e.getSource();
             index = box.getSelectedIndex();
         });
 
         var panel = UI.PanelFactory.grid()
-                .add(UI.PanelFactory.panel(comboBox)
+                .add(UI.PanelFactory.panel(languageComboBox)
                         .withLabel(DevPilotMessageBundle.get("devpilot.setting.language"))
                         .resizeX(false))
                 .createPanel();
@@ -135,4 +149,34 @@ public class DevPilotSettingsComponent {
         return statusCheckRadio.isSelected();
     }
 
+    public String getLocalStoragePath() {
+        return localStorageField.getText();
+    }
+
+    // For reset
+    public void setFullName(String text) {
+        fullNameField.setText(text);
+    }
+
+    public void setLanguageIndex(Integer index) {
+        this.index = index;
+        languageComboBox.setSelectedIndex(index);
+    }
+
+    public void setMethodInlayPresentationDisplayIndex(Integer methodInlayPresentationDisplayIndex) {
+        this.methodInlayPresentationDisplayIndex = methodInlayPresentationDisplayIndex;
+        methodInlayPresentationDisplayComboBox.setSelectedIndex(methodInlayPresentationDisplayIndex);
+    }
+
+    public void setCompletionEnabled(boolean selected) {
+        autoCompletionRadio.setSelected(selected);
+    }
+
+    public void setStatusCheckEnabled(boolean selected) {
+        statusCheckRadio.setSelected(selected);
+    }
+
+    public void setLocalStoragePath(String text) {
+        localStorageField.setText(text);
+    }
 }

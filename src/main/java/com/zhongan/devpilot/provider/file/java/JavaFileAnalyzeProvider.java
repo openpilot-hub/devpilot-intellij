@@ -59,7 +59,8 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
                             "imports", PsiElementUtils.getImportInfo(psiJavaFile),
                             "package", psiJavaFile.getPackageName(),
                             "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                            "filePath", codeReference.getFileUrl()
+                            "filePath", codeReference.getFileUrl(),
+                            "language", "java"
                     )
             );
         }
@@ -87,7 +88,8 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
     }
 
     @Override
-    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference, List<PsiElement> localRef, List<PsiElement> remoteRef, Map<String, String> data) {
+    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference,
+                                           List<PsiElement> localRef, List<String> remoteRef, Map<String, String> data) {
         String packageName = null;
 
         if (codeReference != null && codeReference.getFileUrl() != null) {
@@ -97,9 +99,14 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
             }
         }
 
-        var relatedCode = PsiElementUtils.transformElementToString(localRef, packageName);
-        data.put("relatedContext", relatedCode);
-//        data.put("additionalRelatedContext", null);
+        if (localRef != null && !localRef.isEmpty()) {
+            var relatedCode = PsiElementUtils.transformElementToString(localRef, packageName);
+            data.put("relatedContext", relatedCode);
+        }
+
+        if (remoteRef != null && !remoteRef.isEmpty()) {
+            data.put("additionalRelatedContext", String.join("\n", remoteRef));
+        }
     }
 
     @Override
