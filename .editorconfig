@@ -202,7 +202,6 @@ ij_java_names_count_to_use_import_on_demand = 99
 ij_java_new_line_after_lparen_in_annotation = false
 ij_java_new_line_after_lparen_in_deconstruction_pattern = true
 ij_java_new_line_after_lparen_in_record_header = false
-ij_java_packages_to_use_import_on_demand =
 ij_java_parameter_annotation_wrap = off
 ij_java_parameter_name_prefix =
 ij_java_parameter_name_suffix =

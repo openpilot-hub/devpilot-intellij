@@ -1,5 +1,5 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
-<idea-plugin>
+<idea-plugin require-restart="true">
     <!-- Unique identifier of the plugin. It should be FQN. It cannot be changed between the plugin versions. -->
     <id>com.zhongan.devPilot</id>
 
@@ -9,6 +9,15 @@
     <version>2.6.0</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.7.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Accept completion by a single line</li>
+        </ul>
+        <h2>Enhancements</h2>
+        <ul>
+          <li>Handle more case for different LLMs</li>
+        </ul>
         <h1>Release 2.6.0</h1>
         <h2>New Features</h2>
         <ul>
@@ -164,6 +173,7 @@
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CodeLlamaSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AIGatewaySettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.ChatShortcutSettingState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState"/>
         <applicationService
                 serviceImplementation="com.zhongan.devpilot.settings.actionconfiguration.EditorActionConfigurationState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.TrialServiceSettingsState"/>
@@ -221,5 +231,7 @@
 
     <applicationListeners>
         <listener class="com.zhongan.devpilot.listener.ThemeChangeListener" topic="com.intellij.ide.ui.LafManagerListener"/>
+        <listener class="com.zhongan.devpilot.listener.MultiProjectManagerListener"
+                  topic="com.intellij.openapi.project.ProjectManagerListener"/>
     </applicationListeners>
 </idea-plugin>

@@ -9,6 +9,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
@@ -19,9 +20,12 @@ import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.EncryptionUtil;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
 import com.zhongan.devpilot.util.TokenUtils;
@@ -39,9 +43,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -99,11 +105,10 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        // todo normal chat should be used in some case
-//        if (messageModel.getCodeRef() == null) {
-//            normalChat(sessionType, msgType, data, message, callback, messageModel);
-//            return;
-//        }
+        if (StringUtils.isEmpty(messageModel.getMode())) {
+            normalChat(sessionType, msgType, data, message, callback, messageModel);
+            return;
+        }
 
         smartChat(sessionType, msgType, data, message, callback, messageModel);
     }
@@ -130,7 +135,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(CHAT_STEP_TWO);
-            var localRef = callRag(references, messageModel.getCodeRef());
+            var rag = callRag(references, messageModel.getCodeRef(), message);
 
             // step3 call model to get the final result
             if (shouldCancelChat(messageModel)) {
@@ -147,17 +152,27 @@ public final class DevPilotChatToolWindowService {
                 newMap = new HashMap<>();
             }
             final List<CodeReferenceModel>[] localRefs = new List[1];
+            final List<CodeReferenceModel>[] remoteRefs = new List[1];
 
-            if (localRef != null) {
+            if (rag != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    var language = messageModel.getCodeRef() == null ?
+                            DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
+
                     FileAnalyzeProviderFactory.getProvider(language)
-                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), localRef, null, data);
-                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, EditorActionEnum.getEnumByName(msgType));
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, newMap);
+
+                    if (rag.localRag != null) {
+                        localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(rag.localRag, EditorActionEnum.getEnumByName(msgType));
+                    }
+
+                    if (rag.remoteRag != null) {
+                        remoteRefs[0] = CodeReferenceModel.getCodeRefFromString(rag.remoteRag, language);
+                    }
                 });
             }
 
-            sendMessage(sessionType, msgType, newMap, message, callback, messageModel, null, localRefs[0], SMART_CHAT_TYPE);
+            sendMessage(sessionType, msgType, newMap, message, callback, messageModel, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE);
         });
     }
 
@@ -168,11 +183,10 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        // todo normal chat should be used in some case
-//        if (messageModel.getCodeRef() == null) {
-//            regenerateNormalChat(messageModel, callback);
-//            return;
-//        }
+        if (StringUtils.isEmpty(messageModel.getMode())) {
+            regenerateNormalChat(messageModel, callback);
+            return;
+        }
 
         regenerateSmartChat(messageModel, callback);
     }
@@ -197,7 +211,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(CHAT_STEP_TWO);
-            var localRef = callRag(references, messageModel.getCodeRef());
+            var rag = callRag(references, messageModel.getCodeRef(), messageModel.getContent());
 
             // step3 call model to get the final result
             if (shouldCancelChat(messageModel)) {
@@ -208,17 +222,32 @@ public final class DevPilotChatToolWindowService {
 
             var data = new HashMap<String, String>();
             final List<CodeReferenceModel>[] localRefs = new List[1];
+            final List<CodeReferenceModel>[] remoteRefs = new List[1];
 
-            if (localRef != null) {
+            if (rag != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var language = messageModel.getCodeRef() == null ? null : messageModel.getCodeRef().getLanguageId();
+                    var language = messageModel.getCodeRef() == null ?
+                            DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
+
                     FileAnalyzeProviderFactory.getProvider(language)
-                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), localRef, null, data);
-                    localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(localRef, messageModel.getCodeRef().getType());
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, data);
+
+                    EditorActionEnum type = null;
+                    if (messageModel.getCodeRef() != null) {
+                        type = messageModel.getCodeRef().getType();
+                    }
+
+                    if (rag.localRag != null) {
+                        localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(rag.localRag, type);
+                    }
+
+                    if (rag.remoteRag != null) {
+                        remoteRefs[0] = CodeReferenceModel.getCodeRefFromString(rag.remoteRag, language);
+                    }
                 });
             }
 
-            sendMessage(callback, data, null, localRefs[0], SMART_CHAT_TYPE);
+            sendMessage(callback, data, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE);
         });
     }
 
@@ -261,31 +290,59 @@ public final class DevPilotChatToolWindowService {
                 MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "CODE_PREDICTION", content, dataMap));
         devPilotChatCompletionRequest.setStream(Boolean.FALSE);
         var response = this.llmProvider.codePrediction(devPilotChatCompletionRequest);
-        if (!response.isSuccessful()) {
+        if (!response.isSuccessful() || response.getContent() == null) {
             return null;
         }
-        return JsonUtils.fromJson(response.getContent(), DevPilotCodePrediction.class);
+        return JsonUtils.fromJson(JsonUtils.fixJson(response.getContent()), DevPilotCodePrediction.class);
     }
 
-    private List<PsiElement> callRag(DevPilotCodePrediction codePredict, CodeReferenceModel codeReference) {
+    private Rag callRag(DevPilotCodePrediction codePredict, CodeReferenceModel codeReference, String message) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(2));
         callWebView(this.lastMessage);
 
-        // call local rag
-        if (codePredict == null) {
-            return null;
-        }
+        return ApplicationManager.getApplication().runReadAction((Computable<Rag>) () -> {
+            List<PsiElement> localRag = null;
+            List<String> remoteRag = null;
 
-        // todo call remote rag
-        return ApplicationManager.getApplication().runReadAction(
-                (Computable<List<PsiElement>>) () -> {
-                    var language = codeReference == null ? null : codeReference.getLanguageId();
+            var language = codeReference == null ? DevPilotVersion.getDefaultLanguage() : codeReference.getLanguageId();
 
-                    return FileAnalyzeProviderFactory
-                            .getProvider(language).callLocalRag(project, codePredict);
-                }
-        );
+            // call local rag
+            if (codePredict != null) {
+                localRag = FileAnalyzeProviderFactory.getProvider(language).callLocalRag(project, codePredict);
+            }
+
+            // menu action will not call remote rag
+            if (codeReference != null && codeReference.getType() != null) {
+                return new Rag(localRag, null);
+            }
+
+            // call remote rag
+            var request = new DevPilotRagRequest();
+            if (codeReference != null) {
+                request.setSelectedCode(codeReference.getSourceCode());
+            }
+            request.setProjectType(language);
+            if (message != null) {
+                request.setContent(message);
+            }
+
+            // calculate md5 of project path as unique id
+            request.setProjectName(getProjectPathString());
+
+            if (codePredict != null) {
+                request.setPredictionComments(codePredict.getComments());
+            }
+
+            var response = this.llmProvider.ragCompletion(request);
+
+            if (response != null) {
+                remoteRag = response.stream().map(DevPilotRagResponse::getCode)
+                        .filter(Objects::nonNull).collect(Collectors.toList());
+            }
+
+            return new Rag(localRag, remoteRag);
+        });
     }
 
     public String sendMessage(Integer sessionType, String msgType, Map<String, String> data,
@@ -466,7 +523,8 @@ public final class DevPilotChatToolWindowService {
         regenerateChat(lastMessage, null);
     }
 
-    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement) {
+    // called by ide
+    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement, String mode) {
         ActionManager actionManager = ActionManager.getInstance();
         BasicEditorAction myAction = (BasicEditorAction) actionManager
                 .getAction(DevPilotMessageBundle.get(actionEnum.getLabel()));
@@ -476,13 +534,14 @@ public final class DevPilotChatToolWindowService {
                 BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
-            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement, null);
+            myAction.fastAction(project, editor, editor.getSelectionModel().getSelectedText(), psiElement, null, mode);
         });
     }
 
-    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement) {
+    // called by web view
+    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement, String mode) {
         if (codeReferenceModel == null || StringUtils.isEmpty(codeReferenceModel.getSourceCode())) {
-            handleActions(actionEnum, psiElement);
+            handleActions(actionEnum, psiElement, mode);
             return;
         }
 
@@ -495,7 +554,7 @@ public final class DevPilotChatToolWindowService {
                 BalloonAlertUtils.showWarningAlert(DevPilotMessageBundle.get("devpilot.alter.code.not.selected"), 0, -10, Balloon.Position.above);
                 return;
             }
-            myAction.fastAction(project, editor, codeReferenceModel.getSourceCode(), psiElement, codeReferenceModel);
+            myAction.fastAction(project, editor, codeReferenceModel.getSourceCode(), psiElement, codeReferenceModel, mode);
         });
     }
 
@@ -674,5 +733,42 @@ public final class DevPilotChatToolWindowService {
         javaCallModel.setPayload(referenceModel);
 
         callWebView(javaCallModel);
+    }
+
+    private String getProjectPathString() {
+        var path = project.getBasePath();
+
+        if (path == null) {
+            return null;
+        }
+
+        return EncryptionUtil.getMD5Hash(path);
+    }
+
+    static class Rag {
+        private List<PsiElement> localRag;
+
+        private List<String> remoteRag;
+
+        Rag(List<PsiElement> localRag, List<String> remoteRag) {
+            this.localRag = localRag;
+            this.remoteRag = remoteRag;
+        }
+
+        public List<PsiElement> getLocalRag() {
+            return localRag;
+        }
+
+        public void setLocalRag(List<PsiElement> localRag) {
+            this.localRag = localRag;
+        }
+
+        public List<String> getRemoteRag() {
+            return remoteRag;
+        }
+
+        public void setRemoteRag(List<String> remoteRag) {
+            this.remoteRag = remoteRag;
+        }
     }
 }

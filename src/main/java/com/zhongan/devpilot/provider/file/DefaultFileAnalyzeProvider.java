@@ -36,7 +36,7 @@ public class DefaultFileAnalyzeProvider implements FileAnalyzeProvider {
     }
 
     @Override
-    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference, List<PsiElement> localRef, List<PsiElement> remoteRef, Map<String, String> data) {
+    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference, List<PsiElement> localRef, List<String> remoteRef, Map<String, String> data) {
 
     }
 

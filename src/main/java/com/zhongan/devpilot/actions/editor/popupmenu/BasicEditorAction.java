@@ -24,18 +24,18 @@ public abstract class BasicEditorAction extends AnAction {
         PopupMenuEditorActionGroupUtil.registerOrReplaceAction(this);
     }
 
-    protected abstract void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel);
+    protected abstract void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel, String mode);
 
     public void actionPerformed(@NotNull AnActionEvent event) {
         var project = event.getProject();
         var editor = event.getData(PlatformDataKeys.EDITOR);
         if (editor != null && project != null) {
-            actionPerformed(project, editor, editor.getSelectionModel().getSelectedText(), null, null);
+            actionPerformed(project, editor, editor.getSelectionModel().getSelectedText(), null, null, "with-context");
         }
     }
 
-    public void fastAction(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel) {
-        actionPerformed(project, editor, selectedText, psiElement, codeReferenceModel);
+    public void fastAction(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel, String mode) {
+        actionPerformed(project, editor, selectedText, psiElement, codeReferenceModel, mode);
     }
 
     public void update(AnActionEvent event) {

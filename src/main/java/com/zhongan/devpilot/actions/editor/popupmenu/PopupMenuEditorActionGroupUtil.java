@@ -1,6 +1,7 @@
 package com.zhongan.devpilot.actions.editor.popupmenu;
 
 import com.intellij.icons.AllIcons;
+import com.intellij.openapi.actionSystem.ActionGroup;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.actionSystem.AnAction;
 import com.intellij.openapi.actionSystem.DefaultActionGroup;
@@ -49,8 +50,8 @@ public class PopupMenuEditorActionGroupUtil {
             EditorActionEnum.EXPLAIN_CODE.getLabel(), AllIcons.Actions.Preview));
 
     public static void refreshActions(Project project) {
-        AnAction actionGroup = ActionManager.getInstance().getAction("com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction");
-        if (actionGroup instanceof DefaultActionGroup) {
+        AnAction actionGroup = ActionManager.getInstance().getAction("DevPilotGroupedActions");
+        if (actionGroup instanceof ActionGroup) {
             DefaultActionGroup group = (DefaultActionGroup) actionGroup;
             group.removeAll();
             group.add(new NewChatAction());
@@ -61,7 +62,7 @@ public class PopupMenuEditorActionGroupUtil {
             defaultActions.forEach((label) -> {
                 var action = new BasicEditorAction(DevPilotMessageBundle.get(label), DevPilotMessageBundle.get(label), ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
-                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel) {
+                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel, String mode) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
                         var editorActionEnum = EditorActionEnum.getEnumByLabel(label);
@@ -117,7 +118,7 @@ public class PopupMenuEditorActionGroupUtil {
                         }
 
                         var codeMessage = MessageModel.buildCodeMessage(
-                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel);
+                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel, mode);
 
                         FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
                                 .buildChatDataMap(project, psiElement, codeReferenceModel, data);
