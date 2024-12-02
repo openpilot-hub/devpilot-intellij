@@ -1,7 +1,6 @@
 package com.zhongan.devpilot.actions.notifications;
 
 import com.intellij.ide.BrowserUtil;
-import com.intellij.ide.plugins.PluginManagerConfigurable;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
@@ -150,7 +149,7 @@ public class DevPilotNotification {
                 DevPilotMessageBundle.get("devpilot.notification.version.message"),
                 NotificationType.INFORMATION);
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.upgrade.message"),
-                () -> ShowSettingsUtil.getInstance().showSettingsDialog(ProjectUtil.currentOrDefaultProject(project), PluginManagerConfigurable.class)));
+                () -> ShowSettingsUtil.getInstance().showSettingsDialog(ProjectUtil.currentOrDefaultProject(project), "Plugins")));
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
 
         }));
