@@ -163,7 +163,7 @@ public final class DevPilotChatToolWindowService {
                             DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
 
                     FileAnalyzeProviderFactory.getProvider(language)
-                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, newMap);
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, rag.localEmbeddingRag, newMap);
 
                     if (rag.localRag != null) {
                         localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(rag.localRag, EditorActionEnum.getEnumByName(msgType));
@@ -241,7 +241,7 @@ public final class DevPilotChatToolWindowService {
                             DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
 
                     FileAnalyzeProviderFactory.getProvider(language)
-                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, data);
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, rag.localEmbeddingRag, data);
 
                     EditorActionEnum type = null;
                     if (messageModel.getCodeRef() != null) {
