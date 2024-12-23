@@ -3,12 +3,16 @@ package com.zhongan.devpilot.webview.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.intellij.openapi.editor.Document;
+import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
+import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryResponse;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
+import com.zhongan.devpilot.util.PsiElementUtils;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +50,26 @@ public class CodeReferenceModel {
         return new CodeReferenceModel(editorInfo.getLanguageId(), editorInfo.getFilePresentableUrl(),
                 editorInfo.getFileName(), editorInfo.getSourceCode(), editorInfo.getSelectedStartLine(),
                 editorInfo.getSelectedStartColumn(), editorInfo.getSelectedEndLine(), editorInfo.getSelectedEndColumn(), actionEnum);
+    }
+
+    public static List<CodeReferenceModel> getCodeRefFromRag(
+            Project project, Collection<EmbeddingQueryResponse.HitData> codeList, String languageId) {
+        if (codeList == null) {
+            return null;
+        }
+
+        var result = new ArrayList<CodeReferenceModel>();
+
+        for (var data : codeList) {
+            var code = PsiElementUtils.getCodeBlock(project, data.getFilePath(), data.getStartOffset(), data.getEndOffset());
+            var absolutePath = project.getBasePath() + File.separator + data.getFilePath();
+            var fileName = data.getFilePath().substring(data.getFilePath().lastIndexOf(File.separator) + 1);
+            var ref = new CodeReferenceModel(languageId, absolutePath, fileName, code,
+                    data.getStartLine(), data.getStartColumn(), data.getEndLine(), data.getEndColumn(), null);
+            result.add(ref);
+        }
+
+        return result;
     }
 
     public static List<CodeReferenceModel> getCodeRefFromString(Collection<String> codeList, String languageId) {

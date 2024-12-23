@@ -56,7 +56,7 @@ public class AgentsRunner {
     }
 
     public synchronized boolean run() throws Exception {
-       return run(false);
+        return run(false);
     }
 
     private int getAvailablePort() {

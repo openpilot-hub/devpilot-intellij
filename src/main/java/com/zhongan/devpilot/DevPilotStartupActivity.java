@@ -3,6 +3,7 @@ package com.zhongan.devpilot;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.startup.StartupActivity;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
+import com.zhongan.devpilot.embedding.LocalEmbeddingService;
 import com.zhongan.devpilot.network.DevPilotAvailabilityChecker;
 import com.zhongan.devpilot.update.DevPilotUpdate;
 
@@ -15,6 +16,8 @@ public class DevPilotStartupActivity implements StartupActivity {
 
         new DevPilotUpdate.DevPilotUpdateTask(project).queue();
         new DevPilotAvailabilityChecker(project).checkNetworkAndLogStatus();
+
+        LocalEmbeddingService.start();
     }
 
 }

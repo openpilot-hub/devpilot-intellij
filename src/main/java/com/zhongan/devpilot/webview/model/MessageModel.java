@@ -25,7 +25,7 @@ public class MessageModel {
     private RecallModel recall;
 
     /**
-     * 模式，无值则为不带上下文，with-context则为开启上下文
+     * 模式，无值则为开启上下文，with-ctrl则为不开启上下文
      */
     private String mode;
 

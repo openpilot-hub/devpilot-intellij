@@ -54,6 +54,19 @@ public class GitUtil {
         return null;
     }
 
+    public static String getRepoUrlFromFile(Project project, VirtualFile virtualFile) {
+        GitRepository repository = git4idea.GitUtil.getRepositoryManager(project).getRepositoryForFile(virtualFile);
+        if (repository == null) {
+            return null;
+        }
+        for (GitRemote remote : repository.getRemotes()) {
+            if (remote.getName().equals(ORIGIN)) {
+                return remote.getFirstUrl();
+            }
+        }
+        return null;
+    }
+
     public static Boolean isRepoEmbedded(String appName) {
         Boolean embedded = Boolean.FALSE;
         if (!map.containsKey(appName) || (System.currentTimeMillis() - map.get(appName).getTimestamp()) > syncTimeInterval) {

@@ -12,11 +12,13 @@ import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.LocalRagSettingsState;
 import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import javax.swing.JComponent;
 import javax.swing.JPanel;
+import javax.swing.JTextArea;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -25,6 +27,8 @@ public class DevPilotSettingsComponent {
     private final JPanel mainPanel;
 
     private final JBTextField fullNameField;
+
+    private final JBRadioButton localRagRadio;
 
     private final JBRadioButton autoCompletionRadio;
 
@@ -48,6 +52,9 @@ public class DevPilotSettingsComponent {
 
         Integer languageIndex = LanguageSettingsState.getInstance().getLanguageIndex();
 
+        localRagRadio = new JBRadioButton(
+                DevPilotMessageBundle.get("devpilot.settings.local.rag.desc"),
+                LocalRagSettingsState.getInstance().getEnable());
         autoCompletionRadio = new JBRadioButton(
                 DevPilotMessageBundle.get("devpilot.settings.service.code.completion.desc"),
                 CompletionSettingsState.getInstance().getEnable());
@@ -72,15 +79,29 @@ public class DevPilotSettingsComponent {
                         .resizeX(false)
                         .createPanel())
                 .addComponent(new TitledSeparator(
+                        DevPilotMessageBundle.get("devpilot.settings.local.rag.title")))
+                .addComponent(localRagRadio)
+                .addComponent(createTextArea(DevPilotMessageBundle.get("devpilot.settings.local.rag.explain")))
+                .addVerticalGap(8)
+                .addComponent(new TitledSeparator(
                         DevPilotMessageBundle.get("devpilot.settings.service.code.completion.title")))
                 .addComponent(autoCompletionRadio)
                 .addVerticalGap(8)
-
                 .addComponent(new TitledSeparator(
                         DevPilotMessageBundle.get("devpilot.settings.service.status.check.title")))
                 .addComponent(statusCheckRadio)
                 .addComponentFillVertically(new JPanel(), 0)
                 .getPanel();
+    }
+
+    private JComponent createTextArea(String text) {
+        JTextArea textArea = new JTextArea(text);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setEditable(false);
+        textArea.setBackground(null);
+        textArea.setBorder(null);
+        return textArea;
     }
 
     private @NotNull JComponent createMethodShortcutDisplayModeSectionPanel(Integer inlayPresentationDisplayIndex) {
@@ -145,6 +166,10 @@ public class DevPilotSettingsComponent {
         return autoCompletionRadio.isSelected();
     }
 
+    public boolean getLocalRagEnabled() {
+        return localRagRadio.isSelected();
+    }
+
     public boolean getStatusCheckEnabled() {
         return statusCheckRadio.isSelected();
     }
@@ -174,6 +199,10 @@ public class DevPilotSettingsComponent {
 
     public void setStatusCheckEnabled(boolean selected) {
         statusCheckRadio.setSelected(selected);
+    }
+
+    public void setLocalRagRadioEnabled(boolean selected) {
+        localRagRadio.setSelected(selected);
     }
 
     public void setLocalStoragePath(String text) {

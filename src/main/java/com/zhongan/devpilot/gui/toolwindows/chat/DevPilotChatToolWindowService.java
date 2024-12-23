@@ -11,7 +11,10 @@ import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
 import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
+import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.constant.DefaultConst;
+import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryRequest;
+import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryResponse;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
@@ -105,7 +108,7 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        if (StringUtils.isEmpty(messageModel.getMode())) {
+        if (!StringUtils.isEmpty(messageModel.getMode())) {
             normalChat(sessionType, msgType, data, message, callback, messageModel);
             return;
         }
@@ -169,6 +172,14 @@ public final class DevPilotChatToolWindowService {
                     if (rag.remoteRag != null) {
                         remoteRefs[0] = CodeReferenceModel.getCodeRefFromString(rag.remoteRag, language);
                     }
+
+                    if (rag.localEmbeddingRag != null) {
+                        if (localRefs[0] == null) {
+                            localRefs[0] = CodeReferenceModel.getCodeRefFromRag(project, rag.localEmbeddingRag, language);
+                        } else {
+                            localRefs[0].addAll(CodeReferenceModel.getCodeRefFromRag(project, rag.localEmbeddingRag, language));
+                        }
+                    }
                 });
             }
 
@@ -183,7 +194,7 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
-        if (StringUtils.isEmpty(messageModel.getMode())) {
+        if (!StringUtils.isEmpty(messageModel.getMode())) {
             regenerateNormalChat(messageModel, callback);
             return;
         }
@@ -243,6 +254,14 @@ public final class DevPilotChatToolWindowService {
 
                     if (rag.remoteRag != null) {
                         remoteRefs[0] = CodeReferenceModel.getCodeRefFromString(rag.remoteRag, language);
+                    }
+
+                    if (rag.localEmbeddingRag != null) {
+                        if (localRefs[0] == null) {
+                            localRefs[0] = CodeReferenceModel.getCodeRefFromRag(project, rag.localEmbeddingRag, language);
+                        } else {
+                            localRefs[0].addAll(CodeReferenceModel.getCodeRefFromRag(project, rag.localEmbeddingRag, language));
+                        }
                     }
                 });
             }
@@ -304,6 +323,7 @@ public final class DevPilotChatToolWindowService {
         return ApplicationManager.getApplication().runReadAction((Computable<Rag>) () -> {
             List<PsiElement> localRag = null;
             List<String> remoteRag = null;
+            List<EmbeddingQueryResponse.HitData> localEmbedding = null;
 
             var language = codeReference == null ? DevPilotVersion.getDefaultLanguage() : codeReference.getLanguageId();
 
@@ -312,9 +332,23 @@ public final class DevPilotChatToolWindowService {
                 localRag = FileAnalyzeProviderFactory.getProvider(language).callLocalRag(project, codePredict);
             }
 
+            // call local embedding
+            var embeddingRequest = new EmbeddingQueryRequest();
+            embeddingRequest.setProjectName(project.getBasePath());
+            embeddingRequest.setHomeDir(BinaryManager.INSTANCE.getHomeDir().getAbsolutePath());
+            embeddingRequest.setContent(message);
+            if (codeReference != null) {
+                embeddingRequest.setSelectedCode(codeReference.getSourceCode());
+            }
+
+            var embeddingResponse = llmProvider.embeddingQuery(embeddingRequest);
+            if (embeddingResponse != null) {
+                localEmbedding = embeddingResponse.getHitsData();
+            }
+
             // menu action will not call remote rag
             if (codeReference != null && codeReference.getType() != null) {
-                return new Rag(localRag, null);
+                return new Rag(localRag, null, localEmbedding);
             }
 
             // call remote rag
@@ -341,7 +375,7 @@ public final class DevPilotChatToolWindowService {
                         .filter(Objects::nonNull).collect(Collectors.toList());
             }
 
-            return new Rag(localRag, remoteRag);
+            return new Rag(localRag, remoteRag, localEmbedding);
         });
     }
 
@@ -750,9 +784,12 @@ public final class DevPilotChatToolWindowService {
 
         private List<String> remoteRag;
 
-        Rag(List<PsiElement> localRag, List<String> remoteRag) {
+        private List<EmbeddingQueryResponse.HitData> localEmbeddingRag;
+
+        Rag(List<PsiElement> localRag, List<String> remoteRag, List<EmbeddingQueryResponse.HitData> localEmbeddingRag) {
             this.localRag = localRag;
             this.remoteRag = remoteRag;
+            this.localEmbeddingRag = localEmbeddingRag;
         }
 
         public List<PsiElement> getLocalRag() {
@@ -769,6 +806,14 @@ public final class DevPilotChatToolWindowService {
 
         public void setRemoteRag(List<String> remoteRag) {
             this.remoteRag = remoteRag;
+        }
+
+        public List<EmbeddingQueryResponse.HitData> getLocalEmbeddingRag() {
+            return localEmbeddingRag;
+        }
+
+        public void setLocalEmbeddingRag(List<EmbeddingQueryResponse.HitData> localEmbeddingRag) {
+            this.localEmbeddingRag = localEmbeddingRag;
         }
     }
 }
