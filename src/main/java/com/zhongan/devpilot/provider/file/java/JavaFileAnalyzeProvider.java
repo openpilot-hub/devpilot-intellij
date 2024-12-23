@@ -36,6 +36,7 @@ import com.zhongan.devpilot.embedding.entity.java.anno.AnnotationAttributeMeta;
 import com.zhongan.devpilot.embedding.entity.java.anno.AnnotationMeta;
 import com.zhongan.devpilot.embedding.entity.java.file.JavaFileMeta;
 import com.zhongan.devpilot.embedding.entity.java.function.JavaFunctionMeta;
+import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryResponse;
 import com.zhongan.devpilot.enums.UtFrameTypeEnum;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProvider;
@@ -129,7 +130,8 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
 
     @Override
     public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference,
-                                           List<PsiElement> localRef, List<String> remoteRef, Map<String, String> data) {
+                                           List<PsiElement> localRef, List<String> remoteRef,
+                                           List<EmbeddingQueryResponse.HitData> localEmbeddingRef, Map<String, String> data) {
         String packageName = null;
 
         if (codeReference != null && codeReference.getFileUrl() != null) {
@@ -139,8 +141,25 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
             }
         }
 
+        String relatedCode = "";
+
         if (localRef != null && !localRef.isEmpty()) {
-            var relatedCode = PsiElementUtils.transformElementToString(localRef, packageName);
+            relatedCode = PsiElementUtils.transformElementToString(localRef, packageName);
+        }
+
+        if (localEmbeddingRef != null && !localEmbeddingRef.isEmpty()) {
+            String codeList = localEmbeddingRef.stream()
+                    .map(hitData -> PsiElementUtils.getCodeBlock(project,
+                            hitData.getFilePath(), hitData.getStartOffset(), hitData.getEndOffset()))
+                    .filter(code -> !StringUtils.isEmpty(code))
+                    .collect(Collectors.joining("\n"));
+
+            if (!StringUtils.isEmpty(codeList)) {
+                relatedCode += codeList;
+            }
+        }
+
+        if (!relatedCode.isEmpty()) {
             data.put("relatedContext", relatedCode);
         }
 
