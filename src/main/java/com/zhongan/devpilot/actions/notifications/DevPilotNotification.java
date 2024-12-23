@@ -127,6 +127,20 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
+    public static void simpleNotLoginNotification() {
+        var notification = new Notification(
+                "DevPilot Notification Group",
+                DevPilotMessageBundle.get("notification.group.devpilot"),
+                DevPilotMessageBundle.get("devpilot.status.notLoggedIn"),
+                NotificationType.WARNING);
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.settings.service.statusbar.login.desc"),
+                () -> ApplicationManager.getApplication().executeOnPooledThread(LoginUtils::gotoLogin)));
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
+
+        }));
+        Notifications.Bus.notify(notification);
+    }
+
     public static void notLoginNotification(Project project) {
         var notification = new Notification(
                 "DevPilot Notification Group",
@@ -157,4 +171,18 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
+    public static void infoAndSetting(Project project, String display, String text) {
+        var notification = new Notification(
+                "DevPilot Notification Group",
+                DevPilotMessageBundle.get("notification.group.devpilot"),
+                text,
+                NotificationType.INFORMATION);
+        notification.addAction(new NotificationAction(display) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent anActionEvent, @NotNull Notification notification) {
+                ShowSettingsUtil.getInstance().showSettingsDialog(project, DevPilotSettingsConfigurable.class);
+            }
+        });
+        Notifications.Bus.notify(notification);
+    }
 }

@@ -44,6 +44,14 @@ public class DefaultConst {
 
     public static final String REMOTE_RAG_DEFAULT_PATH = "/rag";
 
+    public static final String EMBEDDING_SUBMIT_PATH = "/submitChunks";
+
+    public static final String EMBEDDING_DELETE_PATH = "/deleteChunks";
+
+    public static final String EMBEDDING_SEARCH_PATH = "/local-rag";
+
+    public static final String EMBEDDING_RESET_INDEX_PATH = "/reset-index";
+
     public static final String FEEDBACK_URL = OFFICIAL_WEBSITE_URL + "/feedback";
 
     public static final String PROFILE_URL = OFFICIAL_WEBSITE_URL + "/profile";

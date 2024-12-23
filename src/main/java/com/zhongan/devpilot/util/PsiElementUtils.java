@@ -26,6 +26,7 @@ import com.intellij.psi.search.searches.ClassInheritorsSearch;
 import com.intellij.psi.util.PropertyUtil;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -617,6 +618,23 @@ public class PsiElementUtils {
             }
         }
         return Pair.of(title, version);
+    }
+
+    public static String getCodeBlock(Project project, String filePath, int startOffset, int endOffset) {
+        // change path to absolute path
+        String path = project.getBasePath() + File.separator + filePath;
+
+        VirtualFile virtualFile = LocalFileSystem.getInstance().findFileByPath(path);
+        if (virtualFile == null) {
+            return null;
+        }
+
+        PsiFile psiFile = PsiManager.getInstance(project).findFile(virtualFile);
+        if (psiFile == null) {
+            return null;
+        }
+
+        return psiFile.getText().substring(startOffset, endOffset);
     }
 
 }

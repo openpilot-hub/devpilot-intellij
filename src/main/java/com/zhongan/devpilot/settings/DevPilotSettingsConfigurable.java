@@ -9,11 +9,13 @@ import com.intellij.openapi.util.Pair;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
 import com.zhongan.devpilot.agents.AgentsRunner;
 import com.zhongan.devpilot.agents.BinaryManager;
+import com.zhongan.devpilot.embedding.LocalEmbeddingService;
 import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.settings.state.LocalRagSettingsState;
 import com.zhongan.devpilot.settings.state.PersonalAdvancedSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.ConfigurableUtils;
@@ -57,12 +59,14 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var methodInlayPresentationDisplayIndex = settingsComponent.getMethodInlayPresentationDisplayIndex();
         var completionEnable = CompletionSettingsState.getInstance().getEnable();
         Boolean enable = AvailabilityCheck.getInstance().getEnable();
+        Boolean localRagEnabled = LocalRagSettingsState.getInstance().getEnable();
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !languageIndex.equals(languageSettings.getLanguageIndex())
                 || !methodInlayPresentationDisplayIndex.equals(chatShortcutSettings.getDisplayIndex())
                 || !settingsComponent.getCompletionEnabled() == (completionEnable)
                 || !settingsComponent.getStatusCheckEnabled() == (enable)
+                || !settingsComponent.getLocalRagEnabled() == (localRagEnabled)
                 || !settingsComponent.getLocalStoragePath().equals(personalAdvancedSettings.getLocalStorage());
     }
 
@@ -124,15 +128,18 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         try {
             if (!settingsComponent.getLocalStoragePath().equals(personalAdvancedSettings.getLocalStorage())) {
                 String oldPath = personalAdvancedSettings.getLocalStorage();
-                boolean shouldClearData = !StringUtils.startsWith(localStoragePath, oldPath);
                 Pair<Integer, Long> integerLongPair = BinaryManager.INSTANCE.retrieveAlivePort();
                 if (integerLongPair != null) {
                     BinaryManager.INSTANCE.setCurrentPort(integerLongPair.first);
                 }
                 personalAdvancedSettings.setLocalStorage(localStoragePath);
+                if (!BinaryManager.INSTANCE.shouldStartAgent()) {
+                    BinaryManager.INSTANCE.findProcessAndKill(new File(oldPath));
+                    return;
+                }
                 boolean success = AgentsRunner.INSTANCE.run(true);
-                if (success && shouldClearData) {
-                    BinaryManager.INSTANCE.clearDataBefore(oldPath);
+                if (success) {
+                    BinaryManager.INSTANCE.findProcessAndKill(new File(oldPath));
                 }
             }
         } catch (Exception e) {
@@ -144,6 +151,14 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
         availabilityCheck.setEnable(settingsComponent.getStatusCheckEnabled());
+
+        LocalRagSettingsState localRagSettings = LocalRagSettingsState.getInstance();
+        var pastEnable = localRagSettings.getEnable();
+        localRagSettings.setEnable(settingsComponent.getLocalRagEnabled());
+        // if local rag was disabled and now enabled, start the embedding service for current project
+        if (!pastEnable && localRagSettings.getEnable()) {
+            LocalEmbeddingService.immediateStartCurrentProject();
+        }
     }
 
     @Override
@@ -166,6 +181,9 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         AvailabilityCheck availabilityCheck = AvailabilityCheck.getInstance();
         settingsComponent.setStatusCheckEnabled(availabilityCheck.getEnable());
+
+        LocalRagSettingsState localRagSettings = LocalRagSettingsState.getInstance();
+        settingsComponent.setLocalRagRadioEnabled(localRagSettings.getEnable());
     }
 
     @Override

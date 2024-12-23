@@ -3,11 +3,16 @@ package com.zhongan.devpilot.util;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.intellij.openapi.diagnostic.Logger;
 
+import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.List;
 
 public class JsonUtils {
+    private static final Logger log = Logger.getInstance(JsonUtils.class);
+
     private final static ObjectMapper objectMapper = new ObjectMapper();
 
     static {
@@ -21,6 +26,7 @@ public class JsonUtils {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (Exception e) {
+            log.warn("Error occurred while transform json.", e);
             return null;
         }
     }
@@ -29,6 +35,7 @@ public class JsonUtils {
         try {
             return objectMapper.readValue(json, clazz);
         } catch (Exception e) {
+            log.warn("Error occurred while parsing from json.", e);
             return null;
         }
     }
@@ -37,6 +44,27 @@ public class JsonUtils {
         try {
             return objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
         } catch (Exception e) {
+            log.warn("Error occurred while parsing from json list.", e);
+            return null;
+        }
+    }
+
+    public static boolean toJson(File file, Object object) {
+        try {
+            objectMapper.writeValue(file, object);
+        } catch (IOException e) {
+            log.warn("Error occurred while writing into file.", e);
+            return false;
+        }
+
+        return true;
+    }
+
+    public static <T> T fromJson(File file, Class<T> clazz) {
+        try {
+            return objectMapper.readValue(file, clazz);
+        } catch (Exception e) {
+            log.warn("Error occurred while parsing from json file.", e);
             return null;
         }
     }
