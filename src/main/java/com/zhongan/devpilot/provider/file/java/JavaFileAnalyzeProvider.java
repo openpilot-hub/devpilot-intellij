@@ -42,6 +42,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProvider;
 import com.zhongan.devpilot.provider.ut.UtFrameworkProvider;
 import com.zhongan.devpilot.provider.ut.UtFrameworkProviderFactory;
+import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MD5Utils;
 import com.zhongan.devpilot.util.PsiElementUtils;
 import com.zhongan.devpilot.util.PsiFileUtil;
@@ -50,11 +51,13 @@ import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import static com.zhongan.devpilot.constant.PlaceholderConst.ADDITIONAL_MOCK_PROMPT;
@@ -74,43 +77,69 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
     }
 
     @Override
-    public void buildCodePredictDataMap(Project project, CodeReferenceModel codeReference, Map<String, String> data) {
-        var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+    public void buildCodePredictDataMap(Project project, List<CodeReferenceModel> codeReferences, Map<String, String> data) {
+        List<Map<String, String>> refs = new ArrayList<>();
 
-        if (psiJavaFile != null) {
-            data.putAll(
-                    Map.of(
-                            "imports", PsiElementUtils.getImportInfo(psiJavaFile),
-                            "package", psiJavaFile.getPackageName(),
-                            "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                            "selectedCode", codeReference.getSourceCode(),
-                            "filePath", codeReference.getFileUrl()
-                    )
-            );
+        for (CodeReferenceModel codeReference : codeReferences) {
+            var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+
+            if (psiJavaFile != null) {
+                var map = Map.of(
+                        "imports", PsiElementUtils.getImportInfo(psiJavaFile),
+                        "package", psiJavaFile.getPackageName(),
+                        "fields", PsiElementUtils.getFieldList(psiJavaFile),
+                        "selectedCode", codeReference.getSourceCode(),
+                        "filePath", codeReference.getFileUrl()
+                );
+                refs.add(map);
+            }
+        }
+
+        if (!CollectionUtils.isEmpty(refs)) {
+            var refsString = JsonUtils.toJson(refs);
+            if (!StringUtils.isEmpty(refsString)) {
+                data.put("refs", JsonUtils.toJson(refs));
+            }
         }
     }
 
     @Override
-    public void buildChatDataMap(Project project, PsiElement psiElement, CodeReferenceModel codeReference, Map<String, String> data) {
-        var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+    public void buildChatDataMap(Project project, PsiElement psiElement, List<CodeReferenceModel> codeReferences, Map<String, String> data) {
+        List<Map<String, String>> refs = new ArrayList<>();
 
-        if (psiJavaFile != null) {
-            data.putAll(
-                    Map.of(
-                            "imports", PsiElementUtils.getImportInfo(psiJavaFile),
-                            "package", psiJavaFile.getPackageName(),
-                            "fields", PsiElementUtils.getFieldList(psiJavaFile),
-                            "filePath", codeReference.getFileUrl(),
-                            "language", "java"
-                    )
-            );
+        for (CodeReferenceModel codeReference : codeReferences) {
+            var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+
+            Map<String, String> map = new HashMap<>();
+
+            if (psiJavaFile != null) {
+                map.putAll(Map.of(
+                        "imports", PsiElementUtils.getImportInfo(psiJavaFile),
+                        "package", psiJavaFile.getPackageName(),
+                        "fields", PsiElementUtils.getFieldList(psiJavaFile),
+                        "filePath", codeReference.getFileUrl(),
+                        "selectedCode", codeReference.getSourceCode(),
+                        "language", "java"
+                ));
+            }
+
+            if (psiElement != null) {
+                var fullClassName = PsiElementUtils.getFullClassName(psiElement);
+
+                if (fullClassName != null) {
+                    map.put(CLASS_FULL_NAME, fullClassName);
+                }
+            }
+
+            if (!map.isEmpty()) {
+                refs.add(map);
+            }
         }
 
-        if (psiElement != null) {
-            var fullClassName = PsiElementUtils.getFullClassName(psiElement);
-
-            if (fullClassName != null) {
-                data.put(CLASS_FULL_NAME, fullClassName);
+        if (!CollectionUtils.isEmpty(refs)) {
+            var refsString = JsonUtils.toJson(refs);
+            if (!StringUtils.isEmpty(refsString)) {
+                data.put("refs", JsonUtils.toJson(refs));
             }
         }
     }
@@ -129,15 +158,19 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
     }
 
     @Override
-    public void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference,
+    public void buildRelatedContextDataMap(Project project, List<CodeReferenceModel> codeReferences,
                                            List<PsiElement> localRef, List<String> remoteRef,
                                            List<EmbeddingQueryResponse.HitData> localEmbeddingRef, Map<String, String> data) {
         String packageName = null;
 
-        if (codeReference != null && codeReference.getFileUrl() != null) {
-            var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
-            if (psiJavaFile != null) {
-                packageName = psiJavaFile.getPackageName();
+        if (CollectionUtils.isNotEmpty(codeReferences)) {
+            var codeReference = codeReferences.get(codeReferences.size() - 1);
+
+            if (codeReference.getFileUrl() != null) {
+                var psiJavaFile = PsiElementUtils.getPsiJavaFileByFilePath(project, codeReference.getFileUrl());
+                if (psiJavaFile != null) {
+                    packageName = psiJavaFile.getPackageName();
+                }
             }
         }
 
@@ -240,7 +273,7 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
         }
         fileMeta.setLlmSummary("TODO::");
 
-        fileMeta.setClazzDef(getClazzDef(psiJavaFile, psiClass));
+        fileMeta.setClazzDef(getClazzDefWithoutImports(psiJavaFile, psiClass));
         return fileMeta;
     }
 
@@ -439,5 +472,14 @@ public class JavaFileAnalyzeProvider implements FileAnalyzeProvider {
             result += "\n    // ...\n}";
         }
         return result;
+    }
+
+    public static String getClazzDefWithoutImports(PsiJavaFile psiJavaFile, PsiClass psiClass) {
+        String fullText = getClazzDef(psiJavaFile, psiClass);
+
+        String withoutImports = fullText.replaceAll("(?m)^import\\s+.*?;\n", "");
+        withoutImports = withoutImports.replaceAll("(?m)^\\s*\n", "");
+
+        return withoutImports;
     }
 }

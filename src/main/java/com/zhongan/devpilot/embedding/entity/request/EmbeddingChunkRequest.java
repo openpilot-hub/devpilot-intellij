@@ -12,6 +12,8 @@ public class EmbeddingChunkRequest {
 
     private String projectName;
 
+    private String projectLocation;
+
     private String gitRepo;
 
     private Map<String, List<VectorIndexRequest>> addedRecords;
@@ -48,6 +50,14 @@ public class EmbeddingChunkRequest {
 
     public void setProjectName(String projectName) {
         this.projectName = projectName;
+    }
+
+    public String getProjectLocation() {
+        return projectLocation;
+    }
+
+    public void setProjectLocation(String projectLocation) {
+        this.projectLocation = projectLocation;
     }
 
     public String getGitRepo() {

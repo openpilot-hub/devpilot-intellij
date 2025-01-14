@@ -2,6 +2,7 @@ package com.zhongan.devpilot.webview.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.List;
 import java.util.UUID;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -20,7 +21,7 @@ public class MessageModel {
 
     private Boolean streaming;
 
-    private CodeReferenceModel codeRef;
+    private List<CodeReferenceModel> codeRefs;
 
     private RecallModel recall;
 
@@ -30,7 +31,7 @@ public class MessageModel {
     private String mode;
 
     public static MessageModel buildCodeMessage(String id, Long time, String content,
-                                                String username, CodeReferenceModel codeReference, String mode) {
+                                                String username, List<CodeReferenceModel> codeReference, String mode) {
         MessageModel messageModel = new MessageModel();
         messageModel.setId(id);
         messageModel.setTime(time);
@@ -39,7 +40,7 @@ public class MessageModel {
         messageModel.setUsername(username);
         messageModel.setAvatar(null);
         messageModel.setStreaming(false);
-        messageModel.setCodeRef(codeReference);
+        messageModel.setCodeRefs(codeReference);
         messageModel.setMode(mode);
         return messageModel;
     }
@@ -61,7 +62,7 @@ public class MessageModel {
         messageModel.setUsername(null);
         messageModel.setAvatar(null);
         messageModel.setStreaming(streaming);
-        messageModel.setCodeRef(null);
+        messageModel.setCodeRefs(null);
         messageModel.setRecall(recall);
         return messageModel;
     }
@@ -146,12 +147,12 @@ public class MessageModel {
         this.streaming = streaming;
     }
 
-    public CodeReferenceModel getCodeRef() {
-        return codeRef;
+    public List<CodeReferenceModel> getCodeRefs() {
+        return codeRefs;
     }
 
-    public void setCodeRef(CodeReferenceModel codeRef) {
-        this.codeRef = codeRef;
+    public void setCodeRefs(List<CodeReferenceModel> codeRefs) {
+        this.codeRefs = codeRefs;
     }
 
     public RecallModel getRecall() {

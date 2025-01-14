@@ -86,7 +86,8 @@ public class DevPilotDocumentListener implements BulkAwareDocumentListener {
                 lastShownCompletion,
                 event.getNewFragment().toString(),
                 new DefaultCompletionAdjustment(),
-                result.getCompletionType());
+                result.getCompletionType(),
+                null);
 
     }
 

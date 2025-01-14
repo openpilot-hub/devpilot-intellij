@@ -274,6 +274,7 @@ public class LocalEmbeddingService {
         var chunkRequest = new EmbeddingChunkRequest();
         chunkRequest.setHomeDir(BinaryManager.INSTANCE.getHomeDir().getAbsolutePath());
         chunkRequest.setProjectName(project.getBasePath());
+        chunkRequest.setProjectLocation(project.getBasePath());
         chunkRequest.setGitRepo(index.getGitRepo());
 
         var taskList = transformIndexToDevPilotFile(project, fileList);

@@ -16,7 +16,7 @@ public class DefaultConst {
 
     public static final String DEFAULT_SOURCE_STRING = "JetBrains IDE";
 
-    public static final String AI_GATEWAY_INSTRUCT_COMPLETION = "/devpilot/v1/code-completion/default";
+    public static final String AI_GATEWAY_INSTRUCT_COMPLETION = "/devpilot/v2/code-completion/default";
 
     public static final String TELEMETRY_HOST = ConfigBundleUtils.getConfig("devpilot.telemetry.host", "http://localhost:8085");
 
@@ -52,6 +52,8 @@ public class DefaultConst {
 
     public static final String EMBEDDING_RESET_INDEX_PATH = "/reset-index";
 
+    public static final String AGENT_INSTRUCT_COMPLETION = "/instruct-completion";
+
     public static final String FEEDBACK_URL = OFFICIAL_WEBSITE_URL + "/feedback";
 
     public static final String PROFILE_URL = OFFICIAL_WEBSITE_URL + "/profile";
@@ -72,11 +74,11 @@ public class DefaultConst {
 
     public static final int CHAT_STEP_THREE = 3;
 
-    public static final String DEFAULT_PROMPT_VERSION = "V240923";
+    public static final String DEFAULT_PROMPT_VERSION = "V250102";
 
-    public static final String CODE_PREDICT_PROMPT_VERSION = "V240923";
+    public static final String CODE_PREDICT_PROMPT_VERSION = "V250102";
 
-    public static final String GIT_COMMIT_PROMPT_VERSION = "V240923";
+    public static final String GIT_COMMIT_PROMPT_VERSION = "V250102";
 
     public static final int NORMAL_CHAT_TYPE = 1;
 

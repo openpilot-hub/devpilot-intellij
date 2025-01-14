@@ -21,16 +21,16 @@ public interface FileAnalyzeProvider {
         return "default";
     }
 
-    default void buildCodePredictDataMap(Project project, CodeReferenceModel codeReference, Map<String, String> data) {
+    default void buildCodePredictDataMap(Project project, List<CodeReferenceModel> codeReferences, Map<String, String> data) {
     }
 
-    default void buildChatDataMap(Project project, PsiElement psiElement, CodeReferenceModel codeReference, Map<String, String> data) {
+    default void buildChatDataMap(Project project, PsiElement psiElement, List<CodeReferenceModel> codeReferences, Map<String, String> data) {
     }
 
     default void buildTestDataMap(Project project, Editor editor, Map<String, String> data) {
     }
 
-    default void buildRelatedContextDataMap(Project project, CodeReferenceModel codeReference, List<PsiElement> localRef, List<String> remoteRef, List<EmbeddingQueryResponse.HitData> localEmbeddingRef, Map<String, String> data) {
+    default void buildRelatedContextDataMap(Project project, List<CodeReferenceModel> codeReferences, List<PsiElement> localRef, List<String> remoteRef, List<EmbeddingQueryResponse.HitData> localEmbeddingRef, Map<String, String> data) {
     }
 
     default List<PsiElement> callLocalRag(Project project, DevPilotCodePrediction codePrediction) {

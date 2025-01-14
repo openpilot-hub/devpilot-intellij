@@ -634,7 +634,11 @@ public class PsiElementUtils {
             return null;
         }
 
-        return psiFile.getText().substring(startOffset, endOffset);
+        try {
+            return psiFile.getText().substring(startOffset, endOffset);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 }
