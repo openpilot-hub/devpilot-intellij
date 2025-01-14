@@ -73,7 +73,7 @@ public class JsonUtils {
         String jsonWithoutMarkdown = MarkdownUtil.extractContents(json);
 
         if (jsonWithoutMarkdown != null) {
-            return jsonWithoutMarkdown;
+            json = jsonWithoutMarkdown;
         }
 
         int index = json.indexOf("{");

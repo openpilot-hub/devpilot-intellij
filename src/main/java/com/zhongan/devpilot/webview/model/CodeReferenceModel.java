@@ -7,6 +7,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.psi.PsiDocumentManager;
 import com.intellij.psi.PsiElement;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryResponse;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
@@ -16,6 +17,8 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import org.apache.commons.collections.CollectionUtils;
 
 import static com.zhongan.devpilot.util.PsiElementUtils.shouldIgnorePsiElement;
 
@@ -46,6 +49,33 @@ public class CodeReferenceModel {
 
     }
 
+    public static EditorActionEnum getLastType(List<CodeReferenceModel> codeReferences) {
+        if (CollectionUtils.isEmpty(codeReferences)) {
+            return null;
+        }
+
+        var lastCode = codeReferences.get(codeReferences.size() - 1);
+        return lastCode.getType();
+    }
+
+    public static String getLastSourceCode(List<CodeReferenceModel> codeReferences) {
+        if (CollectionUtils.isEmpty(codeReferences)) {
+            return null;
+        }
+
+        var lastCode = codeReferences.get(codeReferences.size() - 1);
+        return lastCode.getSourceCode();
+    }
+
+    public static String getLanguage(List<CodeReferenceModel> codeReferences) {
+        if (CollectionUtils.isEmpty(codeReferences)) {
+            return DevPilotVersion.getDefaultLanguage();
+        }
+
+        var lastCode = codeReferences.get(codeReferences.size() - 1);
+        return lastCode.getLanguageId();
+    }
+
     public static CodeReferenceModel getCodeRefFromEditor(EditorInfo editorInfo, EditorActionEnum actionEnum) {
         return new CodeReferenceModel(editorInfo.getLanguageId(), editorInfo.getFilePresentableUrl(),
                 editorInfo.getFileName(), editorInfo.getSourceCode(), editorInfo.getSelectedStartLine(),
@@ -62,6 +92,9 @@ public class CodeReferenceModel {
 
         for (var data : codeList) {
             var code = PsiElementUtils.getCodeBlock(project, data.getFilePath(), data.getStartOffset(), data.getEndOffset());
+            if (code == null) {
+                continue;
+            }
             var absolutePath = project.getBasePath() + File.separator + data.getFilePath();
             var fileName = data.getFilePath().substring(data.getFilePath().lastIndexOf(File.separator) + 1);
             var ref = new CodeReferenceModel(languageId, absolutePath, fileName, code,

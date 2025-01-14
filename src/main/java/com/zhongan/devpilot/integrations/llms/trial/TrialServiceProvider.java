@@ -6,11 +6,15 @@ import com.google.gson.Gson;
 import com.intellij.openapi.components.Service;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectUtil;
+import com.intellij.openapi.util.Pair;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
+import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotCompletionPredictRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotFailedResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
@@ -42,7 +46,8 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.sse.EventSource;
 
-import static com.zhongan.devpilot.constant.DefaultConst.AI_GATEWAY_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.AGENT_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_HOST;
 import static com.zhongan.devpilot.constant.DefaultConst.TRIAL_DEFAULT_HOST;
 
 @Service(Service.Level.PROJECT)
@@ -133,17 +138,24 @@ public final class TrialServiceProvider implements LlmProvider {
         }
 
         Response response;
-        String json = GatewayRequestUtils.completionRequestJson(instructCompletionRequest);
         try {
-            var request = new Request.Builder()
-                    .url(TRIAL_DEFAULT_HOST + AI_GATEWAY_INSTRUCT_COMPLETION)
-                    .header("User-Agent", UserAgentUtils.buildUserAgent())
-                    .header("Auth-Type", LoginUtils.getLoginType())
-                    .header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US")
-                    .post(RequestBody.create(json, MediaType.parse("application/json")))
-                    .build();
-            Call call = OkhttpUtils.getClient().newCall(request);
-            response = call.execute();
+            String requestBody = GatewayRequestUtils.completionRequestPureJson(instructCompletionRequest);
+
+            Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
+            if (null != portPId) {
+                String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + AGENT_INSTRUCT_COMPLETION;
+                var request = new Request.Builder()
+                        .url(url)
+                        .header("User-Agent", UserAgentUtils.buildUserAgent())
+                        .header("Auth-Type", LoginUtils.getLoginType())
+                        .header("X-B3-Language", LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh-CN" : "en-US")
+                        .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                        .build();
+                Call call = OkhttpUtils.getClient().newCall(request);
+                response = call.execute();
+            } else {
+                return null;
+            }
         } catch (Exception e) {
             Logger.getInstance(getClass()).warn("Instruct completion failed: " + e.getMessage());
             return null;
@@ -268,5 +280,67 @@ public final class TrialServiceProvider implements LlmProvider {
     @Override
     public List<DevPilotRagResponse> ragCompletion(DevPilotRagRequest ragRequest) {
         return null;
+    }
+
+    @Override
+    public DevPilotChatCompletionResponse completionCodePrediction(DevPilotCompletionPredictRequest devPilotCompletionPredictRequest) {
+        Response response;
+
+        try {
+            String requestBody = GatewayRequestV2Utils.encodeRequest(devPilotCompletionPredictRequest);
+            if (requestBody == null) {
+                return DevPilotChatCompletionResponse.failed("Chat completion failed: request body is null");
+            }
+
+            DevPilotNotification.debug("Send Request :[" + requestBody + "].");
+
+            var request = new Request.Builder()
+                    .url(TRIAL_DEFAULT_HOST + "/devpilot/v2/flow/process")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", "wx")
+                    .header("X-DevPilot-Params", " {\"command\":\"completionPrediction\"}")
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
+
+            Call call = OkhttpUtils.getClient().newCall(request);
+            response = call.execute();
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+
+        try {
+            return parseCompletionPredictResult(response);
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        }
+    }
+
+    private DevPilotChatCompletionResponse parseCompletionPredictResult(Response response) throws IOException {
+        if (response == null) {
+            return DevPilotChatCompletionResponse.failed(DevPilotMessageBundle.get("devpilot.chatWindow.response.null"));
+        }
+
+        var result = Objects.requireNonNull(response.body()).string();
+
+        if (response.isSuccessful()) {
+            var message = objectMapper.readValue(result, DevPilotSuccessResponse.class)
+                    .getChoices()
+                    .get(0)
+                    .getMessage();
+            return DevPilotChatCompletionResponse.success(message.getContent());
+
+        } else if (response.code() == 401) {
+            LoginUtils.logout();
+            return DevPilotChatCompletionResponse.failed("Chat completion failed: Unauthorized, please login <a href=\"" + LoginUtils.loginUrl() + "\">" + "sso" + "</a>");
+        } else if (isPluginVersionTooLowResp(resolveJsonBody(result))) {
+            handlePluginVersionTooLow(ProjectUtil.currentOrDefaultProject(null).getService(DevPilotChatToolWindowService.class), false);
+            return DevPilotChatCompletionResponse.warn(DevPilotMessageBundle.get("devpilot.notification.version.message"));
+        } else {
+            return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
+                    .getError()
+                    .getMessage());
+        }
     }
 }

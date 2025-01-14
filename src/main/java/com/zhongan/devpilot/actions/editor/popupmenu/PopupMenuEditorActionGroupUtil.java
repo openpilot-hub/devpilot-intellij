@@ -28,8 +28,10 @@ import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -117,11 +119,14 @@ public class PopupMenuEditorActionGroupUtil {
                             codeReferenceModel = CodeReferenceModel.getCodeRefFromEditor(editorInfo, editorActionEnum);
                         }
 
+                        List<CodeReferenceModel> list = new ArrayList<>();
+                        list.add(codeReferenceModel);
+
                         var codeMessage = MessageModel.buildCodeMessage(
-                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel, mode);
+                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, list, mode);
 
                         FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
-                                .buildChatDataMap(project, psiElement, codeReferenceModel, data);
+                                .buildChatDataMap(project, psiElement, list, data);
 
                         service.chat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }

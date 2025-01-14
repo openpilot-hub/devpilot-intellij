@@ -9,7 +9,6 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.util.Computable;
 import com.intellij.psi.PsiElement;
-import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.constant.DefaultConst;
@@ -20,8 +19,10 @@ import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
+import com.zhongan.devpilot.integrations.llms.entity.CompletionRelatedCodeInfo;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotCodePrediction;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotCompletionPredictRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
@@ -31,6 +32,7 @@ import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.EncryptionUtil;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
+import com.zhongan.devpilot.util.PsiElementUtils;
 import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.EmbeddedModel;
@@ -47,6 +49,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -130,7 +134,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(CHAT_STEP_ONE);
-            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), msgType);
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRefs(), msgType);
 
             // step2 call rag to analyze code
             if (shouldCancelChat(messageModel)) {
@@ -138,7 +142,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(CHAT_STEP_TWO);
-            var rag = callRag(references, messageModel.getCodeRef(), message);
+            var rag = callRag(references, messageModel.getCodeRefs(), message);
 
             // step3 call model to get the final result
             if (shouldCancelChat(messageModel)) {
@@ -159,11 +163,10 @@ public final class DevPilotChatToolWindowService {
 
             if (rag != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var language = messageModel.getCodeRef() == null ?
-                            DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
+                    var language = CodeReferenceModel.getLanguage(messageModel.getCodeRefs());
 
                     FileAnalyzeProviderFactory.getProvider(language)
-                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, rag.localEmbeddingRag, newMap);
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRefs(), rag.localRag, rag.remoteRag, rag.localEmbeddingRag, newMap);
 
                     if (rag.localRag != null) {
                         localRefs[0] = CodeReferenceModel.getCodeRefListFromPsiElement(rag.localRag, EditorActionEnum.getEnumByName(msgType));
@@ -214,7 +217,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(CHAT_STEP_ONE);
-            var references = codePredict(messageModel.getContent(), messageModel.getCodeRef(), null);
+            var references = codePredict(messageModel.getContent(), messageModel.getCodeRefs(), null);
 
             // step2 call rag to analyze code
             if (shouldCancelChat(messageModel)) {
@@ -222,7 +225,7 @@ public final class DevPilotChatToolWindowService {
             }
 
             this.nowStep.set(CHAT_STEP_TWO);
-            var rag = callRag(references, messageModel.getCodeRef(), messageModel.getContent());
+            var rag = callRag(references, messageModel.getCodeRefs(), messageModel.getContent());
 
             // step3 call model to get the final result
             if (shouldCancelChat(messageModel)) {
@@ -237,15 +240,14 @@ public final class DevPilotChatToolWindowService {
 
             if (rag != null) {
                 ApplicationManager.getApplication().runReadAction(() -> {
-                    var language = messageModel.getCodeRef() == null ?
-                            DevPilotVersion.getDefaultLanguage() : messageModel.getCodeRef().getLanguageId();
+                    var language = CodeReferenceModel.getLanguage(messageModel.getCodeRefs());
 
                     FileAnalyzeProviderFactory.getProvider(language)
-                            .buildRelatedContextDataMap(project, messageModel.getCodeRef(), rag.localRag, rag.remoteRag, rag.localEmbeddingRag, data);
+                            .buildRelatedContextDataMap(project, messageModel.getCodeRefs(), rag.localRag, rag.remoteRag, rag.localEmbeddingRag, data);
 
                     EditorActionEnum type = null;
-                    if (messageModel.getCodeRef() != null) {
-                        type = messageModel.getCodeRef().getType();
+                    if (messageModel.getCodeRefs() != null) {
+                        type = CodeReferenceModel.getLastType(messageModel.getCodeRefs());
                     }
 
                     if (rag.localRag != null) {
@@ -278,18 +280,86 @@ public final class DevPilotChatToolWindowService {
         return !StringUtils.equals(currentMessageId, messageModel.getId());
     }
 
-    private DevPilotCodePrediction codePredict(String content, CodeReferenceModel codeReference, String commandType) {
+    public List<CompletionRelatedCodeInfo> buildCompletionRelatedFile(String filePath, String document, int position, String language) {
+        var predict = completionCodePredict(filePath, document, position, language);
+        if (predict != null) {
+            var result = new CopyOnWriteArrayList<CompletionRelatedCodeInfo>();
+
+            // 本地索引召回
+            ApplicationManager.getApplication().runReadAction(() -> {
+                var list = FileAnalyzeProviderFactory.getProvider(language).callLocalRag(project, predict);
+                for (var element : list) {
+                    var info = new CompletionRelatedCodeInfo();
+                    info.setScore(1.0d);
+                    info.setFilePath(element.getContainingFile().getName());
+                    info.setCode(element.getText());
+                    result.add(info);
+                }
+            });
+
+            // 本地向量库召回
+            if (!StringUtils.isEmpty(predict.getComments())) {
+                this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+                var embeddingRequest = new EmbeddingQueryRequest();
+                embeddingRequest.setProjectName(project.getBasePath());
+                embeddingRequest.setHomeDir(BinaryManager.INSTANCE.getHomeDir().getAbsolutePath());
+                embeddingRequest.setContent(predict.getComments());
+
+                var embeddingResponse = this.llmProvider.embeddingQuery(embeddingRequest);
+                if (embeddingResponse != null) {
+                    var hitDataList = embeddingResponse.getHitsData();
+                    for (EmbeddingQueryResponse.HitData hitData : hitDataList) {
+                        var code = PsiElementUtils.getCodeBlock(project,
+                                hitData.getFilePath(), hitData.getStartOffset(), hitData.getEndOffset());
+                        if (code == null) {
+                            continue;
+                        }
+                        var info = new CompletionRelatedCodeInfo();
+                        info.setScore(Double.parseDouble(hitData.getScore()));
+                        info.setFilePath(hitData.getFilePath());
+                        info.setCode(code);
+                        result.add(info);
+                    }
+                }
+            }
+
+            // 本地索引和本地向量库一起返回
+            return result;
+        }
+
+        return null;
+    }
+
+    public DevPilotCodePrediction completionCodePredict(String filePath, String document, int position, String language) {
+        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+
+        var completionPredictRequest = new DevPilotCompletionPredictRequest();
+        completionPredictRequest.setFilePath(filePath);
+        completionPredictRequest.setDocument(document);
+        completionPredictRequest.setPosition(position);
+        completionPredictRequest.setLanguage(language);
+
+        var response = this.llmProvider.completionCodePrediction(completionPredictRequest);
+        if (!response.isSuccessful() || response.getContent() == null) {
+            return null;
+        }
+        return JsonUtils.fromJson(JsonUtils.fixJson(response.getContent()), DevPilotCodePrediction.class);
+    }
+
+    private DevPilotCodePrediction codePredict(String content, List<CodeReferenceModel> codeReference, String commandType) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(1));
         callWebView(this.lastMessage);
 
         final Map<String, String> dataMap = new HashMap<>();
 
+        var type = CodeReferenceModel.getLastType(codeReference);
+
         if (commandType == null) {
-            if (codeReference == null || codeReference.getType() == null) {
+            if (codeReference == null || type == null) {
                 commandType = "PURE_CHAT";
             } else {
-                commandType = codeReference.getType().name();
+                commandType = type.name();
             }
         }
 
@@ -297,7 +367,9 @@ public final class DevPilotChatToolWindowService {
 
         if (codeReference != null) {
             ApplicationManager.getApplication().runReadAction(() -> {
-                FileAnalyzeProviderFactory.getProvider(codeReference.getLanguageId())
+                var language = CodeReferenceModel.getLanguage(codeReference);
+
+                FileAnalyzeProviderFactory.getProvider(language)
                         .buildCodePredictDataMap(project, codeReference, dataMap);
             });
         }
@@ -315,67 +387,94 @@ public final class DevPilotChatToolWindowService {
         return JsonUtils.fromJson(JsonUtils.fixJson(response.getContent()), DevPilotCodePrediction.class);
     }
 
-    private Rag callRag(DevPilotCodePrediction codePredict, CodeReferenceModel codeReference, String message) {
+    private Rag callRag(DevPilotCodePrediction codePredict, List<CodeReferenceModel> codeReference, String message) {
         this.lastMessage = MessageModel
                 .buildAssistantMessage(System.currentTimeMillis() + "", System.currentTimeMillis(), "", true, RecallModel.create(2));
         callWebView(this.lastMessage);
 
         return ApplicationManager.getApplication().runReadAction((Computable<Rag>) () -> {
-            List<PsiElement> localRag = null;
-            List<String> remoteRag = null;
-            List<EmbeddingQueryResponse.HitData> localEmbedding = null;
+            final List<PsiElement>[] localRag = new List[1];
+            final List<String>[] remoteRag = new List[1];
+            final List<EmbeddingQueryResponse.HitData>[] localEmbedding = new List[1];
 
-            var language = codeReference == null ? DevPilotVersion.getDefaultLanguage() : codeReference.getLanguageId();
+            var language = CodeReferenceModel.getLanguage(codeReference);
 
-            // call local rag
-            if (codePredict != null) {
-                localRag = FileAnalyzeProviderFactory.getProvider(language).callLocalRag(project, codePredict);
+            CountDownLatch latch = new CountDownLatch(3);
+
+            ApplicationManager.getApplication().runReadAction(() -> {
+                try {
+                    // call local rag
+                    if (codePredict != null) {
+                        localRag[0] = FileAnalyzeProviderFactory
+                                .getProvider(language).callLocalRag(project, codePredict);
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+
+            ApplicationManager.getApplication().runReadAction(() -> {
+                try {
+                    // call local embedding
+                    var embeddingRequest = new EmbeddingQueryRequest();
+                    embeddingRequest.setProjectName(project.getBasePath());
+                    embeddingRequest.setHomeDir(BinaryManager.INSTANCE.getHomeDir().getAbsolutePath());
+                    embeddingRequest.setContent(message);
+                    if (codeReference != null) {
+                        embeddingRequest.setSelectedCode(CodeReferenceModel.getLastSourceCode(codeReference));
+                    }
+
+                    var embeddingResponse = llmProvider.embeddingQuery(embeddingRequest);
+                    if (embeddingResponse != null) {
+                        localEmbedding[0] = embeddingResponse.getHitsData();
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+
+            ApplicationManager.getApplication().runReadAction(() -> {
+                try {
+                    // menu action will not call remote rag
+                    if (codeReference == null || CodeReferenceModel.getLastType(codeReference) == null) {
+                        remoteRag[0] = null;
+                    }
+
+                    // call remote rag
+                    var request = new DevPilotRagRequest();
+                    if (codeReference != null) {
+                        request.setSelectedCode(CodeReferenceModel.getLastSourceCode(codeReference));
+                    }
+                    request.setProjectType(language);
+                    if (message != null) {
+                        request.setContent(message);
+                    }
+
+                    // calculate md5 of project path as unique id
+                    request.setProjectName(getProjectPathString());
+
+                    if (codePredict != null) {
+                        request.setPredictionComments(codePredict.getComments());
+                    }
+
+                    var response = this.llmProvider.ragCompletion(request);
+
+                    if (response != null) {
+                        remoteRag[0] = response.stream().map(DevPilotRagResponse::getCode)
+                                .filter(Objects::nonNull).collect(Collectors.toList());
+                    }
+                } finally {
+                    latch.countDown();
+                }
+            });
+
+            try {
+                latch.await();
+            } catch (InterruptedException e) {
+                return new Rag(localRag[0], remoteRag[0], localEmbedding[0]);
             }
 
-            // call local embedding
-            var embeddingRequest = new EmbeddingQueryRequest();
-            embeddingRequest.setProjectName(project.getBasePath());
-            embeddingRequest.setHomeDir(BinaryManager.INSTANCE.getHomeDir().getAbsolutePath());
-            embeddingRequest.setContent(message);
-            if (codeReference != null) {
-                embeddingRequest.setSelectedCode(codeReference.getSourceCode());
-            }
-
-            var embeddingResponse = llmProvider.embeddingQuery(embeddingRequest);
-            if (embeddingResponse != null) {
-                localEmbedding = embeddingResponse.getHitsData();
-            }
-
-            // menu action will not call remote rag
-            if (codeReference != null && codeReference.getType() != null) {
-                return new Rag(localRag, null, localEmbedding);
-            }
-
-            // call remote rag
-            var request = new DevPilotRagRequest();
-            if (codeReference != null) {
-                request.setSelectedCode(codeReference.getSourceCode());
-            }
-            request.setProjectType(language);
-            if (message != null) {
-                request.setContent(message);
-            }
-
-            // calculate md5 of project path as unique id
-            request.setProjectName(getProjectPathString());
-
-            if (codePredict != null) {
-                request.setPredictionComments(codePredict.getComments());
-            }
-
-            var response = this.llmProvider.ragCompletion(request);
-
-            if (response != null) {
-                remoteRag = response.stream().map(DevPilotRagResponse::getCode)
-                        .filter(Objects::nonNull).collect(Collectors.toList());
-            }
-
-            return new Rag(localRag, remoteRag, localEmbedding);
+            return new Rag(localRag[0], remoteRag[0], localEmbedding[0]);
         });
     }
 
@@ -593,8 +692,10 @@ public final class DevPilotChatToolWindowService {
     }
 
     public MessageModel getUserContentCode(MessageModel messageModel) {
-        if (messageModel.getCodeRef() != null) {
-            return messageModel;
+        List<CodeReferenceModel> codeRefs = new ArrayList<>();
+
+        if (messageModel.getCodeRefs() != null) {
+            codeRefs = messageModel.getCodeRefs();
         }
 
         final Editor[] editor = new Editor[1];
@@ -613,8 +714,15 @@ public final class DevPilotChatToolWindowService {
             return messageModel;
         }
 
+        // 检查sourceCode是否在codeRefs重复，重复就删除旧的
+        var code = editorInfo[0].getSourceCode();
+        // 不管存不存在都删除，反正最后都会追加
+        codeRefs.removeIf(codeRef -> codeRef.getSourceCode().equals(code));
+
         var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo[0], null);
-        messageModel.setCodeRef(codeReference);
+        codeRefs.add(codeReference);
+
+        messageModel.setCodeRefs(codeRefs);
 
         return messageModel;
     }

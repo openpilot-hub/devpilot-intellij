@@ -39,6 +39,8 @@ public class VectorIndexRequest {
 
     private String code;
 
+    private String codeType;
+
     private String llmSummary;
 
     private double[] llmSummaryVector;
@@ -163,6 +165,14 @@ public class VectorIndexRequest {
         this.code = code;
     }
 
+    public String getCodeType() {
+        return codeType;
+    }
+
+    public void setCodeType(String codeType) {
+        this.codeType = codeType;
+    }
+
     public String getLlmSummary() {
         return llmSummary;
     }
@@ -195,6 +205,7 @@ public class VectorIndexRequest {
         request.setComments(functionMeta.getComments());
         request.setChunkHash(functionMeta.getChunkHash());
         request.setFileType(fileInfo.getFileMeta().getFileType());
+        request.setCodeType("functionDef");
         request.setTimestamp(new Date());
         return request;
     }
@@ -214,6 +225,7 @@ public class VectorIndexRequest {
         request.setChunkHash(javaFileMeta.getChunkHash());
         request.setFileType(javaFileMeta.getFileType());
         request.setCode(javaFileMeta.getClazzDef());
+        request.setCodeType("classDef");
         request.setComments(javaFileMeta.getComments());
         request.setTimestamp(new Date());
         return request;

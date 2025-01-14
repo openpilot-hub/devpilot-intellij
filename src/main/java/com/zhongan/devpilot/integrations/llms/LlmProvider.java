@@ -13,6 +13,7 @@ import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryResponse;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotChatCompletionResponse;
+import com.zhongan.devpilot.integrations.llms.entity.DevPilotCompletionPredictRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
@@ -65,6 +66,8 @@ public interface LlmProvider {
     DevPilotChatCompletionResponse codePrediction(DevPilotChatCompletionRequest chatCompletionRequest);
 
     List<DevPilotRagResponse> ragCompletion(DevPilotRagRequest ragRequest);
+
+    DevPilotChatCompletionResponse completionCodePrediction(DevPilotCompletionPredictRequest completionPredictRequest);
 
     void interruptSend();
 
