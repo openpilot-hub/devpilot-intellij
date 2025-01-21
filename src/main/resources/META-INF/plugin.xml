@@ -232,6 +232,11 @@
             <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>
         </action>
 
+        <action class="com.zhongan.devpilot.completions.inline.ManualTriggerChatCompletionAction"
+                id="ManualTriggerChatCompletionAction" text="Trigger Chat Completion">
+            <keyboard-shortcut first-keystroke="alt C" keymap="$default"/>
+        </action>
+
         <group id="DevPilot.GenerateGitCommitMessageGroup">
             <add-to-group group-id="Vcs.MessageActionGroup" anchor="first"/>
             <action
