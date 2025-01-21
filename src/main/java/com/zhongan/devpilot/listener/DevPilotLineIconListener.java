@@ -9,12 +9,14 @@ import com.intellij.openapi.editor.event.CaretListener;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.editor.markup.MarkupModel;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
+import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.completions.general.DependencyContainer;
 import com.zhongan.devpilot.completions.inline.CompletionPreview;
 import com.zhongan.devpilot.completions.inline.DefaultCompletionAdjustment;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.enums.CompletionTypeEnum;
+import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,7 +30,7 @@ import static com.zhongan.devpilot.DevPilotIcons.COMPLETION_IN_PROGRESS;
 import static com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON;
 
 public class DevPilotLineIconListener implements CaretListener {
-    private final Map<Editor, RangeHighlighter> activeHighlighters = new HashMap<>();
+    private static final Map<Editor, RangeHighlighter> activeHighlighters = new HashMap<>();
 
     private final Project project;
 
@@ -57,7 +59,7 @@ public class DevPilotLineIconListener implements CaretListener {
         updateGutterIcon(editor, line);
     }
 
-    private void updateGutterIcon(Editor editor, int line) {
+    public static DevPilotGutterIconRenderer updateGutterIcon(Editor editor, int line) {
         MarkupModel markupModel = editor.getMarkupModel();
 
         // 清理之前的高亮
@@ -65,11 +67,13 @@ public class DevPilotLineIconListener implements CaretListener {
 
         // 添加新的高亮图标
         RangeHighlighter highlighter = markupModel.addLineHighlighter(line, 0, null);
-        highlighter.setGutterIconRenderer(new DevPilotGutterIconRenderer(line));
+        var gutterIconRenderer = new DevPilotGutterIconRenderer(line);
+        highlighter.setGutterIconRenderer(gutterIconRenderer);
         activeHighlighters.put(editor, highlighter);
+        return gutterIconRenderer;
     }
 
-    private void removePreviousHighlight(Editor editor) {
+    private static void removePreviousHighlight(Editor editor) {
         if (activeHighlighters.containsKey(editor)) {
             RangeHighlighter highlighter = activeHighlighters.get(editor);
             if (highlighter != null) {
@@ -95,7 +99,8 @@ public class DevPilotLineIconListener implements CaretListener {
 
         @Override
         public @Nullable String getTooltipText() {
-            return "DevPilot chat completion";
+            var shortcut = KeymapUtil.getShortcutText("ManualTriggerChatCompletionAction");
+            return DevPilotMessageBundle.get("devpilot.chat.completion.desc") + " " + shortcut;
         }
 
         @Override
