@@ -9,8 +9,10 @@ import com.intellij.openapi.editor.event.CaretListener;
 import com.intellij.openapi.editor.markup.GutterIconRenderer;
 import com.intellij.openapi.editor.markup.MarkupModel;
 import com.intellij.openapi.editor.markup.RangeHighlighter;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.vfs.VirtualFile;
 import com.zhongan.devpilot.completions.general.DependencyContainer;
 import com.zhongan.devpilot.completions.inline.CompletionPreview;
 import com.zhongan.devpilot.completions.inline.DefaultCompletionAdjustment;
@@ -53,10 +55,21 @@ public class DevPilotLineIconListener implements CaretListener {
             return;
         }
 
+        if (isNonEditableEditor(editor)) {
+            removePreviousHighlight(editor);
+            return;
+        }
+
         int line = event.getCaret().getLogicalPosition().line;
 
         // 更新光标所在行的图标
         updateGutterIcon(editor, line);
+    }
+
+    private boolean isNonEditableEditor(Editor editor) {
+        // 检查是否为不可写的文件
+        VirtualFile file = FileDocumentManager.getInstance().getFile(editor.getDocument());
+        return file == null || !file.isWritable();
     }
 
     public static DevPilotGutterIconRenderer updateGutterIcon(Editor editor, int line) {

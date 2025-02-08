@@ -54,6 +54,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var languageSettings = LanguageSettingsState.getInstance();
         var chatShortcutSettings = ChatShortcutSettingState.getInstance();
         var languageIndex = settingsComponent.getLanguageIndex();
+        var logLanguageIndex = settingsComponent.getGitLogLanguageIndex();
         var personalAdvancedSettings = PersonalAdvancedSettingsState.getInstance();
 
         var methodInlayPresentationDisplayIndex = settingsComponent.getMethodInlayPresentationDisplayIndex();
@@ -63,6 +64,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         return !settingsComponent.getFullName().equals(settings.getFullName())
                 || !languageIndex.equals(languageSettings.getLanguageIndex())
+                || !logLanguageIndex.equals(languageSettings.getGitLogLanguageIndex())
                 || !methodInlayPresentationDisplayIndex.equals(chatShortcutSettings.getDisplayIndex())
                 || !settingsComponent.getCompletionEnabled() == (completionEnable)
                 || !settingsComponent.getStatusCheckEnabled() == (enable)
@@ -109,6 +111,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         var languageSettings = LanguageSettingsState.getInstance();
         Integer languageIndex = settingsComponent.getLanguageIndex();
+        Integer logLanguageIndex = settingsComponent.getGitLogLanguageIndex();
 
         // if language changed, refresh webview
         if (!languageIndex.equals(languageSettings.getLanguageIndex())) {
@@ -116,6 +119,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         }
 
         languageSettings.setLanguageIndex(languageIndex);
+        languageSettings.setGitLogLanguageIndex(logLanguageIndex);
 
         var chatShortcutSettings = ChatShortcutSettingState.getInstance();
         var methodInlayPresentationDisplayIndex = settingsComponent.getMethodInlayPresentationDisplayIndex();
@@ -168,6 +172,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
 
         var languageSettings = LanguageSettingsState.getInstance();
         settingsComponent.setLanguageIndex(languageSettings.getLanguageIndex());
+        settingsComponent.setGitLogLanguageIndex(languageSettings.getGitLogLanguageIndex());
 
         var chatShortcutSettings = ChatShortcutSettingState.getInstance();
         settingsComponent.setMethodInlayPresentationDisplayIndex(chatShortcutSettings.getDisplayIndex());
