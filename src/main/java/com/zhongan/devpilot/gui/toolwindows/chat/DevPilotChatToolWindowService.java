@@ -32,6 +32,7 @@ import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.EncryptionUtil;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
+import com.zhongan.devpilot.util.PromptDataMapUtils;
 import com.zhongan.devpilot.util.PsiElementUtils;
 import com.zhongan.devpilot.util.TokenUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
@@ -367,10 +368,7 @@ public final class DevPilotChatToolWindowService {
 
         if (codeReference != null) {
             ApplicationManager.getApplication().runReadAction(() -> {
-                var language = CodeReferenceModel.getLanguage(codeReference);
-
-                FileAnalyzeProviderFactory.getProvider(language)
-                        .buildCodePredictDataMap(project, codeReference, dataMap);
+                PromptDataMapUtils.buildCodePredictDataMap(project, codeReference, dataMap);
             });
         }
 

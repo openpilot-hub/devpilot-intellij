@@ -17,7 +17,6 @@ import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
-import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.EditorUtils;
@@ -25,6 +24,7 @@ import com.zhongan.devpilot.util.JetbrainsVersionUtils;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.NewFileUtils;
+import com.zhongan.devpilot.util.PromptDataMapUtils;
 import com.zhongan.devpilot.util.TelemetryUtils;
 import com.zhongan.devpilot.webview.DevPilotCustomHandlerFactory;
 import com.zhongan.devpilot.webview.model.CodeActionModel;
@@ -133,8 +133,7 @@ public class DevPilotChatToolWindow {
 
                     if (message.getCodeRefs() != null) {
                         ApplicationManager.getApplication().invokeAndWait(() -> {
-                            FileAnalyzeProviderFactory.getProvider(CodeReferenceModel.getLanguage(message.getCodeRefs()))
-                                    .buildChatDataMap(project, null, message.getCodeRefs(), data);
+                            PromptDataMapUtils.buildChatDataMap(project, null, message.getCodeRefs(), data);
                         });
                     } else {
                         var language = DevPilotVersion.getDefaultLanguage();

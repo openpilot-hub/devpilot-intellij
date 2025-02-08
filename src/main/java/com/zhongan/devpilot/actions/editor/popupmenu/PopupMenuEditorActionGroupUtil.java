@@ -25,6 +25,7 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
+import com.zhongan.devpilot.util.PromptDataMapUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
@@ -125,8 +126,7 @@ public class PopupMenuEditorActionGroupUtil {
                         var codeMessage = MessageModel.buildCodeMessage(
                                 UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, list, mode);
 
-                        FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
-                                .buildChatDataMap(project, psiElement, list, data);
+                        PromptDataMapUtils.buildChatDataMap(project, psiElement, list, data);
 
                         service.chat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }

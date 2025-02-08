@@ -21,10 +21,18 @@ public interface FileAnalyzeProvider {
         return "default";
     }
 
-    default void buildCodePredictDataMap(Project project, List<CodeReferenceModel> codeReferences, Map<String, String> data) {
+    default Map<String, String> buildCodePredictDataMap(Project project, CodeReferenceModel codeReference, Map<String, String> data) {
+        return Map.of(
+                "selectedCode", codeReference.getSourceCode(),
+                "filePath", codeReference.getFileUrl()
+        );
     }
 
-    default void buildChatDataMap(Project project, PsiElement psiElement, List<CodeReferenceModel> codeReferences, Map<String, String> data) {
+    default Map<String, String> buildChatDataMap(Project project, PsiElement psiElement, CodeReferenceModel codeReference, Map<String, String> data) {
+        return Map.of(
+                "filePath", codeReference.getFileUrl(),
+                "selectedCode", codeReference.getSourceCode()
+        );
     }
 
     default void buildTestDataMap(Project project, Editor editor, Map<String, String> data) {
