@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import static com.zhongan.devpilot.util.PsiElementUtils.shouldIgnorePsiElement;
 
@@ -72,8 +73,19 @@ public class CodeReferenceModel {
             return DevPilotVersion.getDefaultLanguage();
         }
 
+        // 目前多个代码片段只要有java代码就认为是java
+        if (codeReferences.stream().anyMatch(codeReference -> "java".equals(codeReference.getLanguageId()))) {
+            return "java";
+        }
+
         var lastCode = codeReferences.get(codeReferences.size() - 1);
-        return lastCode.getLanguageId();
+        var language = lastCode.getLanguageId();
+
+        if (StringUtils.isEmpty(language)) {
+            return DevPilotVersion.getDefaultLanguage();
+        }
+
+        return language;
     }
 
     public static CodeReferenceModel getCodeRefFromEditor(EditorInfo editorInfo, EditorActionEnum actionEnum) {
