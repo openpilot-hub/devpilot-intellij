@@ -11,6 +11,8 @@ public class LanguageSettingsState implements PersistentStateComponent<LanguageS
 
     private static Integer languageIndex = 1;
 
+    private static Integer gitLogLanguageIndex = 0;
+
     public static LanguageSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(LanguageSettingsState.class);
     }
@@ -20,7 +22,15 @@ public class LanguageSettingsState implements PersistentStateComponent<LanguageS
     }
 
     public void setLanguageIndex(Integer languageIndex) {
-        this.languageIndex = languageIndex;
+        LanguageSettingsState.languageIndex = languageIndex;
+    }
+
+    public Integer getGitLogLanguageIndex() {
+        return gitLogLanguageIndex;
+    }
+
+    public void setGitLogLanguageIndex(Integer gitLogLanguageIndex) {
+        LanguageSettingsState.gitLogLanguageIndex = gitLogLanguageIndex;
     }
 
     @Override

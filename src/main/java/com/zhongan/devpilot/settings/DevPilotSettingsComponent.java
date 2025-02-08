@@ -38,6 +38,10 @@ public class DevPilotSettingsComponent {
 
     private ComboBox<String> languageComboBox;
 
+    private Integer gitLogLanguageIndex;
+
+    private ComboBox<String> gitLogLanguageComboBox;
+
     private Integer methodInlayPresentationDisplayIndex;
 
     private ComboBox<String> methodInlayPresentationDisplayComboBox;
@@ -51,6 +55,7 @@ public class DevPilotSettingsComponent {
         index = instance.getLanguageIndex();
 
         Integer languageIndex = LanguageSettingsState.getInstance().getLanguageIndex();
+        Integer logLanguageIndex = LanguageSettingsState.getInstance().getGitLogLanguageIndex();
 
         localRagRadio = new JBRadioButton(
                 DevPilotMessageBundle.get("devpilot.settings.local.rag.desc"),
@@ -73,6 +78,7 @@ public class DevPilotSettingsComponent {
                         .resizeX(false)
                         .createPanel())
                 .addComponent(createLanguageSectionPanel(languageIndex))
+                .addComponent(createGitLogLanguageSectionPanel(logLanguageIndex))
                 .addComponent(createMethodShortcutDisplayModeSectionPanel(inlayPresentationDisplayIndex))
                 .addComponent(UI.PanelFactory.panel(localStorageField)
                         .withLabel(DevPilotMessageBundle.get("devpilot.settings.localStorageLabel"))
@@ -145,6 +151,26 @@ public class DevPilotSettingsComponent {
         return panel;
     }
 
+    public JPanel createGitLogLanguageSectionPanel(Integer logLanguageIndex) {
+        gitLogLanguageComboBox = new ComboBox<>();
+        gitLogLanguageComboBox.addItem("English");
+        gitLogLanguageComboBox.addItem("中文");
+        gitLogLanguageComboBox.setSelectedIndex(logLanguageIndex);
+
+        gitLogLanguageComboBox.addActionListener(e -> {
+            var box = (ComboBox<?>) e.getSource();
+            gitLogLanguageIndex = box.getSelectedIndex();
+        });
+
+        var panel = UI.PanelFactory.grid()
+                .add(UI.PanelFactory.panel(gitLogLanguageComboBox)
+                        .withLabel(DevPilotMessageBundle.get("devpilot.setting.gitlog.language"))
+                        .resizeX(false))
+                .createPanel();
+        panel.setBorder(JBUI.Borders.emptyLeft(0));
+        return panel;
+    }
+
     public JPanel getPanel() {
         return mainPanel;
     }
@@ -156,6 +182,10 @@ public class DevPilotSettingsComponent {
 
     public Integer getLanguageIndex() {
         return index;
+    }
+
+    public Integer getGitLogLanguageIndex() {
+        return gitLogLanguageIndex;
     }
 
     public Integer getMethodInlayPresentationDisplayIndex() {
@@ -186,6 +216,11 @@ public class DevPilotSettingsComponent {
     public void setLanguageIndex(Integer index) {
         this.index = index;
         languageComboBox.setSelectedIndex(index);
+    }
+
+    public void setGitLogLanguageIndex(Integer gitLogLanguageIndex) {
+        this.gitLogLanguageIndex = gitLogLanguageIndex;
+        gitLogLanguageComboBox.setSelectedIndex(gitLogLanguageIndex);
     }
 
     public void setMethodInlayPresentationDisplayIndex(Integer methodInlayPresentationDisplayIndex) {

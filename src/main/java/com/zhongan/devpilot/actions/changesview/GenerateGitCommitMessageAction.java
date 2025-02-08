@@ -180,7 +180,7 @@ public class GenerateGitCommitMessageAction extends AnAction {
     }
 
     public static String getLocale() {
-        Integer languageIndex = LanguageSettingsState.getInstance().getLanguageIndex();
+        Integer languageIndex = LanguageSettingsState.getInstance().getGitLogLanguageIndex();
         Locale locale = languageIndex == 0 ? Locale.ENGLISH : Locale.SIMPLIFIED_CHINESE;
         return locale.getDisplayLanguage();
     }
