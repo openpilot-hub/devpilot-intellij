@@ -23,6 +23,7 @@ import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.settings.state.LocalRagSettingsState;
 import com.zhongan.devpilot.util.GitUtil;
 import com.zhongan.devpilot.util.JsonUtils;
+import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.MD5Utils;
 
 import java.io.File;
@@ -83,6 +84,9 @@ public class LocalEmbeddingService {
     }
 
     public static void indexProject(Project project) {
+        if (!LoginUtils.isLogin()) {
+            return;
+        }
         var indexJsonFile = getIndexJson(project);
         if (indexJsonFile == null) {
             // skip if index file not exists
@@ -265,7 +269,7 @@ public class LocalEmbeddingService {
 
             deleteRequest.setDeletedFiles(deleteFilePathList);
 
-            var deleteResponse = llmProvider.submitDelete(deleteRequest);
+            var deleteResponse = llmProvider.submitDelete(project, deleteRequest);
             if (deleteResponse == null) {
                 log.warn("delete chunk failed");
             }
@@ -288,9 +292,13 @@ public class LocalEmbeddingService {
             chunkRequest.setChangedRecords(fileMap);
             chunkRequest.setSubmitEnd(indexNum == taskList.size());
 
-            var response = llmProvider.submitChunk(chunkRequest);
+            var response = llmProvider.submitChunk(project, chunkRequest);
             if (response == null) {
                 log.warn("submit chunk failed");
+            }
+            if (response != null && response.isNeedAbortSubmit()) {
+                log.warn("Submit chunk failed, need abort submit for not login");
+                return;
             }
         }
     }

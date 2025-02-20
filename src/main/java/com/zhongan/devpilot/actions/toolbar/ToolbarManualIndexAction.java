@@ -7,6 +7,7 @@ import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.embedding.LocalEmbeddingService;
 import com.zhongan.devpilot.settings.state.LocalRagSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
+import com.zhongan.devpilot.util.LoginUtils;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -28,7 +29,10 @@ public class ToolbarManualIndexAction extends AnAction {
                     DevPilotMessageBundle.get("devpilot.notification.index.message"));
             return;
         }
-
+        if (!LoginUtils.isLogin()) {
+            DevPilotNotification.simpleNotLoginNotification(project);
+            return;
+        }
         DevPilotNotification.info(DevPilotMessageBundle.get("devpilot.notification.index.start.message"));
         LocalEmbeddingService.immediateStart(project);
     }
