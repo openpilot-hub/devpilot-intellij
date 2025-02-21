@@ -5,6 +5,7 @@ import com.intellij.openapi.application.ApplicationInfo;
 import com.intellij.openapi.extensions.PluginId;
 
 import java.util.Locale;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class DevPilotVersion {

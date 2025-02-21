@@ -64,6 +64,7 @@ import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_ONE;
 import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_THREE;
 import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_TWO;
 import static com.zhongan.devpilot.constant.DefaultConst.CODE_PREDICT_PROMPT_VERSION;
+import static com.zhongan.devpilot.constant.DefaultConst.D2C_PROMPT_VERSION;
 import static com.zhongan.devpilot.constant.DefaultConst.NORMAL_CHAT_TYPE;
 import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
 import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
@@ -207,7 +208,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void regenerateNormalChat(MessageModel messageModel, Consumer<String> callback) {
-        sendMessage(callback, null, null, null, NORMAL_CHAT_TYPE);
+        sendMessage(callback, null, null, null, NORMAL_CHAT_TYPE, messageModel);
     }
 
     public void regenerateSmartChat(MessageModel messageModel, Consumer<String> callback) {
@@ -269,7 +270,7 @@ public final class DevPilotChatToolWindowService {
                 });
             }
 
-            sendMessage(callback, data, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE);
+            sendMessage(callback, data, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE, messageModel);
         });
     }
 
@@ -499,6 +500,10 @@ public final class DevPilotChatToolWindowService {
             devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
         }
 
+        if ("EXTERNAL_AGENTS".equals(msgType)) {
+            devPilotChatCompletionRequest.setVersion(D2C_PROMPT_VERSION);
+        }
+
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
         var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
         if (MULTI_TURN.equals(sessionTypeEnum) &&
@@ -512,7 +517,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     public String sendMessage(Consumer<String> callback, Map<String, String> data,
-                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
+                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType, MessageModel messageModel) {
         // if data is not empty, the data should add into last history request message
         if (data != null && !data.isEmpty() && !historyMessageList.isEmpty()) {
             var lastHistoryRequestMessage = historyRequestMessageList.get(historyRequestMessageList.size() - 1);
@@ -525,6 +530,10 @@ public final class DevPilotChatToolWindowService {
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         devPilotChatCompletionRequest.setStream(true);
         devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
+
+        if ("EXTERNAL_AGENTS".equals(messageModel.getMsgType())) {
+            devPilotChatCompletionRequest.setVersion(D2C_PROMPT_VERSION);
+        }
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 

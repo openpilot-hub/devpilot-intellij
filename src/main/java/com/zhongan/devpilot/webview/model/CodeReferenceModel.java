@@ -43,6 +43,8 @@ public class CodeReferenceModel {
 
     private boolean visible = true;
 
+    private String base64;
+
     @JsonIgnore
     private EditorActionEnum type;
 
@@ -293,5 +295,13 @@ public class CodeReferenceModel {
 
     public void setType(EditorActionEnum type) {
         this.type = type;
+    }
+
+    public String getBase64() {
+        return base64;
+    }
+
+    public void setBase64(String base64) {
+        this.base64 = base64;
     }
 }
