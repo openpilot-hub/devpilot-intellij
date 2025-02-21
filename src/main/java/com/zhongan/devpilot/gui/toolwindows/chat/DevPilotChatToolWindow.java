@@ -35,7 +35,9 @@ import com.zhongan.devpilot.webview.model.ShowMessageModel;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -43,6 +45,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import javax.swing.JComponent;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
@@ -50,6 +53,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefLoadHandler;
 import org.cef.network.CefRequest;
 
+import static com.intellij.openapi.ui.playback.PlaybackRunner.StatusCallback.Type.message;
 import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 
 public class DevPilotChatToolWindow {
@@ -323,6 +327,45 @@ public class DevPilotChatToolWindow {
                         DevPilotNotification.info(messageModel.getContent());
                     }
 
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "D2C": {
+                    var payload = jsCallModel.getPayload();
+                    var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
+                    if (messageModel == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    var coedRefs = messageModel.getCodeRefs();
+                    CodeReferenceModel code = null;
+                    if (!CollectionUtils.isEmpty(coedRefs)) {
+                        // 理论上这里只会有一个引用，但是万一有多个选择最后的一个
+                        code = coedRefs.get(coedRefs.size() - 1);
+                    }
+
+                    if (code == null || StringUtils.isEmpty(code.getBase64())) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    String base64 = code.getBase64();
+                    List<String> base64List = new ArrayList<>();
+                    base64List.add(base64);
+
+                    // d2c默认不使用上下文
+                    messageModel.setMode("with-ctrl");
+                    var time = System.currentTimeMillis();
+                    var username = DevPilotLlmSettingsState.getInstance().getFullName();
+                    var uuid = UUID.randomUUID().toString();
+
+                    var userMessageModel = MessageModel.buildCodeMessage(
+                            uuid, time, messageModel.getContent(), username, messageModel.getCodeRefs(), messageModel.getMode());
+                    userMessageModel.setMsgType("EXTERNAL_AGENTS");
+
+                    Map<String, String> data = new HashMap<>();
+                    data.put("imageUrls", JsonUtils.toJson(base64List));
+                    data.put("flowId", "frontCodeGenerate");
+
+                    service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "EXTERNAL_AGENTS", data, messageModel.getContent(), null, userMessageModel);
                     return new JBCefJSQuery.Response("success");
                 }
                 default:

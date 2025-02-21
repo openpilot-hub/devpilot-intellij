@@ -1,5 +1,6 @@
 package com.zhongan.devpilot.webview.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.util.List;
@@ -29,6 +30,9 @@ public class MessageModel {
      * 模式，无值则为开启上下文，with-ctrl则为不开启上下文
      */
     private String mode;
+
+    @JsonIgnore
+    private String msgType;
 
     public static MessageModel buildCodeMessage(String id, Long time, String content,
                                                 String username, List<CodeReferenceModel> codeReference, String mode) {
@@ -169,5 +173,13 @@ public class MessageModel {
 
     public void setMode(String mode) {
         this.mode = mode;
+    }
+
+    public String getMsgType() {
+        return msgType;
+    }
+
+    public void setMsgType(String msgType) {
+        this.msgType = msgType;
     }
 }
