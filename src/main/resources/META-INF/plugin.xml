@@ -208,11 +208,11 @@
 
     <actions>
         <group id="DevPilotGroupedActions" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" popup="true" text="DevPilot" description="DevPilot">
-            <action id="com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction"
+            <group id="com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction"
                     class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                     popup="true"
                     text="DevPilot" description="Basic actions of DevPilot">
-            </action>
+            </group>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
 

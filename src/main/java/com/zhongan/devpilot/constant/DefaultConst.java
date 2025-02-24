@@ -1,14 +1,13 @@
 package com.zhongan.devpilot.constant;
 
 import com.zhongan.devpilot.util.ConfigBundleUtils;
-import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 public class DefaultConst {
 
     private DefaultConst() {
     }
 
-    public static final String GPT_35_MAX_TOKEN_EXCEPTION_MSG = DevPilotMessageBundle.get("devpilot.chatWindow.context.overflow");
+    public static final String GPT_35_MAX_TOKEN_EXCEPTION_MSG = "devpilot.chatWindow.context.overflow";
 
     public static final int GPT_35_TOKEN_MAX_LENGTH = 16384;
 
