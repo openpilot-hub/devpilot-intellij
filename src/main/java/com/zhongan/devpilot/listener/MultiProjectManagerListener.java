@@ -18,23 +18,54 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
 
     private static final Logger LOG = Logger.getInstance(MultiProjectManagerListener.class);
 
-    private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService agentStateMonitorScheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private final ScheduledExecutorService agentAutoUpgradeScheduler = Executors.newSingleThreadScheduledExecutor();
 
     public MultiProjectManagerListener() {
-        executorService.scheduleAtFixedRate(
+        agentStateMonitorScheduler.scheduleAtFixedRate(
                 () -> {
                     boolean ok = BinaryManager.INSTANCE.currentPortAvailable();
                     if (!ok) {
                         if (!BinaryManager.INSTANCE.shouldStartAgent()) {
                             return;
                         }
+
+                        if (!BinaryManager.INSTANCE.reStarting.compareAndSet(false, true)) {
+                            LOG.info("Agent upgrading, skip monitor.");
+                            return;
+                        }
+
                         try {
                             AgentsRunner.INSTANCE.run();
                         } catch (Exception e) {
                             LOG.error("Restart agent failed.", e);
+                        } finally {
+                            BinaryManager.INSTANCE.reStarting.set(false);
                         }
                     }
                 }, 2 * 60, 20, TimeUnit.SECONDS);
+
+        agentAutoUpgradeScheduler.scheduleAtFixedRate(
+                () -> {
+                    boolean needed = BinaryManager.INSTANCE.checkIfAutoUpgradeNeeded();
+                    if (needed) {
+                        if (!BinaryManager.INSTANCE.shouldStartAgent()) {
+                            return;
+                        }
+                        if (!BinaryManager.INSTANCE.reStarting.compareAndSet(false, true)) {
+                            LOG.info("Agent is restarting, skip upgrade.");
+                            return;
+                        }
+                        try {
+                            BinaryManager.INSTANCE.upgradeAgent();
+                        } catch (Exception e) {
+                            LOG.error("Upgrade agent failed.", e);
+                        } finally {
+                            BinaryManager.INSTANCE.reStarting.set(false);
+                        }
+                    }
+                }, 5 * 60, 2 * 60 * 60, TimeUnit.SECONDS);
     }
 
     public void projectOpened(@NotNull Project project) {
