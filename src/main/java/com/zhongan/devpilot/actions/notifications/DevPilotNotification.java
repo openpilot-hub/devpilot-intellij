@@ -20,6 +20,7 @@ import com.zhongan.devpilot.util.LoginUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class DevPilotNotification {
 
@@ -127,7 +128,7 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
-    public static void simpleNotLoginNotification() {
+    public static void simpleNotLoginNotification(@Nullable Project project) {
         var notification = new Notification(
                 "DevPilot Notification Group",
                 DevPilotMessageBundle.get("notification.group.devpilot"),
@@ -138,7 +139,7 @@ public class DevPilotNotification {
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
 
         }));
-        Notifications.Bus.notify(notification);
+        Notifications.Bus.notify(notification, project);
     }
 
     public static void notLoginNotification(Project project) {

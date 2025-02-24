@@ -257,7 +257,7 @@ public interface LlmProvider {
         return "plugin version is too low".equals(entity.getMessage());
     }
 
-    default EmbeddingChunkResponse submitChunk(EmbeddingChunkRequest embeddingRequest) {
+    default EmbeddingChunkResponse submitChunk(Project project, EmbeddingChunkRequest embeddingRequest) {
         Response response;
 
         try {
@@ -281,7 +281,7 @@ public interface LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
 
-                return handleResult(response, EmbeddingChunkResponse.class);
+                return handleResult(project, response, EmbeddingChunkResponse.class);
             } else {
                 return null;
             }
@@ -291,7 +291,7 @@ public interface LlmProvider {
         }
     }
 
-    default EmbeddingDeleteResponse submitDelete(EmbeddingDeleteRequest embeddingRequest) {
+    default EmbeddingDeleteResponse submitDelete(Project project, EmbeddingDeleteRequest embeddingRequest) {
         Response response;
 
         try {
@@ -315,7 +315,7 @@ public interface LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
 
-                return handleResult(response, EmbeddingDeleteResponse.class);
+                return handleResult(project, response, EmbeddingDeleteResponse.class);
             } else {
                 return null;
             }
@@ -359,7 +359,7 @@ public interface LlmProvider {
         }
     }
 
-    default EmbeddingDeleteResponse resetIndex(EmbeddingDeleteRequest embeddingRequest) {
+    default EmbeddingDeleteResponse resetIndex(Project project, EmbeddingDeleteRequest embeddingRequest) {
         Response response;
 
         try {
@@ -383,7 +383,7 @@ public interface LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
 
-                return handleResult(response, EmbeddingDeleteResponse.class);
+                return handleResult(project, response, EmbeddingDeleteResponse.class);
             } else {
                 return null;
             }
@@ -393,17 +393,25 @@ public interface LlmProvider {
         }
     }
 
-    default <T> T handleResult(Response response, Class<T> clazz) throws IOException {
+    default <T> T handleResult(Project project, Response response, Class<T> clazz) throws IOException {
         if (response.isSuccessful()) {
             var result = response.body().string();
             return JsonUtils.fromJson(result, clazz);
         } else if (response.code() == 401) {
             LoginUtils.logout();
-            DevPilotNotification.simpleNotLoginNotification();
-            return null;
+            DevPilotNotification.simpleNotLoginNotification(project);
+            if (EmbeddingChunkResponse.class.equals(clazz)) {
+                EmbeddingChunkResponse resp = new EmbeddingChunkResponse();
+                resp.setNeedAbortSubmit(true);
+                return (T) resp;
+            }
         }
 
         return null;
+    }
+
+    default <T> T handleResult(Response response, Class<T> clazz) throws IOException {
+        return handleResult(null, response, clazz);
     }
 
     class Entity {
