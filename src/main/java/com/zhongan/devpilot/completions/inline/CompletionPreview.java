@@ -32,7 +32,6 @@ import com.zhongan.devpilot.util.TelemetryUtils;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
@@ -247,7 +246,7 @@ public class CompletionPreview implements Disposable {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             getAutoImportHandler(editor, fileAfterCompletion, startOffset, endOffset).invoke();
         });
-        TelemetryUtils.completionAccept(completion.id, file, line);
+        TelemetryUtils.completionAccept(completion.id, file, StringUtils.isEmpty(line) ? "EMPTY_LINE" : line);
     }
 
     public void continuePreview() {
@@ -263,7 +262,7 @@ public class CompletionPreview implements Disposable {
             DevPilotCompletion simpleDevpilotCompletion = createSimpleDevpilotCompletion(editor, editor.getCaretModel().getOffset(),
                     "",
                     completion.getLineStateItems().getUnacceptedLines(),
-                    UUID.randomUUID().toString(), editor.getDocument());
+                    completion.id, editor.getDocument());
             CompletionPreview.clear(editor);
             CompletionPreview.createInstance(editor, Collections.singletonList(simpleDevpilotCompletion), editor.getCaretModel().getOffset());
         } finally {
