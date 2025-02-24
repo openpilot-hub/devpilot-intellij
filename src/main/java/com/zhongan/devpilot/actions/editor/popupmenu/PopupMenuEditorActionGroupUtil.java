@@ -154,7 +154,7 @@ public class PopupMenuEditorActionGroupUtil {
      * @return
      */
     public static boolean validateResult(String content) {
-        return content.contains(DefaultConst.GPT_35_MAX_TOKEN_EXCEPTION_MSG);
+        return content.contains(DevPilotMessageBundle.get(DefaultConst.GPT_35_MAX_TOKEN_EXCEPTION_MSG));
     }
 
 }
