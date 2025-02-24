@@ -18,6 +18,7 @@ import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
+import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.EditorUtils;
 import com.zhongan.devpilot.util.JetbrainsVersionUtils;
@@ -53,7 +54,7 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefLoadHandler;
 import org.cef.network.CefRequest;
 
-import static com.intellij.openapi.ui.playback.PlaybackRunner.StatusCallback.Type.message;
+import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 
 public class DevPilotChatToolWindow {
@@ -144,6 +145,12 @@ public class DevPilotChatToolWindow {
                         if (language != null) {
                             data.put(LANGUAGE, language);
                         }
+                    }
+
+                    if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
+                        data.put(ANSWER_LANGUAGE, "zh_CN");
+                    } else {
+                        data.put(ANSWER_LANGUAGE, "en_US");
                     }
 
                     service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", data, message.getContent(), null, userMessageModel);
@@ -364,6 +371,12 @@ public class DevPilotChatToolWindow {
                     Map<String, String> data = new HashMap<>();
                     data.put("imageUrls", JsonUtils.toJson(base64List));
                     data.put("flowId", "frontCodeGenerate");
+
+                    if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
+                        data.put(ANSWER_LANGUAGE, "zh_CN");
+                    } else {
+                        data.put(ANSWER_LANGUAGE, "en_US");
+                    }
 
                     service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "EXTERNAL_AGENTS", data, messageModel.getContent(), null, userMessageModel);
                     return new JBCefJSQuery.Response("success");
