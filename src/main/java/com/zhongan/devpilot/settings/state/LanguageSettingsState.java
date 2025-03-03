@@ -9,7 +9,9 @@ import com.intellij.util.xmlb.XmlSerializerUtil;
 @State(name = "DevPilot_LanguageSettings", storages = @Storage("DevPilot_LanguageSettings.xml"))
 public class LanguageSettingsState implements PersistentStateComponent<LanguageSettingsState> {
 
-    private static Integer languageIndex = 1;
+    private Integer languageIndex = 1;
+
+    private Integer gitLogLanguageIndex = 0;
 
     public static LanguageSettingsState getInstance() {
         return ApplicationManager.getApplication().getService(LanguageSettingsState.class);
@@ -21,6 +23,14 @@ public class LanguageSettingsState implements PersistentStateComponent<LanguageS
 
     public void setLanguageIndex(Integer languageIndex) {
         this.languageIndex = languageIndex;
+    }
+
+    public Integer getGitLogLanguageIndex() {
+        return gitLogLanguageIndex;
+    }
+
+    public void setGitLogLanguageIndex(Integer gitLogLanguageIndex) {
+        this.gitLogLanguageIndex = gitLogLanguageIndex;
     }
 
     @Override

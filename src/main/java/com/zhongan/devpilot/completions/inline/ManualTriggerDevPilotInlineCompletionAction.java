@@ -25,7 +25,7 @@ public class ManualTriggerDevPilotInlineCompletionAction extends BaseCodeInsight
                 DevPilotCompletion lastShownCompletion = CompletionPreview.getCurrentCompletion(editor);
                 handler.retrieveAndShowCompletion(
                     editor, editor.getCaretModel().getOffset(), lastShownCompletion, "",
-                    new DefaultCompletionAdjustment(), null
+                    new DefaultCompletionAdjustment(), null, null
                 );
             }
 

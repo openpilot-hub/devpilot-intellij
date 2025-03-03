@@ -6,16 +6,22 @@ import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.projectRoots.Sdk;
 import com.intellij.openapi.roots.ProjectRootManager;
 import com.intellij.openapi.util.TextRange;
+import com.intellij.openapi.util.io.FileUtilRt;
 import com.intellij.openapi.vfs.VirtualFile;
 import com.intellij.util.ObjectUtils;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.completions.inline.CompletionAdjustment;
 import com.zhongan.devpilot.completions.requests.AutocompleteRequest;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
 import com.zhongan.devpilot.completions.requests.ResultEntry;
+import com.zhongan.devpilot.enums.CompletionTypeEnum;
+import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotInstructCompletionRequest;
+import com.zhongan.devpilot.listener.DevPilotLineIconListener;
 import com.zhongan.devpilot.statusBar.DevPilotStatusBarBaseWidget;
 import com.zhongan.devpilot.statusBar.status.DevPilotStatusEnum;
+import com.zhongan.devpilot.util.LanguageUtil;
 import com.zhongan.devpilot.util.LoginUtils;
 
 import java.nio.file.Files;
@@ -47,11 +53,12 @@ public class CompletionFacade {
         int offset,
         @Nullable Integer tabSize,
         @Nullable CompletionAdjustment completionAdjustment,
-        String completionType) {
+        String completionType,
+        DevPilotLineIconListener.DevPilotGutterIconRenderer gutterIconRenderer) {
         try {
             String filename =
                 getFilename(FileDocumentManager.getInstance().getFile(editor.getDocument()));
-            return retrieveCompletions(editor, offset, filename, tabSize, completionAdjustment, completionType);
+            return retrieveCompletions(editor, offset, filename, tabSize, completionAdjustment, completionType, gutterIconRenderer);
         } catch (Exception e) {
             DevPilotStatusBarBaseWidget.update(editor.getProject(), LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
             return null;
@@ -65,7 +72,8 @@ public class CompletionFacade {
         @Nullable String filename,
         @Nullable Integer tabSize,
         @Nullable CompletionAdjustment completionAdjustment,
-        String completionType) {
+        String completionType,
+        DevPilotLineIconListener.DevPilotGutterIconRenderer gutterIconRenderer) {
         Document document = editor.getDocument();
 
         int begin = Integer.max(0, offset - PREFIX_MAX_OFFSET);
@@ -93,13 +101,44 @@ public class CompletionFacade {
         request.setMaxTokens(MAX_INSTRUCT_COMPLETION_TOKENS);
 
         DevPilotStatusBarBaseWidget.update(editor.getProject(), DevPilotStatusEnum.InCompletion);
+
+        // chat completion的话提前走需求整理
+        if (CompletionTypeEnum.CHAT_COMPLETION.getType().equalsIgnoreCase(completionType)) {
+            // code predict
+            var project = editor.getProject();
+            if (project != null && filename != null) {
+                var service = project.getService(DevPilotChatToolWindowService.class);
+                var doc = document.getText(new TextRange(begin, end));
+                var extension = FileUtilRt.getExtension(filename);
+                var language = LanguageUtil.getLanguageByExtension(extension);
+                var lan = DevPilotVersion.getDefaultLanguage();
+                if (language != null) {
+                    lan = language.getLanguageName().toLowerCase();
+                }
+
+                var relatedFiles = service.buildCompletionRelatedFile(filename, doc, offset, lan);
+
+                if (relatedFiles != null && !relatedFiles.isEmpty()) {
+                    request.setRelatedCodeInfos(relatedFiles);
+                }
+            }
+        }
+
         request.setOffset(offset);
         request.setEditor(editor);
         if (!StringUtils.isEmpty(completionType)) {
-            request.setCompletionType(completionType);
+            // chat completion场景默认是comment
+            if (CompletionTypeEnum.CHAT_COMPLETION.getType().equalsIgnoreCase(completionType)) {
+                request.setCompletionType(CompletionTypeEnum.COMMENT.getType());
+            } else {
+                request.setCompletionType(completionType);
+            }
         }
         final var response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
         DevPilotStatusBarBaseWidget.update(editor.getProject(), LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
+        if (gutterIconRenderer != null) {
+            gutterIconRenderer.setLoading(false);
+        }
         if (response == null) {
             return null;
         }

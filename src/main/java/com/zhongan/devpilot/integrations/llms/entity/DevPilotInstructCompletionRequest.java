@@ -3,6 +3,8 @@ package com.zhongan.devpilot.integrations.llms.entity;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.intellij.openapi.editor.Editor;
 
+import java.util.List;
+
 public class DevPilotInstructCompletionRequest {
 
     private Editor editor;
@@ -25,6 +27,8 @@ public class DevPilotInstructCompletionRequest {
     String completionType = "inline";
 
     String encoding = null;
+
+    List<CompletionRelatedCodeInfo> relatedCodeInfos;
 
     public Editor getEditor() {
         return editor;
@@ -104,5 +108,13 @@ public class DevPilotInstructCompletionRequest {
 
     public void setEncoding(String encoding) {
         this.encoding = encoding;
+    }
+
+    public List<CompletionRelatedCodeInfo> getRelatedCodeInfos() {
+        return relatedCodeInfos;
+    }
+
+    public void setRelatedCodeInfos(List<CompletionRelatedCodeInfo> relatedCodeInfos) {
+        this.relatedCodeInfos = relatedCodeInfos;
     }
 }

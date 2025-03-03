@@ -14,6 +14,8 @@ import com.zhongan.devpilot.completions.inline.render.GraphicsUtils;
 import com.zhongan.devpilot.completions.prediction.CompletionFacade;
 import com.zhongan.devpilot.completions.prediction.DevPilotCompletion;
 import com.zhongan.devpilot.completions.requests.AutocompleteResponse;
+import com.zhongan.devpilot.enums.CompletionTypeEnum;
+import com.zhongan.devpilot.listener.DevPilotLineIconListener;
 
 import java.util.Collections;
 import java.util.List;
@@ -47,7 +49,8 @@ public class InlineCompletionHandler {
         @Nullable DevPilotCompletion lastShownSuggestion,
         @NotNull String userInput,
         @NotNull CompletionAdjustment completionAdjustment,
-        String completionType) {
+        String completionType,
+        DevPilotLineIconListener.DevPilotGutterIconRenderer gutterIconRenderer) {
         Integer tabSize = GraphicsUtils.getTabSize(editor);
 
         ObjectUtils.doIfNotNull(lastFetchInBackgroundTask, task -> task.cancel(false));
@@ -56,7 +59,9 @@ public class InlineCompletionHandler {
 
         List<DevPilotCompletion> cachedCompletions =
             InlineCompletionCache.INSTANCE.retrieveAdjustedCompletions(editor, userInput);
-        if (!cachedCompletions.isEmpty()) {
+        if (!cachedCompletions.isEmpty()
+                && !CompletionTypeEnum.CHAT_COMPLETION.getType().equalsIgnoreCase(completionType)) {
+            // chat completion 不走缓存
             renderCachedCompletions(editor, offset, tabSize, cachedCompletions, completionAdjustment, completionType);
             return;
         }
@@ -70,7 +75,8 @@ public class InlineCompletionHandler {
                         getCurrentEditorOffset(editor, userInput),
                         editor.getDocument().getModificationStamp(),
                         completionAdjustment,
-                        completionType));
+                        completionType,
+                        gutterIconRenderer));
     }
 
     private void renderCachedCompletions(
@@ -83,7 +89,7 @@ public class InlineCompletionHandler {
         showInlineCompletion(editor, cachedCompletions, offset, null);
         lastFetchInBackgroundTask =
             Utils.executeThread(
-                () -> retrieveInlineCompletion(editor, offset, tabSize, completionAdjustment, completionType));
+                () -> retrieveInlineCompletion(editor, offset, tabSize, completionAdjustment, completionType, null));
     }
 
     private int getCurrentEditorOffset(@NotNull Editor editor, @NotNull String userInput) {
@@ -97,7 +103,8 @@ public class InlineCompletionHandler {
         int offset,
         long modificationStamp,
         @NotNull CompletionAdjustment completionAdjustment,
-        String completionType) {
+        String completionType,
+        DevPilotLineIconListener.DevPilotGutterIconRenderer gutterIconRenderer) {
         lastFetchAndRenderTask =
             Utils.executeThread(
                 () -> {
@@ -107,7 +114,7 @@ public class InlineCompletionHandler {
                         debounceTimeMs = logAndGetEmptySuggestionsDebounceMillis();
                     }
                     refetchCompletionsAfterDebounce(
-                        editor, tabSize, offset, modificationStamp, completionAdjustment, debounceTimeMs, completionType);
+                        editor, tabSize, offset, modificationStamp, completionAdjustment, debounceTimeMs, completionType, gutterIconRenderer);
                 });
     }
 
@@ -127,14 +134,15 @@ public class InlineCompletionHandler {
         long modificationStamp,
         @NotNull CompletionAdjustment completionAdjustment,
         long debounceTime,
-        String completionType) {
+        String completionType,
+        DevPilotLineIconListener.DevPilotGutterIconRenderer gutterIconRenderer) {
         lastDebounceRenderTask =
             Utils.executeThread(
                 () -> {
                     CompletionAdjustment cachedOnlyCompletionAdjustment =
                         completionAdjustment.withCachedOnly();
                     List<DevPilotCompletion> completions =
-                        retrieveInlineCompletion(editor, offset, tabSize, cachedOnlyCompletionAdjustment, completionType);
+                        retrieveInlineCompletion(editor, offset, tabSize, cachedOnlyCompletionAdjustment, completionType, gutterIconRenderer);
                     rerenderCompletion(
                         editor, completions, offset, modificationStamp, cachedOnlyCompletionAdjustment);
                 },
@@ -181,9 +189,10 @@ public class InlineCompletionHandler {
         int offset,
         Integer tabSize,
         @NotNull CompletionAdjustment completionAdjustment,
-        String completionType) {
+        String completionType,
+        DevPilotLineIconListener.DevPilotGutterIconRenderer gutterIconRenderer) {
         AutocompleteResponse completionsResponse =
-            this.completionFacade.retrieveCompletions(editor, offset, tabSize, completionAdjustment, completionType);
+            this.completionFacade.retrieveCompletions(editor, offset, tabSize, completionAdjustment, completionType, gutterIconRenderer);
 
         if (completionsResponse == null || completionsResponse.results.length == 0) {
             return Collections.emptyList();

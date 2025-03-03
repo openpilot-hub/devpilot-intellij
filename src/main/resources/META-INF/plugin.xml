@@ -6,9 +6,30 @@
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>DevPilot</name>
-    <version>2.6.0</version>
+    <version>2.10.0</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.10.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Added shortcut command for d2c (design to code)</li>
+          <li>Support for marking language settings in generated commit logs</li>
+          <li>Optimized triggering logic for long-thought completion</li>
+        </ul>
+        <h2>Bug Fixes</h2>
+        <ul>
+          <li>Fixed issue with context references</li>
+        </ul>
+        <h1>Release 2.9.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Multiple code references support</li>
+        </ul>
+        <h1>Release 2.8.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Now support local embedding</li>
+        </ul>
         <h1>Release 2.7.0</h1>
         <h2>New Features</h2>
         <ul>
@@ -153,7 +174,7 @@
     <depends optional="true" config-file="plugin-withJava.xml">com.intellij.modules.java</depends>
     <depends optional="true" config-file="plugin-withPython.xml">com.intellij.modules.python</depends>
     <depends optional="true" config-file="plugin-withGolang.xml">com.intellij.modules.go-capable</depends>
-    <depends optional="true" config-file="plugin-withJavaScript.xml">com.intellij.modules.webstorm</depends>
+    <depends optional="true" config-file="plugin-withJavaScript.xml">JavaScript</depends>
 <!--    <depends optional="true" config-file="plugin-withPython.xml">com.intellij.modules.python</depends>-->
     <!--    <depends>com.intellij.modules.java</depends>-->
 
@@ -170,6 +191,7 @@
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.OpenAISettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LanguageSettingsState"/>
+        <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.LocalRagSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.CodeLlamaSettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.AIGatewaySettingsState"/>
         <applicationService serviceImplementation="com.zhongan.devpilot.settings.state.ChatShortcutSettingState"/>
@@ -197,11 +219,11 @@
 
     <actions>
         <group id="DevPilotGroupedActions" icon="com.zhongan.devpilot.DevPilotIcons.SYSTEM_ICON" popup="true" text="DevPilot" description="DevPilot">
-            <action id="com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction"
+            <group id="com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction"
                     class="com.intellij.openapi.actionSystem.DefaultActionGroup"
                     popup="true"
                     text="DevPilot" description="Basic actions of DevPilot">
-            </action>
+            </group>
             <add-to-group group-id="EditorPopupMenu" anchor="first"/>
         </group>
 
@@ -219,6 +241,11 @@
         <action class="com.zhongan.devpilot.completions.inline.ManualTriggerDevPilotInlineCompletionAction"
                 id="ManualTriggerDevPilotInlineCompletionAction" text="Trigger Inline Completion">
             <keyboard-shortcut first-keystroke="alt B" keymap="$default"/>
+        </action>
+
+        <action class="com.zhongan.devpilot.completions.inline.ManualTriggerChatCompletionAction"
+                id="ManualTriggerChatCompletionAction" text="Trigger Chat Completion">
+            <keyboard-shortcut first-keystroke="alt C" keymap="$default"/>
         </action>
 
         <group id="DevPilot.GenerateGitCommitMessageGroup">

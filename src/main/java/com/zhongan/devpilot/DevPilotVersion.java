@@ -6,6 +6,8 @@ import com.intellij.openapi.extensions.PluginId;
 
 import java.util.Locale;
 
+import org.apache.commons.lang3.StringUtils;
+
 public class DevPilotVersion {
     public static String getDevPilotVersion() {
         var pluginId = PluginId.getId("com.zhongan.devPilot");
@@ -37,10 +39,12 @@ public class DevPilotVersion {
     }
 
     public static String getIdeaVersion() {
-        return ApplicationInfo.getInstance().getFullVersion();
+        String ideaVersion = ApplicationInfo.getInstance().getFullVersion();
+        return StringUtils.replace(ideaVersion, "|", "-");
     }
 
     public static String getVersionName() {
-        return ApplicationInfo.getInstance().getVersionName();
+        String versionName = ApplicationInfo.getInstance().getVersionName();
+        return StringUtils.replace(versionName, "|", "-");
     }
 }

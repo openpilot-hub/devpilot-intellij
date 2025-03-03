@@ -25,11 +25,14 @@ import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.DocumentUtil;
 import com.zhongan.devpilot.util.LanguageUtil;
+import com.zhongan.devpilot.util.PromptDataMapUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -117,11 +120,13 @@ public class PopupMenuEditorActionGroupUtil {
                             codeReferenceModel = CodeReferenceModel.getCodeRefFromEditor(editorInfo, editorActionEnum);
                         }
 
-                        var codeMessage = MessageModel.buildCodeMessage(
-                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, codeReferenceModel, mode);
+                        List<CodeReferenceModel> list = new ArrayList<>();
+                        list.add(codeReferenceModel);
 
-                        FileAnalyzeProviderFactory.getProvider(language == null ? null : language.getLanguageName())
-                                .buildChatDataMap(project, psiElement, codeReferenceModel, data);
+                        var codeMessage = MessageModel.buildCodeMessage(
+                                UUID.randomUUID().toString(), System.currentTimeMillis(), showText, username, list, mode);
+
+                        PromptDataMapUtils.buildChatDataMap(project, psiElement, list, data);
 
                         service.chat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
                     }
@@ -149,7 +154,7 @@ public class PopupMenuEditorActionGroupUtil {
      * @return
      */
     public static boolean validateResult(String content) {
-        return content.contains(DefaultConst.GPT_35_MAX_TOKEN_EXCEPTION_MSG);
+        return content.contains(DevPilotMessageBundle.get(DefaultConst.GPT_35_MAX_TOKEN_EXCEPTION_MSG));
     }
 
 }
