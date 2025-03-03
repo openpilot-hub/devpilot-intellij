@@ -9,6 +9,17 @@
     <version>2.9.0</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.10.0</h1>
+        <h2>New Features</h2>
+        <ul>
+          <li>Added shortcut command for d2c (design to code)</li>
+          <li>Support for marking language settings in generated commit logs</li>
+          <li>Optimized triggering logic for long-thought completion</li>
+        </ul>
+        <h2>Bug Fixes</h2>
+        <ul>
+          <li>Fixed issue with context references</li>
+        </ul>
         <h1>Release 2.9.0</h1>
         <h2>New Features</h2>
         <ul>
