@@ -16,7 +16,7 @@ public class ChatShortcutSettingState implements PersistentStateComponent<ChatSh
     private Boolean enable = true;
 
     // 0 - disable; 1 - inline; 2 - group
-    private static Integer displayIndex = NumberUtils.INTEGER_ONE;
+    private Integer displayIndex = NumberUtils.INTEGER_ONE;
 
     public static ChatShortcutSettingState getInstance() {
         return ApplicationManager.getApplication().getService(ChatShortcutSettingState.class);
@@ -43,7 +43,7 @@ public class ChatShortcutSettingState implements PersistentStateComponent<ChatSh
         } else {
             enable = Boolean.TRUE;
         }
-        ChatShortcutSettingState.displayIndex = displayIndex;
+        this.displayIndex = displayIndex;
     }
 
     public boolean isInlineDisplay() {

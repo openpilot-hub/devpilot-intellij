@@ -13,33 +13,40 @@ import com.intellij.ui.jcef.JBCefBrowser;
 import com.intellij.ui.jcef.JBCefBrowserBase;
 import com.intellij.ui.jcef.JBCefJSQuery;
 import com.zhongan.devpilot.DevPilotVersion;
+import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
-import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
+import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
 import com.zhongan.devpilot.util.EditorUtils;
 import com.zhongan.devpilot.util.JetbrainsVersionUtils;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.NewFileUtils;
+import com.zhongan.devpilot.util.PromptDataMapUtils;
 import com.zhongan.devpilot.util.TelemetryUtils;
 import com.zhongan.devpilot.webview.DevPilotCustomHandlerFactory;
 import com.zhongan.devpilot.webview.model.CodeActionModel;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.JsCallModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
+import com.zhongan.devpilot.webview.model.ShowMessageModel;
 
 import java.awt.Toolkit;
 import java.awt.datatransfer.StringSelection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import javax.swing.JComponent;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.cef.CefApp;
 import org.cef.browser.CefBrowser;
 import org.cef.browser.CefFrame;
@@ -47,8 +54,8 @@ import org.cef.handler.CefLifeSpanHandlerAdapter;
 import org.cef.handler.CefLoadHandler;
 import org.cef.network.CefRequest;
 
+import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
 import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
-import static com.zhongan.devpilot.constant.PlaceholderConst.SELECTED_CODE;
 
 public class DevPilotChatToolWindow {
     private JBCefBrowser jbCefBrowser;
@@ -125,22 +132,25 @@ public class DevPilotChatToolWindow {
 
                     var message = service.getUserContentCode(messageModel);
                     var userMessageModel = MessageModel.buildCodeMessage(
-                            uuid, time, message.getContent(), username, message.getCodeRef(), message.getMode());
+                            uuid, time, message.getContent(), username, message.getCodeRefs(), message.getMode());
 
                     var data = new HashMap<String, String>();
 
-                    if (message.getCodeRef() != null) {
-                        data.put(SELECTED_CODE, message.getCodeRef().getSourceCode());
-
+                    if (message.getCodeRefs() != null) {
                         ApplicationManager.getApplication().invokeAndWait(() -> {
-                            FileAnalyzeProviderFactory.getProvider(message.getCodeRef().getLanguageId())
-                                    .buildChatDataMap(project, null, message.getCodeRef(), data);
+                            PromptDataMapUtils.buildChatDataMap(project, null, message.getCodeRefs(), data);
                         });
                     } else {
                         var language = DevPilotVersion.getDefaultLanguage();
                         if (language != null) {
                             data.put(LANGUAGE, language);
                         }
+                    }
+
+                    if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
+                        data.put(ANSWER_LANGUAGE, "zh_CN");
+                    } else {
+                        data.put(ANSWER_LANGUAGE, "en_US");
                     }
 
                     service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", data, message.getContent(), null, userMessageModel);
@@ -197,9 +207,19 @@ public class DevPilotChatToolWindow {
                         return new JBCefJSQuery.Response("error");
                     }
 
+                    // 获取最后一个为主要的code块
+                    var codeRefs = userMessage.getCodeRefs();
+                    CodeReferenceModel code;
+
+                    if (!CollectionUtils.isEmpty(codeRefs)) {
+                        code = codeRefs.get(codeRefs.size() - 1);
+                    } else {
+                        code = null;
+                    }
+
                     ApplicationManager.getApplication().invokeLater(
                             () -> NewFileUtils.createNewFile(project, codeActionModel.getContent(),
-                                    userMessage.getCodeRef(), codeActionModel.getLang()));
+                                    code, codeActionModel.getLang()));
 
                     TelemetryUtils.chatAccept(codeActionModel, ChatActionTypeEnum.NEW_FILE);
 
@@ -243,7 +263,14 @@ public class DevPilotChatToolWindow {
                         return new JBCefJSQuery.Response("error");
                     }
 
-                    service.handleActions(messageModel.getCodeRef(), codeActionMap.get(command), null, messageModel.getMode());
+                    var coedRefs = messageModel.getCodeRefs();
+                    CodeReferenceModel code = null;
+                    if (!CollectionUtils.isEmpty(coedRefs)) {
+                        // 理论上这里只会有一个引用，但是万一有多个选择最后的一个
+                        code = coedRefs.get(coedRefs.size() - 1);
+                    }
+
+                    service.handleActions(code, codeActionMap.get(command), null, messageModel.getMode());
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CopyCode": {
@@ -292,6 +319,66 @@ public class DevPilotChatToolWindow {
                     var action = !command.equals("DislikeMessage");
 
                     TelemetryUtils.messageFeedback(id, action);
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "ShowMessage": {
+                    var payload = jsCallModel.getPayload();
+                    var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), ShowMessageModel.class);
+                    if (messageModel == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    if ("error".equals(messageModel.getType())) {
+                        DevPilotNotification.error(messageModel.getContent());
+                    } else {
+                        DevPilotNotification.info(messageModel.getContent());
+                    }
+
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "D2C": {
+                    var payload = jsCallModel.getPayload();
+                    var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
+                    if (messageModel == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    var coedRefs = messageModel.getCodeRefs();
+                    CodeReferenceModel code = null;
+                    if (!CollectionUtils.isEmpty(coedRefs)) {
+                        // 理论上这里只会有一个引用，但是万一有多个选择最后的一个
+                        code = coedRefs.get(coedRefs.size() - 1);
+                    }
+
+                    if (code == null || StringUtils.isEmpty(code.getBase64())) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+
+                    String base64 = code.getBase64();
+                    List<String> base64List = new ArrayList<>();
+                    base64List.add(base64);
+
+                    // d2c默认不使用上下文
+                    messageModel.setMode("with-ctrl");
+                    var time = System.currentTimeMillis();
+                    var username = DevPilotLlmSettingsState.getInstance().getFullName();
+                    var uuid = UUID.randomUUID().toString();
+
+                    var userMessageModel = MessageModel.buildCodeMessage(
+                            uuid, time, messageModel.getContent(), username, messageModel.getCodeRefs(), messageModel.getMode());
+                    userMessageModel.setMsgType("EXTERNAL_AGENTS");
+
+                    Map<String, String> data = new HashMap<>();
+                    data.put("imageUrls", JsonUtils.toJson(base64List));
+                    data.put("flowId", "frontCodeGenerate");
+
+                    if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
+                        data.put(ANSWER_LANGUAGE, "zh_CN");
+                    } else {
+                        data.put(ANSWER_LANGUAGE, "en_US");
+                    }
+
+                    service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "EXTERNAL_AGENTS", data, messageModel.getContent(), null, userMessageModel);
                     return new JBCefJSQuery.Response("success");
                 }
                 default:

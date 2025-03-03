@@ -18,6 +18,34 @@ import static com.zhongan.devpilot.constant.DefaultConst.REQUEST_ENCODING_ON;
 import static com.zhongan.devpilot.util.VirtualFileUtil.getRelativeFilePath;
 
 public class GatewayRequestUtils {
+    public static String completionRequestPureJson(DevPilotInstructCompletionRequest instructCompletionRequest) {
+        int offset = instructCompletionRequest.getOffset();
+        Editor editor = instructCompletionRequest.getEditor();
+        final Document[] document = new Document[1];
+        final Language[] language = new Language[1];
+        final VirtualFile[] virtualFile = new VirtualFile[1];
+        final String[] relativePath = new String[1];
+
+        ApplicationManager.getApplication().runReadAction(() -> {
+            document[0] = editor.getDocument();
+            language[0] = PsiDocumentManager.getInstance(editor.getProject()).getPsiFile(document[0]).getLanguage();
+            virtualFile[0] = FileDocumentManager.getInstance().getFile(document[0]);
+            relativePath[0] = getRelativeFilePath(editor.getProject(), virtualFile[0]);
+        });
+
+        String text = document[0].getText();
+
+        Map<String, Object> map = new HashMap<>();
+        map.put("document", text);
+        map.put("position", String.valueOf(offset));
+        map.put("language", language[0].getID());
+        map.put("filePath", relativePath[0]);
+        map.put("completionType", instructCompletionRequest.getCompletionType());
+        map.put("additionalContext", instructCompletionRequest.getRelatedCodeInfos());
+
+        return JsonUtils.toJson(map);
+    }
+
     public static String completionRequestJson(DevPilotInstructCompletionRequest instructCompletionRequest) {
         int offset = instructCompletionRequest.getOffset();
         Editor editor = instructCompletionRequest.getEditor();

@@ -183,7 +183,8 @@ public class CompletionUtils {
                                                 lastShownSuggestion,
                                                 userInput,
                                                 completionAdjustment,
-                                                completionType));
+                                                completionType,
+                                                null));
                     }
                 }, getTriggerInterval());
         lastTriggerInfo.setTimer(timer);
@@ -193,7 +194,7 @@ public class CompletionUtils {
         private boolean valid;
 
         // default is inline
-        // type: comment, inline
+        // type: comment, inline, chat_completion, 参考CompletionTypeEnum
         private String completionType = "inline";
 
         public VerifyResult(boolean valid) {

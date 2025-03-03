@@ -77,7 +77,7 @@ public class ProcessUtils {
     }
 
     public static List<Long> findDevPilotAgentPidList() {
-        return getPidListFromName(BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
+        return getPidListFromName(BinaryManager.INSTANCE.getType() + File.separator + "bin" + File.separator + BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
     }
 
     private static boolean isProcessIdRunning(long pid, String command) {

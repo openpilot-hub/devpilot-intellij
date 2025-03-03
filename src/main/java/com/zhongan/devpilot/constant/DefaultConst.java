@@ -1,14 +1,13 @@
 package com.zhongan.devpilot.constant;
 
 import com.zhongan.devpilot.util.ConfigBundleUtils;
-import com.zhongan.devpilot.util.DevPilotMessageBundle;
 
 public class DefaultConst {
 
     private DefaultConst() {
     }
 
-    public static final String GPT_35_MAX_TOKEN_EXCEPTION_MSG = DevPilotMessageBundle.get("devpilot.chatWindow.context.overflow");
+    public static final String GPT_35_MAX_TOKEN_EXCEPTION_MSG = "devpilot.chatWindow.context.overflow";
 
     public static final int GPT_35_TOKEN_MAX_LENGTH = 16384;
 
@@ -16,7 +15,7 @@ public class DefaultConst {
 
     public static final String DEFAULT_SOURCE_STRING = "JetBrains IDE";
 
-    public static final String AI_GATEWAY_INSTRUCT_COMPLETION = "/devpilot/v1/code-completion/default";
+    public static final String AI_GATEWAY_INSTRUCT_COMPLETION = "/devpilot/v2/code-completion/default";
 
     public static final String TELEMETRY_HOST = ConfigBundleUtils.getConfig("devpilot.telemetry.host", "http://localhost:8085");
 
@@ -44,6 +43,16 @@ public class DefaultConst {
 
     public static final String REMOTE_RAG_DEFAULT_PATH = "/rag";
 
+    public static final String EMBEDDING_SUBMIT_PATH = "/submitChunks";
+
+    public static final String EMBEDDING_DELETE_PATH = "/deleteChunks";
+
+    public static final String EMBEDDING_SEARCH_PATH = "/local-rag";
+
+    public static final String EMBEDDING_RESET_INDEX_PATH = "/reset-index";
+
+    public static final String AGENT_INSTRUCT_COMPLETION = "/instruct-completion";
+
     public static final String FEEDBACK_URL = OFFICIAL_WEBSITE_URL + "/feedback";
 
     public static final String PROFILE_URL = OFFICIAL_WEBSITE_URL + "/profile";
@@ -64,11 +73,13 @@ public class DefaultConst {
 
     public static final int CHAT_STEP_THREE = 3;
 
-    public static final String DEFAULT_PROMPT_VERSION = "V240923";
+    public static final String DEFAULT_PROMPT_VERSION = "V250102";
 
-    public static final String CODE_PREDICT_PROMPT_VERSION = "V240923";
+    public static final String CODE_PREDICT_PROMPT_VERSION = "V250102";
 
-    public static final String GIT_COMMIT_PROMPT_VERSION = "V240923";
+    public static final String GIT_COMMIT_PROMPT_VERSION = "V250102";
+
+    public static final String D2C_PROMPT_VERSION = "V250206";
 
     public static final int NORMAL_CHAT_TYPE = 1;
 
