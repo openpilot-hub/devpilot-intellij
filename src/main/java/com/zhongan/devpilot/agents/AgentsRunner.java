@@ -22,7 +22,7 @@ public class AgentsRunner {
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
-    public synchronized boolean run(boolean force) throws Exception {
+    public synchronized boolean run(boolean force) {
         File homeDir = BinaryManager.INSTANCE.getHomeDir();
         if (homeDir == null) {
             LOG.warn("Home dir is null, skip running DevPilot-Agents.");
@@ -38,28 +38,40 @@ public class AgentsRunner {
             LOG.info("Skip running DevPilot-Agents for failure of init binary.");
             return false;
         }
-        int port = getAvailablePort();
-        List<String> commands = createCommand(BinaryManager.INSTANCE.getBinaryPath(homeDir), port);
-        ProcessBuilder builder = new ProcessBuilder(commands);
-        builder.directory(homeDir);
-        Process process = builder.start();
+        boolean success = doRun(homeDir);
+        if (success && checkRes.isRunning()) {
+            delayKillOldProcess(checkRes.getPid());
+        }
+        return success;
+    }
 
-        boolean aliveFlag = process.isAlive();
-        if (aliveFlag) {
-            writeInfoFile(homeDir, ProcessUtils.findDevPilotAgentPidList(), port);
-            BinaryManager.INSTANCE.setCurrentPort(port);
+    protected boolean doRun(File homeDir) {
+        if (homeDir == null) {
+            return false;
         }
-        if (aliveFlag && checkRes.isRunning()) {
-            executorService.schedule(() -> BinaryManager.INSTANCE.killOldProcess(checkRes.getPid()), 30, TimeUnit.SECONDS);
+        try {
+            int port = getAvailablePort();
+            List<String> commands = createCommand(BinaryManager.INSTANCE.getBinaryPath(homeDir), port);
+            ProcessBuilder builder = new ProcessBuilder(commands);
+            builder.directory(homeDir);
+            Process process = builder.start();
+            boolean aliveFlag = process.isAlive();
+            if (aliveFlag) {
+                writeInfoFile(homeDir, ProcessUtils.findDevPilotAgentPidList(), port);
+                BinaryManager.INSTANCE.setCurrentPort(port);
+            }
+            return aliveFlag;
+        } catch (Exception e) {
+            LOG.warn("Failed to run DevPilot-Agents.", e);
+            return false;
         }
-        return aliveFlag;
     }
 
     public synchronized boolean run() throws Exception {
         return run(false);
     }
 
-    private int getAvailablePort() {
+    protected int getAvailablePort() {
         try (ServerSocket socket = new ServerSocket(0)) {
             return socket.getLocalPort();
         } catch (IOException e) {
@@ -83,7 +95,7 @@ public class AgentsRunner {
         }
     }
 
-    private List<String> createCommand(@NotNull String binaryPath, int port) {
+    protected List<String> createCommand(@NotNull String binaryPath, int port) {
         List<String> commands = new ArrayList<>();
         if (ProcessUtils.isWindowsPlatform()) {
             String command = "cmd";
@@ -111,6 +123,10 @@ public class AgentsRunner {
 
         LOG.info("Starting DevPilot-Agents with command: " + commands);
         return commands;
+    }
+
+    protected void delayKillOldProcess(Long pid) {
+        executorService.schedule(() -> BinaryManager.INSTANCE.killOldProcess(pid), 30, TimeUnit.SECONDS);
     }
 
 }

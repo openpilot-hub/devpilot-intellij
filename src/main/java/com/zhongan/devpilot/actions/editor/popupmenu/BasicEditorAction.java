@@ -30,7 +30,7 @@ public abstract class BasicEditorAction extends AnAction {
         var project = event.getProject();
         var editor = event.getData(PlatformDataKeys.EDITOR);
         if (editor != null && project != null) {
-            actionPerformed(project, editor, editor.getSelectionModel().getSelectedText(), null, null, "with-context");
+            actionPerformed(project, editor, editor.getSelectionModel().getSelectedText(), null, null, "");
         }
     }
 

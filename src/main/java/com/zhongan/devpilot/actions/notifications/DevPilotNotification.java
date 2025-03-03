@@ -1,7 +1,6 @@
 package com.zhongan.devpilot.actions.notifications;
 
 import com.intellij.ide.BrowserUtil;
-import com.intellij.ide.plugins.PluginManagerConfigurable;
 import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationAction;
 import com.intellij.notification.NotificationType;
@@ -21,6 +20,7 @@ import com.zhongan.devpilot.util.LoginUtils;
 
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class DevPilotNotification {
 
@@ -128,6 +128,20 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
+    public static void simpleNotLoginNotification(@Nullable Project project) {
+        var notification = new Notification(
+                "DevPilot Notification Group",
+                DevPilotMessageBundle.get("notification.group.devpilot"),
+                DevPilotMessageBundle.get("devpilot.status.notLoggedIn"),
+                NotificationType.WARNING);
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.settings.service.statusbar.login.desc"),
+                () -> ApplicationManager.getApplication().executeOnPooledThread(LoginUtils::gotoLogin)));
+        notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
+
+        }));
+        Notifications.Bus.notify(notification, project);
+    }
+
     public static void notLoginNotification(Project project) {
         var notification = new Notification(
                 "DevPilot Notification Group",
@@ -150,7 +164,7 @@ public class DevPilotNotification {
                 DevPilotMessageBundle.get("devpilot.notification.version.message"),
                 NotificationType.INFORMATION);
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.upgrade.message"),
-                () -> ShowSettingsUtil.getInstance().showSettingsDialog(ProjectUtil.currentOrDefaultProject(project), PluginManagerConfigurable.class)));
+                () -> ShowSettingsUtil.getInstance().showSettingsDialog(ProjectUtil.currentOrDefaultProject(project), "Plugins")));
         notification.addAction(NotificationAction.createSimpleExpiring(DevPilotMessageBundle.get("devpilot.notification.hideButton"), () -> {
 
         }));
@@ -158,4 +172,18 @@ public class DevPilotNotification {
         Notifications.Bus.notify(notification);
     }
 
+    public static void infoAndSetting(Project project, String display, String text) {
+        var notification = new Notification(
+                "DevPilot Notification Group",
+                DevPilotMessageBundle.get("notification.group.devpilot"),
+                text,
+                NotificationType.INFORMATION);
+        notification.addAction(new NotificationAction(display) {
+            @Override
+            public void actionPerformed(@NotNull AnActionEvent anActionEvent, @NotNull Notification notification) {
+                ShowSettingsUtil.getInstance().showSettingsDialog(project, DevPilotSettingsConfigurable.class);
+            }
+        });
+        Notifications.Bus.notify(notification);
+    }
 }

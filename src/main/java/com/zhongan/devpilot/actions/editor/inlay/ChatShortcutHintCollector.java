@@ -192,7 +192,7 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             });
         }
 
-        service.handleActions(actionEnum, psiElement, "with-context");
+        service.handleActions(actionEnum, psiElement, "");
     }
 
     private static int getAnchorOffset(@NotNull PsiElement psiElement) {
