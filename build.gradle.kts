@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.zhongan"
-version = "2.10.0"
+version = "2.11.0"
 
 repositories {
     mavenCentral()
@@ -47,7 +47,7 @@ tasks {
 
     patchPluginXml {
         sinceBuild.set("212")
-        untilBuild.set("243.*")
+        untilBuild.set("251.*")
 
         pluginDescription.set(provider { file("description.html").readText() })
     }
