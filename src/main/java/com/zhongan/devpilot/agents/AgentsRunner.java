@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,27 +23,31 @@ public class AgentsRunner {
 
     private final ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
+    public static volatile AtomicBoolean initialRunning = new AtomicBoolean(false);
+
     public synchronized boolean run(boolean force) {
-        File homeDir = BinaryManager.INSTANCE.getHomeDir();
-        if (homeDir == null) {
-            LOG.warn("Home dir is null, skip running DevPilot-Agents.");
-            return false;
+        initialRunning.set(true);
+        try {
+            File homeDir = BinaryManager.INSTANCE.getHomeDir();
+            if (homeDir == null) {
+                LOG.warn("Home dir is null, skip running DevPilot-Agents.");
+                return false;
+            }
+            BinaryManager.AgentCheckResult checkRes = BinaryManager.INSTANCE.checkIfAgentRunning(homeDir);
+            if (!force && checkRes.isRunning()) {
+                LOG.info("Skip running DevPilot-Agents for already running.");
+                return true;
+            }
+            BinaryManager.INSTANCE.findProcessAndKill();
+            boolean processRes = BinaryManager.INSTANCE.postProcessBeforeRunning(homeDir);
+            if (!processRes) {
+                LOG.info("Skip running DevPilot-Agents for failure of init binary.");
+                return false;
+            }
+            return doRun(homeDir);
+        } finally {
+            initialRunning.set(false);
         }
-        BinaryManager.AgentCheckResult checkRes = BinaryManager.INSTANCE.checkIfAgentRunning(homeDir);
-        if (!force && checkRes.isRunning()) {
-            LOG.info("Skip running DevPilot-Agents for already running.");
-            return true;
-        }
-        boolean processRes = BinaryManager.INSTANCE.postProcessBeforeRunning(homeDir);
-        if (!processRes) {
-            LOG.info("Skip running DevPilot-Agents for failure of init binary.");
-            return false;
-        }
-        boolean success = doRun(homeDir);
-        if (success && checkRes.isRunning()) {
-            delayKillOldProcess(checkRes.getPid());
-        }
-        return success;
     }
 
     protected boolean doRun(File homeDir) {
@@ -58,7 +63,6 @@ public class AgentsRunner {
             boolean aliveFlag = process.isAlive();
             if (aliveFlag) {
                 writeInfoFile(homeDir, ProcessUtils.findDevPilotAgentPidList(), port);
-                BinaryManager.INSTANCE.setCurrentPort(port);
             }
             return aliveFlag;
         } catch (Exception e) {

@@ -61,8 +61,6 @@ public class BinaryManager {
 
     public static final String EXECUTABLE_NAME = "devpilot-agents";
 
-    private volatile Integer currentPort;
-
     public volatile AtomicBoolean reStarting = new AtomicBoolean(false);
 
     static {
@@ -343,9 +341,6 @@ public class BinaryManager {
     }
 
     public Pair<Integer, Long> retrieveAlivePort() {
-        if (currentPort != null) {
-            return new Pair<>(currentPort, 0L);
-        }
         File homeDir = getHomeDir();
         if (homeDir != null) {
             File infoFile = new File(homeDir, getIdeInfoPath());
@@ -354,10 +349,6 @@ public class BinaryManager {
             }
         }
         return null;
-    }
-
-    public void setCurrentPort(Integer port) {
-        this.currentPort = port;
     }
 
     public void findProcessAndKill() {

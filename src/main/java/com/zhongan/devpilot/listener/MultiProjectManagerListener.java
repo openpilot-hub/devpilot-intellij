@@ -31,7 +31,7 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
                             return;
                         }
 
-                        if (!BinaryManager.INSTANCE.reStarting.compareAndSet(false, true)) {
+                        if (!BinaryManager.INSTANCE.reStarting.compareAndSet(false, true) || AgentsRunner.initialRunning.get()) {
                             LOG.info("Agent upgrading, skip monitor.");
                             return;
                         }
@@ -53,7 +53,7 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
                         if (!BinaryManager.INSTANCE.shouldStartAgent()) {
                             return;
                         }
-                        if (!BinaryManager.INSTANCE.reStarting.compareAndSet(false, true)) {
+                        if (!BinaryManager.INSTANCE.reStarting.compareAndSet(false, true) || AgentsRunner.initialRunning.get()) {
                             LOG.info("Agent is restarting, skip upgrade.");
                             return;
                         }
