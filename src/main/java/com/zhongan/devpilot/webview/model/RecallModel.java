@@ -13,6 +13,8 @@ public class RecallModel {
 
     private List<CodeReferenceModel> localRefs;
 
+    public RecallModel() {}
+
     public RecallModel(List<Step> steps, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs) {
         this.steps = steps;
         this.remoteRefs = remoteRefs;
@@ -89,6 +91,8 @@ public class RecallModel {
 
     static class Step {
         private String status;
+
+        public Step() {}
 
         Step(String status) {
             this.status = status;

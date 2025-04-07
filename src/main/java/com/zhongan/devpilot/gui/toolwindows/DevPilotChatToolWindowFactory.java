@@ -8,6 +8,8 @@ import com.intellij.ui.content.ContentFactory;
 import com.intellij.ui.jcef.JBCefApp;
 import com.zhongan.devpilot.actions.toolbar.ToolbarFeedbackAction;
 import com.zhongan.devpilot.actions.toolbar.ToolbarManualIndexAction;
+import com.zhongan.devpilot.actions.toolbar.ToolbarNewSessionAction;
+import com.zhongan.devpilot.actions.toolbar.ToolbarHistorySessionAction;
 import com.zhongan.devpilot.actions.toolbar.ToolbarUserProfileAction;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 
@@ -35,7 +37,7 @@ public class DevPilotChatToolWindowFactory implements ToolWindowFactory {
             webPanel.add(devPilotChatToolWindow.getDevPilotChatToolWindowPanel());
             Content content = contentFactory.createContent(webPanel, "", false);
             toolWindow.getContentManager().addContent(content);
-            toolWindow.setTitleActions(List.of(new ToolbarFeedbackAction(), new ToolbarUserProfileAction(), new ToolbarManualIndexAction()));
+            toolWindow.setTitleActions(List.of(new ToolbarNewSessionAction(),new ToolbarHistorySessionAction(),new ToolbarFeedbackAction(), new ToolbarUserProfileAction(), new ToolbarManualIndexAction()));
         }
     }
 }
