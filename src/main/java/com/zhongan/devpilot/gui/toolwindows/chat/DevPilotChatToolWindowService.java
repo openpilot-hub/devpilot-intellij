@@ -27,6 +27,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
+import com.zhongan.devpilot.session.ChatSessionManager;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.EncryptionUtil;
@@ -75,11 +76,9 @@ public final class DevPilotChatToolWindowService {
 
     private final DevPilotChatToolWindow devPilotChatToolWindow;
 
+    private final ChatSessionManager sessionManager;
+
     private LlmProvider llmProvider;
-
-    private final List<MessageModel> historyMessageList = new ArrayList<>();
-
-    private final List<DevPilotMessage> historyRequestMessageList = new ArrayList<>();
 
     private final AtomicBoolean cancel = new AtomicBoolean(false);
 
@@ -91,6 +90,7 @@ public final class DevPilotChatToolWindowService {
 
     public DevPilotChatToolWindowService(Project project) {
         this.project = project;
+        this.sessionManager = new ChatSessionManager(project);
         this.devPilotChatToolWindow = new DevPilotChatToolWindow(project);
     }
 
@@ -375,7 +375,7 @@ public final class DevPilotChatToolWindowService {
 
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         devPilotChatCompletionRequest.setVersion(CODE_PREDICT_PROMPT_VERSION);
-        devPilotChatCompletionRequest.getMessages().addAll(removeRedundantRelatedContext(copyHistoryRequestMessageList(historyRequestMessageList)));
+        devPilotChatCompletionRequest.getMessages().addAll(removeRedundantRelatedContext(copyHistoryRequestMessageList(sessionManager.getCurrentSession().getHistoryRequestMessageList())));
         devPilotChatCompletionRequest.getMessages().add(
                 MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "CODE_PREDICTION", content, dataMap));
         devPilotChatCompletionRequest.setStream(Boolean.FALSE);
@@ -488,6 +488,7 @@ public final class DevPilotChatToolWindowService {
         }
 
         // check session type,default multi session
+        List<DevPilotMessage> historyRequestMessageList = sessionManager.getCurrentSession().getHistoryRequestMessageList();
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
         var sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
         if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
@@ -509,8 +510,7 @@ public final class DevPilotChatToolWindowService {
         if (MULTI_TURN.equals(sessionTypeEnum) &&
                 devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
-            historyRequestMessageList.add(
-                    devPilotChatCompletionRequest.getMessages().get(devPilotChatCompletionRequest.getMessages().size() - 1));
+            sessionManager.saveRequestIntoSession(devPilotChatCompletionRequest.getMessages().get(devPilotChatCompletionRequest.getMessages().size() - 1));
         }
 
         return chatCompletion;
@@ -519,6 +519,9 @@ public final class DevPilotChatToolWindowService {
     public String sendMessage(Consumer<String> callback, Map<String, String> data,
                               List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType, MessageModel messageModel) {
         // if data is not empty, the data should add into last history request message
+        List<MessageModel> historyMessageList = sessionManager.getCurrentSession().getHistoryMessageList();
+        List<DevPilotMessage> historyRequestMessageList = sessionManager.getCurrentSession().getHistoryRequestMessageList();
+
         if (data != null && !data.isEmpty() && !historyMessageList.isEmpty()) {
             var lastHistoryRequestMessage = historyRequestMessageList.get(historyRequestMessageList.size() - 1);
             if (lastHistoryRequestMessage.getPromptData() == null) {
@@ -540,8 +543,7 @@ public final class DevPilotChatToolWindowService {
         var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
         if (devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
             // update multi session request
-            historyRequestMessageList.add(
-                    devPilotChatCompletionRequest.getMessages().get(devPilotChatCompletionRequest.getMessages().size() - 1));
+            sessionManager.saveRequestIntoSession(devPilotChatCompletionRequest.getMessages().get(devPilotChatCompletionRequest.getMessages().size() - 1));
         }
 
         return chatCompletion;
@@ -564,6 +566,7 @@ public final class DevPilotChatToolWindowService {
 
     /**
      * Only used in CODE_PREDICTION for minimizing request data size.
+     *
      * @param devPilotMessages
      */
     private List<DevPilotMessage> removeRedundantRelatedContext(List<DevPilotMessage> devPilotMessages) {
@@ -581,38 +584,56 @@ public final class DevPilotChatToolWindowService {
         return copy;
     }
 
+    public void handleCreateNewSession() {
+        sessionManager.createNewSession();
+        callWebView();
+    }
+
+    public void handleSwitchSession(String sessionId) {
+        sessionManager.switchSession(sessionId);
+        callWebView();
+    }
+
+    public void handleDeleteSession(String sessionId) {
+        sessionManager.deleteSession(sessionId);
+        callWebView();
+    }
+
     public List<MessageModel> getHistoryMessageList() {
-        return historyMessageList;
+        return sessionManager.getCurrentSession().getHistoryMessageList();
     }
 
     public void addMessage(MessageModel messageModel) {
-        historyMessageList.add(messageModel);
+        sessionManager.getCurrentSession().getHistoryMessageList().add(messageModel);
     }
 
     public void addRequestMessage(DevPilotMessage message) {
-        historyRequestMessageList.add(message);
+        sessionManager.getCurrentSession().getHistoryRequestMessageList().add(message);
     }
 
     public void clearSession() {
-        historyMessageList.clear();
-        historyRequestMessageList.clear();
+        sessionManager.getCurrentSession().getHistoryMessageList().clear();
+        sessionManager.getCurrentSession().getHistoryRequestMessageList().clear();
         callWebView();
     }
 
     // Do not clear message show session
     public void clearRequestSession() {
-        historyRequestMessageList.clear();
+        sessionManager.getCurrentSession().getHistoryRequestMessageList().clear();
 
-        if (historyMessageList.isEmpty()) {
+        if (sessionManager.getCurrentSession().getHistoryMessageList().isEmpty()) {
             return;
         }
 
         var dividerModel = MessageModel.buildDividerMessage();
         callWebView(dividerModel);
-        historyMessageList.add(dividerModel);
+        sessionManager.getCurrentSession().getHistoryMessageList().add(dividerModel);
     }
 
     public void deleteMessage(String id) {
+        List<MessageModel> historyMessageList = sessionManager.getCurrentSession().getHistoryMessageList();
+        List<DevPilotMessage> historyRequestMessageList = sessionManager.getCurrentSession().getHistoryRequestMessageList();
+
         // get user message id then delete itself and its next item(assistant message)
         String assistantMessageId = null;
 
@@ -643,6 +664,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void regenerateMessage() {
+        List<MessageModel> historyMessageList = sessionManager.getCurrentSession().getHistoryMessageList();
         var lastMessage = historyMessageList.get(historyMessageList.size() - 1);
 
         if (!lastMessage.getRole().equals("assistant")) {
@@ -651,7 +673,7 @@ public final class DevPilotChatToolWindowService {
 
         var id = lastMessage.getId();
         historyMessageList.removeIf(item -> item.getId().equals(id));
-        historyRequestMessageList.removeIf(item -> item.getId().equals(id));
+        sessionManager.getCurrentSession().getHistoryRequestMessageList().removeIf(item -> item.getId().equals(id));
 
         // todo handle real callback
         lastMessage = historyMessageList.get(historyMessageList.size() - 1);
@@ -742,7 +764,7 @@ public final class DevPilotChatToolWindowService {
             return null;
         }
 
-        var userMessage = historyMessageList.get(index - 1);
+        var userMessage = sessionManager.getCurrentSession().getHistoryMessageList().get(index - 1);
 
         if (!userMessage.getRole().equals("user")) {
             return null;
@@ -752,6 +774,8 @@ public final class DevPilotChatToolWindowService {
     }
 
     private void buildConversationWindowMemory() {
+        List<DevPilotMessage> historyRequestMessageList = sessionManager.getCurrentSession().getHistoryRequestMessageList();
+
         // 先确保内容不超过 输入token限制
         List<Integer> tokenCounts = TokenUtils.ComputeTokensFromMessagesUsingGPT35Enc(historyRequestMessageList);
         int totalTokenCount = tokenCounts.get(0);
@@ -778,6 +802,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     private int getMessageIndex(String id) {
+        List<MessageModel> historyMessageList = sessionManager.getCurrentSession().getHistoryMessageList();
         var index = -1;
         for (int i = 0; i < historyMessageList.size(); i++) {
             var message = historyMessageList.get(i);
@@ -841,6 +866,13 @@ public final class DevPilotChatToolWindowService {
         javaCallModel.setCommand("RenderChatConversation");
         javaCallModel.setPayload(messageList);
 
+        callWebView(javaCallModel);
+    }
+
+    public void renderHistorySession() {
+        var javaCallModel = new JavaCallModel();
+        javaCallModel.setCommand("ShowHistory");
+        javaCallModel.setPayload(sessionManager.getSessions().stream().filter(t -> CollectionUtils.isNotEmpty(t.getHistoryRequestMessageList())).collect(Collectors.toList()));
         callWebView(javaCallModel);
     }
 

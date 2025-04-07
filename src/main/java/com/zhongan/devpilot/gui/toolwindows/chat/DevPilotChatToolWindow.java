@@ -42,6 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.swing.JComponent;
 
@@ -336,6 +337,34 @@ public class DevPilotChatToolWindow {
 
                     return new JBCefJSQuery.Response("success");
                 }
+                case "CreateNewSession": {
+                    service.handleCreateNewSession();
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "SwitchSession": {
+                    var payload = jsCallModel.getPayload();
+                    var sessionIdMap = JsonUtils.fromJson(JsonUtils.toJson(payload), Map.class);
+                    if (sessionIdMap == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+                    var sessionId = sessionIdMap.get("sessionId");
+                    service.handleSwitchSession(String.valueOf(sessionId));
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "DeleteSession": {
+                    var payload = jsCallModel.getPayload();
+                    var sessionIdMap = JsonUtils.fromJson(JsonUtils.toJson(payload), Map.class);
+                    if (sessionIdMap == null) {
+                        return new JBCefJSQuery.Response("error");
+                    }
+                    var sessionId = sessionIdMap.get("sessionId");
+                    service.handleDeleteSession(String.valueOf(sessionId));
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "BackToChat": {
+                    service.callWebView();
+                    return new JBCefJSQuery.Response("success");
+                }
                 case "D2C": {
                     var payload = jsCallModel.getPayload();
                     var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
@@ -422,6 +451,8 @@ public class DevPilotChatToolWindow {
 
     }
 
+    private final AtomicBoolean historyRendered = new AtomicBoolean(false);
+
     private void registerLifeSpanHandler(JBCefBrowser browser) {
         final CefLifeSpanHandlerAdapter lifeSpanHandlerAdapter = new CefLifeSpanHandlerAdapter() {
             @Override
@@ -430,6 +461,26 @@ public class DevPilotChatToolWindow {
             }
         };
         browser.getJBCefClient().addLifeSpanHandler(lifeSpanHandlerAdapter, browser.getCefBrowser());
+
+        browser.getJBCefClient().addLoadHandler(new CefLoadHandler() {
+            @Override
+            public void onLoadingStateChange(CefBrowser browser, boolean isLoading, boolean canGoBack, boolean canGoForward) {
+
+            }
+
+            @Override
+            public void onLoadStart(CefBrowser browser, CefFrame frame, CefRequest.TransitionType transitionType) {}
+
+            @Override
+            public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
+                if (frame.isMain() && historyRendered.compareAndSet(false, true)) {
+                    project.getService(DevPilotChatToolWindowService.class).callWebView();
+                }
+            }
+
+            @Override
+            public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {}
+        }, browser.getCefBrowser());
     }
 
     public JComponent getDevPilotChatToolWindowPanel() {
