@@ -92,7 +92,7 @@ public class RecallModel {
     static class Step {
         private String status;
 
-        public Step() {}
+        Step() {}
 
         Step(String status) {
             this.status = status;

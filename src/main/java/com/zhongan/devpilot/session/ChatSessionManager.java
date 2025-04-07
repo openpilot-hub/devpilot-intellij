@@ -21,8 +21,11 @@ public class ChatSessionManager {
     private static final Logger log = Logger.getInstance(ChatSessionManager.class);
 
     private static final String SESSIONS_DIR = ".session_histories";
+
     private final String basePath;
+
     private ChatSession currentSession;
+
     private final List<ChatSession> sessions = new ArrayList<>();
 
     public ChatSessionManager(Project project) {
@@ -34,7 +37,7 @@ public class ChatSessionManager {
         if (sessions.isEmpty()) {
             createNewSession();
         } else {
-            currentSession = sessions.get(sessions.size() - 1); // Use most recent session
+            currentSession = sessions.get(sessions.size() - 1);
         }
     }
 

@@ -8,9 +8,13 @@ import java.util.List;
 
 public class ChatSession {
     private String id;
+
     private long createTime;
+
     private long updateTime;
+
     private List<MessageModel> historyMessageList;
+
     private List<DevPilotMessage> historyRequestMessageList;
 
     public ChatSession() {
