@@ -3,7 +3,6 @@ package com.zhongan.devpilot.session;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.agents.BinaryManager;
-import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.session.model.ChatSession;
 import com.zhongan.devpilot.util.JsonUtils;
 
@@ -80,11 +79,6 @@ public class ChatSessionManager {
         sessions.add(session);
         currentSession = session;
         return session;
-    }
-
-    public void saveRequestIntoSession(DevPilotMessage message) {
-        currentSession.getHistoryRequestMessageList().add(message);
-        saveSession(currentSession);
     }
 
     public void saveSession(ChatSession session) {
