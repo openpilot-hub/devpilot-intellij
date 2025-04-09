@@ -28,6 +28,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.session.ChatSessionManager;
+import com.zhongan.devpilot.session.model.ChatSession;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.EncryptionUtil;
@@ -68,7 +69,6 @@ import static com.zhongan.devpilot.constant.DefaultConst.CODE_PREDICT_PROMPT_VER
 import static com.zhongan.devpilot.constant.DefaultConst.D2C_PROMPT_VERSION;
 import static com.zhongan.devpilot.constant.DefaultConst.NORMAL_CHAT_TYPE;
 import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
-import static com.zhongan.devpilot.enums.SessionTypeEnum.MULTI_TURN;
 
 @Service
 public final class DevPilotChatToolWindowService {
@@ -507,11 +507,7 @@ public final class DevPilotChatToolWindowService {
 
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
         var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
-        if (MULTI_TURN.equals(sessionTypeEnum) &&
-                devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
-            // update multi session request
-            sessionManager.saveRequestIntoSession(devPilotChatCompletionRequest.getMessages().get(devPilotChatCompletionRequest.getMessages().size() - 1));
-        }
+        sessionManager.saveSession(sessionManager.getCurrentSession());
 
         return chatCompletion;
     }
@@ -541,10 +537,7 @@ public final class DevPilotChatToolWindowService {
         this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
 
         var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
-        if (devPilotChatCompletionRequest.getMessages().size() > historyRequestMessageList.size()) {
-            // update multi session request
-            sessionManager.saveRequestIntoSession(devPilotChatCompletionRequest.getMessages().get(devPilotChatCompletionRequest.getMessages().size() - 1));
-        }
+        sessionManager.saveSession(sessionManager.getCurrentSession());
 
         return chatCompletion;
     }
@@ -604,11 +597,15 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void addMessage(MessageModel messageModel) {
-        sessionManager.getCurrentSession().getHistoryMessageList().add(messageModel);
+        ChatSession currentSession = sessionManager.getCurrentSession();
+        currentSession.getHistoryMessageList().add(messageModel);
+        sessionManager.saveSession(currentSession);
     }
 
     public void addRequestMessage(DevPilotMessage message) {
-        sessionManager.getCurrentSession().getHistoryRequestMessageList().add(message);
+        ChatSession currentSession = sessionManager.getCurrentSession();
+        currentSession.getHistoryRequestMessageList().add(message);
+        sessionManager.saveSession(currentSession);
     }
 
     public void clearSession() {
