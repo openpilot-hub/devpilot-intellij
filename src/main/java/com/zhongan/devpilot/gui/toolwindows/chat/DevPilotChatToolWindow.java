@@ -17,6 +17,7 @@ import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.enums.SessionTypeEnum;
+import com.zhongan.devpilot.session.ChatSessionManagerService;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.ConfigChangeUtils;
@@ -474,6 +475,7 @@ public class DevPilotChatToolWindow {
             @Override
             public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
                 if (frame.isMain() && historyRendered.compareAndSet(false, true)) {
+                    project.getService(ChatSessionManagerService.class);
                     project.getService(DevPilotChatToolWindowService.class).callWebView();
                 }
             }
