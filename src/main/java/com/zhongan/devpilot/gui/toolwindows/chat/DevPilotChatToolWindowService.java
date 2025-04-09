@@ -28,6 +28,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.session.ChatSessionManager;
+import com.zhongan.devpilot.session.ChatSessionManagerService;
 import com.zhongan.devpilot.session.model.ChatSession;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
@@ -90,7 +91,7 @@ public final class DevPilotChatToolWindowService {
 
     public DevPilotChatToolWindowService(Project project) {
         this.project = project;
-        this.sessionManager = new ChatSessionManager(project);
+        this.sessionManager = project.getService(ChatSessionManagerService.class).getSessionManager();
         this.devPilotChatToolWindow = new DevPilotChatToolWindow(project);
     }
 
