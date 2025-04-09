@@ -122,6 +122,10 @@ public class DevPilotChatToolWindow {
             var service = project.getService(DevPilotChatToolWindowService.class);
 
             switch (command) {
+                case "ChatInitialized": {
+                    service.callWebView();
+                    return new JBCefJSQuery.Response("success");
+                }
                 case "AppendToConversation": {
                     var payload = jsCallModel.getPayload();
                     var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
@@ -470,7 +474,8 @@ public class DevPilotChatToolWindow {
             }
 
             @Override
-            public void onLoadStart(CefBrowser browser, CefFrame frame, CefRequest.TransitionType transitionType) {}
+            public void onLoadStart(CefBrowser browser, CefFrame frame, CefRequest.TransitionType transitionType) {
+            }
 
             @Override
             public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
@@ -481,7 +486,8 @@ public class DevPilotChatToolWindow {
             }
 
             @Override
-            public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {}
+            public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
+            }
         }, browser.getCefBrowser());
     }
 
