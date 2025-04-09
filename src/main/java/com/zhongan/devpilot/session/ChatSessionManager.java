@@ -22,7 +22,7 @@ public class ChatSessionManager {
 
     private static final String SESSIONS_DIR = ".session_histories";
 
-    private static final int MAX_SESSIONS = 10;
+    private static final int MAX_SESSIONS = 20;
 
     private final String basePath;
 
