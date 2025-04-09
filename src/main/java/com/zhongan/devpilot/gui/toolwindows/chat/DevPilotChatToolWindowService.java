@@ -589,7 +589,7 @@ public final class DevPilotChatToolWindowService {
 
     public void handleDeleteSession(String sessionId) {
         sessionManager.deleteSession(sessionId);
-        callWebView();
+        renderHistorySession();
     }
 
     public List<MessageModel> getHistoryMessageList() {
@@ -869,7 +869,18 @@ public final class DevPilotChatToolWindowService {
     public void renderHistorySession() {
         var javaCallModel = new JavaCallModel();
         javaCallModel.setCommand("ShowHistory");
-        javaCallModel.setPayload(sessionManager.getSessions().stream().filter(t -> CollectionUtils.isNotEmpty(t.getHistoryRequestMessageList())).collect(Collectors.toList()));
+        javaCallModel.setPayload(sessionManager.getSessions().stream()
+                .filter(t -> CollectionUtils.isNotEmpty(t.getHistoryRequestMessageList()))
+                .sorted((s1, s2) -> {
+                    if (s1.getUpdateTime() == null) {
+                        return 1;
+                    }
+                    if (s2.getUpdateTime() == null) {
+                        return -1;
+                    }
+                    return s2.getUpdateTime().compareTo(s1.getUpdateTime());
+                })
+                .collect(Collectors.toList()));
         callWebView(javaCallModel);
     }
 
