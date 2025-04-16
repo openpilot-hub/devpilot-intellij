@@ -32,11 +32,11 @@ public class ProjectUtil {
 
             Component component = ComponentUtil.findUltimateParent(window);
             if (component instanceof IdeFrame) {
-                project = ((IdeFrame)component).getProject();
+                project = ((IdeFrame) component).getProject();
             }
         }
 
-        return isValidProject(project)? project : null;
+        return isValidProject(project) ? project : null;
     }
 
     private static boolean isValidProject(@Nullable Project project) {
