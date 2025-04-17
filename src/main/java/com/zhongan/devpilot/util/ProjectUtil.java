@@ -1,5 +1,6 @@
 package com.zhongan.devpilot.util;
 
+import com.intellij.openapi.application.PathManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.wm.IdeFrame;
@@ -10,6 +11,7 @@ import java.awt.GraphicsEnvironment;
 import java.awt.KeyboardFocusManager;
 import java.awt.Window;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.Nullable;
 
 public class ProjectUtil {
@@ -41,5 +43,9 @@ public class ProjectUtil {
 
     private static boolean isValidProject(@Nullable Project project) {
         return project != null && !project.isDisposed() && !project.isDefault() && project.isInitialized();
+    }
+
+    public static boolean isSandboxProject() {
+        return StringUtils.contains(PathManager.getSystemPath(), "sandbox");
     }
 }

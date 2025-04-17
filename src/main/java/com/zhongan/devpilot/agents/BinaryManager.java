@@ -13,6 +13,7 @@ import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.ProcessUtils;
+import com.zhongan.devpilot.util.ProjectUtil;
 import com.zhongan.devpilot.util.UserAgentUtils;
 
 import java.io.File;
@@ -116,6 +117,16 @@ public class BinaryManager {
                 LOG.warn("Failed to create final home directory." + finalHomeDir.getName());
                 return null;
             }
+
+            boolean fromSources = ProjectUtil.isSandboxProject();
+            if (fromSources) {
+                finalHomeDir = new File(finalHomeDir, "sandbox");
+                if (!finalHomeDir.exists() && !finalHomeDir.mkdirs()) {
+                    LOG.warn("Failed to create final home directory for sandbox." + finalHomeDir.getName());
+                    return null;
+                }
+            }
+
             return finalHomeDir;
         }
     }
@@ -365,6 +376,15 @@ public class BinaryManager {
             killProcessAndDeleteInfoFile(infoPair.second, true);
         } else {
             LOG.info("Pid not exist when trying to kill process, skip process killing");
+            List<Long> pidList = ProcessUtils.findDevPilotAgentPidList();
+            if (!pidList.isEmpty()) {
+                LOG.info(String.format("Find %s process(es) when trying to kill process.", pidList.size()));
+                for (Long pid : pidList) {
+                    killProcessAndDeleteInfoFile(pid, true);
+                }
+            } else {
+                LOG.info("No process found, skip killing process.");
+            }
         }
     }
 
