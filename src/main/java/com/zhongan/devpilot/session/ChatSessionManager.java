@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
@@ -20,6 +21,8 @@ public class ChatSessionManager {
     private static final Logger log = Logger.getInstance(ChatSessionManager.class);
 
     private static final String SESSIONS_DIR = ".session_histories";
+
+    private static final int MAX_SESSIONS = 20;
 
     private final String basePath;
 
@@ -36,7 +39,7 @@ public class ChatSessionManager {
         if (sessions.isEmpty()) {
             createNewSession();
         } else {
-            currentSession = sessions.get(sessions.size() - 1);
+            currentSession = sessions.get(0);
         }
     }
 
@@ -65,12 +68,23 @@ public class ChatSessionManager {
                 }
             }
         }
+        sortSessionsByUpdateTime();
+    }
+
+    private void sortSessionsByUpdateTime() {
+        sessions.sort(Comparator.comparing(ChatSession::getUpdateTime).reversed());
     }
 
     public ChatSession createNewSession() {
         if (null != currentSession && CollectionUtils.isEmpty(currentSession.getHistoryRequestMessageList())) {
             return currentSession;
         }
+        while (sessions.size() > MAX_SESSIONS) {
+            sortSessionsByUpdateTime();
+            ChatSession oldestSession = sessions.get(sessions.size() - 1);
+            deleteSession(oldestSession.getId());
+        }
+
         ChatSession session = new ChatSession();
         session.setId(UUID.randomUUID().toString());
         session.setCreateTime(System.currentTimeMillis());
@@ -107,7 +121,7 @@ public class ChatSessionManager {
         }
 
         if (currentSession != null && currentSession.getId().equals(sessionId)) {
-            currentSession = sessions.isEmpty() ? createNewSession() : sessions.get(sessions.size() - 1);
+            currentSession = sessions.isEmpty() ? createNewSession() : getLastModifiedSession();
         }
     }
 
@@ -124,7 +138,13 @@ public class ChatSessionManager {
         return currentSession;
     }
 
+    private ChatSession getLastModifiedSession() {
+        sortSessionsByUpdateTime();
+        return sessions.get(0);
+    }
+
     public List<ChatSession> getSessions() {
+        sortSessionsByUpdateTime();
         return new ArrayList<>(sessions);
     }
 
