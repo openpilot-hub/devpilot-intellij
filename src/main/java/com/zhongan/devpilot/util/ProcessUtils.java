@@ -7,8 +7,11 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import org.apache.commons.lang3.StringUtils;
 
 import static com.zhongan.devpilot.agents.BinaryManager.EXECUTABLE_NAME;
 
@@ -59,7 +62,18 @@ public class ProcessUtils {
             Process process = null;
             if (isWindowsPlatform()) {
                 log.info(String.format("Kill process in Windows mode. Pid: [%d]", pid));
-                process = rt.exec("C:\\Windows\\System32\\taskkill.exe /F /T /PID " + pid);
+                process = rt.exec("taskkill /PID " + pid);
+                boolean terminated = process.waitFor(3, TimeUnit.SECONDS);
+
+                if (!terminated || isProcessAlive(pid)) {
+                    log.info(String.format("Process %d is still alive，Try to kill force.", pid));
+                    process = rt.exec("taskkill /F /T /PID " + pid);
+                    terminated = process.waitFor(5, TimeUnit.SECONDS);
+
+                    if (!terminated || isProcessAlive(pid)) {
+                        log.warn(String.format("Failed to kill %d", pid));
+                    }
+                }
             } else if (!osName.contains(NIX_OS) && !osName.contains(LINUX_OS) && !osName.contains(MAC_OS)) {
                 log.info(String.format("Unsupported OS: Check alive for Pid: [%d] return false", pid));
             } else {
@@ -76,8 +90,18 @@ public class ProcessUtils {
 
     }
 
-    public static List<Long> findDevPilotAgentPidList() {
-        return getPidListFromName(BinaryManager.INSTANCE.getType() + File.separator + "bin" + File.separator + BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
+    public static List<Long> findDevPilotAgentPidList(long pid) {
+        if (pid > 0) {
+            List<Long> pidList = new ArrayList<>();
+            pidList.add(pid);
+            return pidList;
+        }
+        String version = BinaryManager.INSTANCE.getVersion();
+        if (StringUtils.isEmpty(version)) {
+            return Collections.emptyList();
+        }
+        boolean fromSources = ProjectUtil.isSandboxProject();
+        return getPidListFromName(BinaryManager.INSTANCE.getType() + File.separator + (fromSources ? ("sandbox" + File.separator) : StringUtils.EMPTY) + "bin" + File.separator + BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
     }
 
     private static boolean isProcessIdRunning(long pid, String command) {

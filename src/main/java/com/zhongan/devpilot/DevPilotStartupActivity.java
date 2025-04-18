@@ -20,7 +20,7 @@ public class DevPilotStartupActivity implements StartupActivity {
         new DevPilotAvailabilityChecker(project).checkNetworkAndLogStatus();
         EditorFactory.getInstance().getEventMulticaster().addCaretListener(new DevPilotLineIconListener(project), project);
 
-        LocalEmbeddingService.start();
+        LocalEmbeddingService.start(project);
     }
 
 }

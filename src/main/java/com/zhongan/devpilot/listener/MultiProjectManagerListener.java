@@ -1,6 +1,5 @@
 package com.zhongan.devpilot.listener;
 
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
@@ -84,7 +83,7 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
 
     public void projectClosing(@NotNull Project project) {
         Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
-        if (openProjects.length == 1 && !ApplicationManager.getApplication().isInternal()) {
+        if (openProjects.length == 1) {
             BinaryManager.INSTANCE.findProcessAndKill();
         }
     }

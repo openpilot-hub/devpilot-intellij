@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 
 public class AgentsRunner {
@@ -62,7 +63,13 @@ public class AgentsRunner {
             Process process = builder.start();
             boolean aliveFlag = process.isAlive();
             if (aliveFlag) {
-                writeInfoFile(homeDir, ProcessUtils.findDevPilotAgentPidList(), port);
+                long pid = NumberUtils.LONG_ZERO;
+                try {
+                    pid = process.pid();
+                } catch (Exception e) {
+                    LOG.warn("Error occurred while getting pid from process.", e);
+                }
+                writeInfoFile(homeDir, ProcessUtils.findDevPilotAgentPidList(pid), port);
             }
             return aliveFlag;
         } catch (Exception e) {

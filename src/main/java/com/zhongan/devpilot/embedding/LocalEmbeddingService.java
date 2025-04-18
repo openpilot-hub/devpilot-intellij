@@ -25,6 +25,7 @@ import com.zhongan.devpilot.util.GitUtil;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.MD5Utils;
+import com.zhongan.devpilot.util.ProjectUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,16 +61,13 @@ public class LocalEmbeddingService {
     /**
      * Starts thread processing interval 15 minutes
      */
-    public static void start() {
+    public static void start(Project project) {
         scheduler.scheduleWithFixedDelay(() -> {
             var enabled = LocalRagSettingsState.getInstance().getEnable();
 
             // only the setting enabled will process the project index
             if (enabled) {
-                var projects = ProjectManager.getInstance().getOpenProjects();
-                for (var project : projects) {
-                    wrapIndexTask(project, LocalEmbeddingService::indexProject);
-                }
+                wrapIndexTask(project, LocalEmbeddingService::indexProject);
             }
         }, 15L, 15L, TimeUnit.MINUTES);
     }
@@ -119,6 +117,10 @@ public class LocalEmbeddingService {
     }
 
     public static void wrapIndexTask(Project project, Consumer<Project> consumer) {
+        Project currentProject = ProjectUtil.getCurrentContextProject();
+        if (project != currentProject) {
+            return;
+        }
         Integer status = indexStatusMap.get(project.getBasePath());
         if (status != null && status == 0) {
             // skip if index is running
