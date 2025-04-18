@@ -90,7 +90,12 @@ public class ProcessUtils {
 
     }
 
-    public static List<Long> findDevPilotAgentPidList() {
+    public static List<Long> findDevPilotAgentPidList(long pid) {
+        if (pid > 0) {
+            List<Long> pidList = new ArrayList<>();
+            pidList.add(pid);
+            return pidList;
+        }
         String version = BinaryManager.INSTANCE.getVersion();
         if (StringUtils.isEmpty(version)) {
             return Collections.emptyList();
