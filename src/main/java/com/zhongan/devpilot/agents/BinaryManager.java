@@ -443,7 +443,7 @@ public class BinaryManager {
                 String rawText = FileUtils.readFileToString(infoFile, StandardCharsets.UTF_8);
                 if (rawText != null && !rawText.isEmpty()) {
                     String[] lines = rawText.split("\r\n|\n");
-                    if (lines.length != 2) {
+                    if (lines.length < 2) {
                         LOG.info("Read info file get invalided port and pid.");
                         return null;
                     }
