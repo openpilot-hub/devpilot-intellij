@@ -6,9 +6,14 @@
     <!-- Public plugin name should be written in Title Case.
          Guidelines: https://plugins.jetbrains.com/docs/marketplace/plugin-overview-page.html#plugin-name -->
     <name>DevPilot</name>
-    <version>2.11.0</version>
+    <version>2.11.1</version>
 
     <change-notes><![CDATA[
+        <h1>Release 2.11.1</h1>
+        <h2>Bug Fixes</h2>
+        <ul>
+            <li>Fixed the memory usage issue in the Windows environment</li>
+        </ul>
         <h1>Release 2.11.0</h1>
         <h2>New Features</h2>
         <ul>
