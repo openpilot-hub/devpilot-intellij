@@ -13,6 +13,7 @@ import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
 import com.zhongan.devpilot.util.ProcessUtils;
+import com.zhongan.devpilot.util.ProjectUtil;
 import com.zhongan.devpilot.util.UserAgentUtils;
 
 import java.io.File;
@@ -116,6 +117,16 @@ public class BinaryManager {
                 LOG.warn("Failed to create final home directory." + finalHomeDir.getName());
                 return null;
             }
+
+            boolean fromSources = ProjectUtil.isSandboxProject();
+            if (fromSources) {
+                finalHomeDir = new File(finalHomeDir, "sandbox");
+                if (!finalHomeDir.exists() && !finalHomeDir.mkdirs()) {
+                    LOG.warn("Failed to create final home directory for sandbox." + finalHomeDir.getName());
+                    return null;
+                }
+            }
+
             return finalHomeDir;
         }
     }
@@ -365,6 +376,15 @@ public class BinaryManager {
             killProcessAndDeleteInfoFile(infoPair.second, true);
         } else {
             LOG.info("Pid not exist when trying to kill process, skip process killing");
+            List<Long> pidList = ProcessUtils.findDevPilotAgentPidList(NumberUtils.LONG_ZERO);
+            if (!pidList.isEmpty()) {
+                LOG.info(String.format("Find %s process(es) when trying to kill process.", pidList.size()));
+                for (Long pid : pidList) {
+                    killProcessAndDeleteInfoFile(pid, true);
+                }
+            } else {
+                LOG.info("No process found, skip killing process.");
+            }
         }
     }
 
@@ -384,7 +404,7 @@ public class BinaryManager {
             if (infoPair != null) {
                 return infoPair;
             }
-            List<Long> pidList = ProcessUtils.findDevPilotAgentPidList();
+            List<Long> pidList = ProcessUtils.findDevPilotAgentPidList(NumberUtils.LONG_ZERO);
             for (Long pid : pidList) {
                 killOldProcess(pid);
             }
@@ -423,6 +443,10 @@ public class BinaryManager {
                 String rawText = FileUtils.readFileToString(infoFile, StandardCharsets.UTF_8);
                 if (rawText != null && !rawText.isEmpty()) {
                     String[] lines = rawText.split("\r\n|\n");
+                    if (lines.length < 2) {
+                        LOG.info("Read info file get invalided port and pid.");
+                        return null;
+                    }
 
                     int port = Integer.parseInt(lines[0]);
                     Long pid = Long.valueOf(lines[1]);
