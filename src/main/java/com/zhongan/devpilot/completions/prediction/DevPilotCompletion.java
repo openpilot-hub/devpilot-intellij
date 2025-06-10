@@ -1,7 +1,9 @@
 package com.zhongan.devpilot.completions.prediction;
 
 import com.intellij.codeInsight.lookup.impl.LookupCellRenderer;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.editor.Editor;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.TextRange;
 import com.intellij.util.containers.FList;
 import com.zhongan.devpilot.completions.Completion;
@@ -91,9 +93,14 @@ public class DevPilotCompletion implements Completion {
     }
 
     private String prepare(String suffix) {
-        int cursorOffset = editor.getCaretModel().getOffset();
-        if (shouldRemoveSuffix(this)) {
-            editor.getDocument().deleteString(cursorOffset, cursorOffset + this.oldSuffix.length());
+        int cursorOffset = ApplicationManager.getApplication().runReadAction(
+                (Computable<Integer>) () -> editor.getCaretModel().getOffset()
+        );
+        boolean needRemove = shouldRemoveSuffix(this);
+        if (needRemove) {
+            ApplicationManager.getApplication().runWriteAction(() -> {
+                editor.getDocument().deleteString(cursorOffset, cursorOffset + this.oldSuffix.length());
+            });
         }
         return suffix;
     }

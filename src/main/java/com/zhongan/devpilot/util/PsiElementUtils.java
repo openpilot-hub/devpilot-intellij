@@ -240,7 +240,7 @@ public class PsiElementUtils {
             } else {
                 var methods = psiClass.getMethods();
                 for (var method : methods) {
-                    if (methodName.equals(method.getName())) {
+                    if (StringUtils.equals(methodName, method.getName())) {
                         return method;
                     }
                 }

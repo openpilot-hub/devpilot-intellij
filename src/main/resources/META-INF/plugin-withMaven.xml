@@ -1,0 +1,5 @@
+<idea-plugin>
+    <extensions defaultExtensionNs="com.intellij">
+        <projectService serviceImplementation="com.zhongan.devpilot.provider.ut.java.JavaUtFrameworkProvider"/>
+    </extensions>
+</idea-plugin>

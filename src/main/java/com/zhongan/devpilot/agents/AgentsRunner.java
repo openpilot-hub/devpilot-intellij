@@ -1,6 +1,9 @@
 package com.zhongan.devpilot.agents;
 
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.zhongan.devpilot.mcp.McpConfigurationHandler;
 import com.zhongan.devpilot.util.ProcessUtils;
 
 import java.io.File;
@@ -9,11 +12,13 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,6 +53,14 @@ public class AgentsRunner {
             return doRun(homeDir);
         } finally {
             initialRunning.set(false);
+
+            ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                try {
+                    McpConfigurationHandler.INSTANCE.initialMcpServer();
+                } catch (Exception e) {
+                    LOG.warn("Failed to connect to SSE server in AgentsRunner finally block.", e);
+                }
+            });
         }
     }
 
@@ -60,6 +73,14 @@ public class AgentsRunner {
             List<String> commands = createCommand(BinaryManager.INSTANCE.getBinaryPath(homeDir), port);
             ProcessBuilder builder = new ProcessBuilder(commands);
             builder.directory(homeDir);
+
+            Map<String, String> env = builder.environment();
+            String pathVariableValue = PathEnvironmentVariableUtil.getPathVariableValue();
+            if (StringUtils.isNotBlank(pathVariableValue)) {
+                env.put("PATH", pathVariableValue);
+                LOG.info("Setting PATH env to pathVariableValue: " + pathVariableValue);
+            }
+
             Process process = builder.start();
             boolean aliveFlag = process.isAlive();
             if (aliveFlag) {

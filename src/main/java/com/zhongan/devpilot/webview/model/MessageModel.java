@@ -3,11 +3,15 @@ package com.zhongan.devpilot.webview.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang3.StringUtils;
+
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MessageModel {
+
     private String id;
 
     private Long time;
@@ -29,13 +33,16 @@ public class MessageModel {
     /**
      * 模式，无值则为开启上下文，with-ctrl则为不开启上下文
      */
-    private String mode;
+    private int chatMode;
 
     @JsonIgnore
     private String msgType;
 
+    private List<AgentDecisionModel> decisions = new ArrayList<>();
+
+
     public static MessageModel buildCodeMessage(String id, Long time, String content,
-                                                String username, List<CodeReferenceModel> codeReference, String mode) {
+                                                String username, List<CodeReferenceModel> codeReference, int mode) {
         MessageModel messageModel = new MessageModel();
         messageModel.setId(id);
         messageModel.setTime(time);
@@ -45,16 +52,18 @@ public class MessageModel {
         messageModel.setAvatar(null);
         messageModel.setStreaming(false);
         messageModel.setCodeRefs(codeReference);
-        messageModel.setMode(mode);
+        messageModel.setChatMode(mode);
         return messageModel;
-    }
-
-    public static MessageModel buildUserMessage(String id, Long time, String content, String username) {
-        return buildCodeMessage(id, time, content, username, null, null);
     }
 
     public static MessageModel buildInfoMessage(String content) {
         return buildAssistantMessage(UUID.randomUUID().toString(), System.currentTimeMillis(), content, false, null);
+    }
+
+    public static MessageModel buildEmptyAssistantMessage(boolean streaming) {
+        MessageModel messageModel = buildInfoMessage(StringUtils.EMPTY);
+        messageModel.setStreaming(streaming);
+        return messageModel;
     }
 
     public static MessageModel buildAssistantMessage(String id, Long time, String content, boolean streaming, RecallModel recall) {
@@ -167,12 +176,12 @@ public class MessageModel {
         this.recall = recall;
     }
 
-    public String getMode() {
-        return mode;
+    public int getChatMode() {
+        return chatMode;
     }
 
-    public void setMode(String mode) {
-        this.mode = mode;
+    public void setChatMode(int chatMode) {
+        this.chatMode = chatMode;
     }
 
     public String getMsgType() {
@@ -181,5 +190,13 @@ public class MessageModel {
 
     public void setMsgType(String msgType) {
         this.msgType = msgType;
+    }
+
+    public List<AgentDecisionModel> getDecisions() {
+        return decisions;
+    }
+
+    public void setDecisions(List<AgentDecisionModel> decisions) {
+        this.decisions = decisions;
     }
 }

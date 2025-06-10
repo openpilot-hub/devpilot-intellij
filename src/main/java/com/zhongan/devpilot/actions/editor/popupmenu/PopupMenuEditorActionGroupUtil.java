@@ -15,7 +15,6 @@ import com.intellij.psi.PsiElement;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
-import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
@@ -65,7 +64,7 @@ public class PopupMenuEditorActionGroupUtil {
             defaultActions.forEach((label) -> {
                 var action = new BasicEditorAction(DevPilotMessageBundle.get(label), DevPilotMessageBundle.get(label), ICONS.getOrDefault(label, AllIcons.FileTypes.Unknown)) {
                     @Override
-                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel, String mode) {
+                    protected void actionPerformed(Project project, Editor editor, String selectedText, PsiElement psiElement, CodeReferenceModel codeReferenceModel, int mode) {
                         ToolWindow toolWindow = ToolWindowManager.getInstance(project).getToolWindow("DevPilot");
                         toolWindow.show();
                         var editorActionEnum = EditorActionEnum.getEnumByLabel(label);
@@ -112,7 +111,7 @@ public class PopupMenuEditorActionGroupUtil {
 
                         var service = project.getService(DevPilotChatToolWindowService.class);
                         var username = DevPilotLlmSettingsState.getInstance().getFullName();
-                        service.clearRequestSession();
+                        service.clearRequestSessionAndChangeChatMode(mode);
 
                         var showText = DevPilotMessageBundle.get(label);
 
@@ -128,7 +127,7 @@ public class PopupMenuEditorActionGroupUtil {
 
                         PromptDataMapUtils.buildChatDataMap(project, psiElement, list, data);
 
-                        service.chat(SessionTypeEnum.MULTI_TURN.getCode(), editorActionEnum.name(), data, null, callback, codeMessage);
+                        service.chat(editorActionEnum.name(), data, null, callback, codeMessage);
                     }
                 };
                 if (!label.equals(EditorActionEnum.COMMENT_METHOD.getLabel())) {

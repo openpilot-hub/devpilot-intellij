@@ -134,7 +134,7 @@ public class CompletionFacade {
                 request.setCompletionType(completionType);
             }
         }
-        final var response = new LlmProviderFactory().getLlmProvider(editor.getProject()).instructCompletion(request);
+        final var response = LlmProviderFactory.INSTANCE.getLlmProvider(editor.getProject()).instructCompletion(request);
         DevPilotStatusBarBaseWidget.update(editor.getProject(), LoginUtils.isLogin() ? DevPilotStatusEnum.LoggedIn : DevPilotStatusEnum.NotLoggedIn);
         if (gutterIconRenderer != null) {
             gutterIconRenderer.setLoading(false);
@@ -168,7 +168,7 @@ public class CompletionFacade {
         VirtualFile virtualFile = FileDocumentManager.getInstance().getFile(editor.getDocument());
         if (virtualFile == null
             || virtualFile.getExtension() == null
-            || !virtualFile.getExtension().equals("java")) {
+            || !"java".equals(virtualFile.getExtension())) {
             return null;
         }
 

@@ -289,4 +289,17 @@ public class ProcessUtils {
         return pids;
     }
 
+    public static String getOSName() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        if (isWindowsPlatform()) {
+            osName = WINDOWS_OS;
+        } else if (osName.contains(MAC_OS)) {
+            osName = MAC_OS;
+        } else if (osName.contains(LINUX_OS)) {
+            osName = LINUX_OS;
+        } else if (osName.contains(NIX_OS)) {
+            osName = NIX_OS;
+        }
+        return osName;
+    }
 }

@@ -248,7 +248,7 @@ public class LocalEmbeddingService {
         diff.setModifiedFileList(newFiles.stream()
                 .filter(newFile -> {
                     var oldFile = oldFileMap.get(newFile.getFilePath());
-                    return oldFile != null && !oldFile.getFileHash().equals(newFile.getFileHash());
+                    return oldFile != null && !StringUtils.equals(oldFile.getFileHash(), newFile.getFileHash());
                 })
                 .collect(Collectors.toList()));
 
@@ -257,7 +257,7 @@ public class LocalEmbeddingService {
 
     private static void batchUploadIndex(Project project, LocalIndex index, IndexFileDiff diff) {
         var fileList = index.getIndexedFiles();
-        var llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        var llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
 
         // first handle delete file
         if (diff != null && !CollectionUtils.isEmpty(diff.getDeletedFileList())) {

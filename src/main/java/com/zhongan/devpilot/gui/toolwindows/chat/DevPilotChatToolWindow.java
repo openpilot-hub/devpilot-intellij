@@ -14,9 +14,9 @@ import com.intellij.ui.jcef.JBCefBrowserBase;
 import com.intellij.ui.jcef.JBCefJSQuery;
 import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
+import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.ChatActionTypeEnum;
 import com.zhongan.devpilot.enums.EditorActionEnum;
-import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.session.ChatSessionManagerService;
 import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
@@ -109,6 +109,49 @@ public class DevPilotChatToolWindow {
         this.jbCefBrowser = browser;
     }
 
+    private JBCefJSQuery.Response handleChatAction(DevPilotChatToolWindowService service, String commandType, Object payload) {
+        var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
+        if (messageModel == null) {
+            return new JBCefJSQuery.Response("error");
+        }
+
+        var time = System.currentTimeMillis();
+        var username = DevPilotLlmSettingsState.getInstance().getFullName();
+        var uuid = UUID.randomUUID().toString();
+
+        var message = service.getUserContentCode(messageModel);
+        var userMessageModel = MessageModel.buildCodeMessage(
+                uuid, time, message.getContent(), username, message.getCodeRefs(), message.getChatMode());
+
+        var data = new HashMap<String, String>();
+
+        if (message.getCodeRefs() != null) {
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                PromptDataMapUtils.buildChatDataMap(project, null, message.getCodeRefs(), data);
+            });
+        } else {
+            data.put(LANGUAGE, DevPilotVersion.getDefaultLanguage());
+        }
+
+        // 设置回答语言
+        String answerLanguage = LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh_CN" : "en_US";
+        data.put(ANSWER_LANGUAGE, answerLanguage);
+
+        if (DefaultConst.AGENT_CHAT_TYPE == message.getChatMode()) {
+            service.deepThinking(data, message.getContent(), userMessageModel);
+        } else {
+            service.chat("PURE_CHAT", data, message.getContent(), null, userMessageModel);
+        }
+
+//        if (StringUtils.equalsIgnoreCase(commandType, "AppendToConversation")) {
+//            service.chat("PURE_CHAT", data, message.getContent(), null, userMessageModel);
+//        } else {
+//            service.deepThinking(data, message.getContent(), userMessageModel);
+//        }
+
+        return new JBCefJSQuery.Response("success");
+    }
+
     private void registerJsCallJavaHandler(JBCefBrowser browser) {
         var myQuery = JBCefJSQuery.create((JBCefBrowserBase) browser);
 
@@ -122,45 +165,35 @@ public class DevPilotChatToolWindow {
             var service = project.getService(DevPilotChatToolWindowService.class);
 
             switch (command) {
-                case "ChatInitialized": {
-                    service.callWebView();
+                case "AgentExecutionApprovedOrNot": {
+                    var payload = jsCallModel.getPayload();
+                    service.agentExecutionApprovedOrNot(payload);
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "McpServerChanged": {
+                    var payload = jsCallModel.getPayload();
+                    service.mcpServerChanged(payload);
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "McpServerOpenConfigurationFile": {
+                    service.openMcpServerConfigurationFile();
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "ListMcpServers": {
+                    service.listMcpServers();
+                    return new JBCefJSQuery.Response("success");
+                }
+                case "SwitchChatMode": {
+                    var payload = jsCallModel.getPayload();
+                    service.switchChatMode(payload);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "AppendToConversation": {
                     var payload = jsCallModel.getPayload();
-                    var messageModel = JsonUtils.fromJson(JsonUtils.toJson(payload), MessageModel.class);
-                    if (messageModel == null) {
-                        return new JBCefJSQuery.Response("error");
-                    }
-                    var time = System.currentTimeMillis();
-                    var username = DevPilotLlmSettingsState.getInstance().getFullName();
-                    var uuid = UUID.randomUUID().toString();
-
-                    var message = service.getUserContentCode(messageModel);
-                    var userMessageModel = MessageModel.buildCodeMessage(
-                            uuid, time, message.getContent(), username, message.getCodeRefs(), message.getMode());
-
-                    var data = new HashMap<String, String>();
-
-                    if (message.getCodeRefs() != null) {
-                        ApplicationManager.getApplication().invokeAndWait(() -> {
-                            PromptDataMapUtils.buildChatDataMap(project, null, message.getCodeRefs(), data);
-                        });
-                    } else {
-                        var language = DevPilotVersion.getDefaultLanguage();
-                        if (language != null) {
-                            data.put(LANGUAGE, language);
-                        }
-                    }
-
-                    if (LanguageSettingsState.getInstance().getLanguageIndex() == 1) {
-                        data.put(ANSWER_LANGUAGE, "zh_CN");
-                    } else {
-                        data.put(ANSWER_LANGUAGE, "en_US");
-                    }
-
-                    service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "PURE_CHAT", data, message.getContent(), null, userMessageModel);
-
+                    return handleChatAction(service, command, payload);
+                }
+                case "ChatInitialized": {
+                    service.callWebView(Boolean.FALSE);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "InterruptChatStream": {
@@ -276,7 +309,7 @@ public class DevPilotChatToolWindow {
                         code = coedRefs.get(coedRefs.size() - 1);
                     }
 
-                    service.handleActions(code, codeActionMap.get(command), null, messageModel.getMode());
+                    service.handleActions(code, codeActionMap.get(command), null, messageModel.getChatMode());
                     return new JBCefJSQuery.Response("success");
                 }
                 case "CopyCode": {
@@ -367,7 +400,7 @@ public class DevPilotChatToolWindow {
                     return new JBCefJSQuery.Response("success");
                 }
                 case "BackToChat": {
-                    service.callWebView();
+                    service.callWebView(Boolean.TRUE);
                     return new JBCefJSQuery.Response("success");
                 }
                 case "D2C": {
@@ -393,13 +426,13 @@ public class DevPilotChatToolWindow {
                     base64List.add(base64);
 
                     // d2c默认不使用上下文
-                    messageModel.setMode("with-ctrl");
+                    messageModel.setChatMode(DefaultConst.NORMAL_CHAT_TYPE);
                     var time = System.currentTimeMillis();
                     var username = DevPilotLlmSettingsState.getInstance().getFullName();
                     var uuid = UUID.randomUUID().toString();
 
                     var userMessageModel = MessageModel.buildCodeMessage(
-                            uuid, time, messageModel.getContent(), username, messageModel.getCodeRefs(), messageModel.getMode());
+                            uuid, time, messageModel.getContent(), username, messageModel.getCodeRefs(), messageModel.getChatMode());
                     userMessageModel.setMsgType("EXTERNAL_AGENTS");
 
                     Map<String, String> data = new HashMap<>();
@@ -412,7 +445,7 @@ public class DevPilotChatToolWindow {
                         data.put(ANSWER_LANGUAGE, "en_US");
                     }
 
-                    service.chat(SessionTypeEnum.MULTI_TURN.getCode(), "EXTERNAL_AGENTS", data, messageModel.getContent(), null, userMessageModel);
+                    service.chat("EXTERNAL_AGENTS", data, messageModel.getContent(), null, userMessageModel);
                     return new JBCefJSQuery.Response("success");
                 }
                 default:
@@ -474,20 +507,18 @@ public class DevPilotChatToolWindow {
             }
 
             @Override
-            public void onLoadStart(CefBrowser browser, CefFrame frame, CefRequest.TransitionType transitionType) {
-            }
+            public void onLoadStart(CefBrowser browser, CefFrame frame, CefRequest.TransitionType transitionType) {}
 
             @Override
             public void onLoadEnd(CefBrowser browser, CefFrame frame, int httpStatusCode) {
                 if (frame.isMain() && historyRendered.compareAndSet(false, true)) {
                     project.getService(ChatSessionManagerService.class);
-                    project.getService(DevPilotChatToolWindowService.class).callWebView();
+                    project.getService(DevPilotChatToolWindowService.class).callWebView(Boolean.FALSE);
                 }
             }
 
             @Override
-            public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {
-            }
+            public void onLoadError(CefBrowser browser, CefFrame frame, ErrorCode errorCode, String errorText, String failedUrl) {}
         }, browser.getCefBrowser());
     }
 

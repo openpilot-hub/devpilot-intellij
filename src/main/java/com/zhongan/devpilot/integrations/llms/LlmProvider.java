@@ -19,6 +19,7 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessStreamingResponse;
+import com.zhongan.devpilot.session.model.ChatSession;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
@@ -30,6 +31,7 @@ import com.zhongan.devpilot.webview.model.RecallModel;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
 
@@ -51,10 +53,16 @@ import static com.zhongan.devpilot.constant.DefaultConst.EMBEDDING_DELETE_PATH;
 import static com.zhongan.devpilot.constant.DefaultConst.EMBEDDING_RESET_INDEX_PATH;
 import static com.zhongan.devpilot.constant.DefaultConst.EMBEDDING_SEARCH_PATH;
 import static com.zhongan.devpilot.constant.DefaultConst.EMBEDDING_SUBMIT_PATH;
+import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_AGENT_DEFAULT_HOST;
 import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_HOST;
+import static com.zhongan.devpilot.constant.DefaultConst.SESSIONS_PATH;
 import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
 
 public interface LlmProvider {
+
+    String deepThinking(Project project, String sessionDir, ChatSession session);
+
+    default void cancel(Project project, String sessionDir, ChatSession session) {}
 
     String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
                           Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int type);
@@ -258,67 +266,25 @@ public interface LlmProvider {
     }
 
     default EmbeddingChunkResponse submitChunk(Project project, EmbeddingChunkRequest embeddingRequest) {
-        Response response;
-
+        Response response = null;
         try {
             String requestBody = JsonUtils.toJson(embeddingRequest);
-            if (requestBody == null) {
-                return null;
-            }
-
-            DevPilotNotification.debug("Send Request :[" + requestBody + "].");
-
-            Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
-            if (null != portPId) {
-                String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + EMBEDDING_SUBMIT_PATH;
-                var request = new Request.Builder()
-                        .url(url)
-                        .header("User-Agent", UserAgentUtils.buildUserAgent())
-                        .header("Auth-Type", LoginUtils.getLoginType())
-                        .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
-                        .build();
-
-                Call call = OkhttpUtils.getClient().newCall(request);
-                response = call.execute();
-
-                return handleResult(project, response, EmbeddingChunkResponse.class);
-            } else {
-                return null;
-            }
+            response = post(requestBody, REMOTE_RAG_DEFAULT_HOST, EMBEDDING_SUBMIT_PATH);
+            return handleResult(response, EmbeddingChunkResponse.class);
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return null;
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
         }
     }
 
     default EmbeddingDeleteResponse submitDelete(Project project, EmbeddingDeleteRequest embeddingRequest) {
-        Response response;
-
         try {
             String requestBody = JsonUtils.toJson(embeddingRequest);
-            if (requestBody == null) {
-                return null;
-            }
-
-            DevPilotNotification.debug("Send Request :[" + requestBody + "].");
-
-            Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
-            if (null != portPId) {
-                String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + EMBEDDING_DELETE_PATH;
-                var request = new Request.Builder()
-                        .url(url)
-                        .header("User-Agent", UserAgentUtils.buildUserAgent())
-                        .header("Auth-Type", LoginUtils.getLoginType())
-                        .delete(RequestBody.create(requestBody, MediaType.parse("application/json")))
-                        .build();
-
-                Call call = OkhttpUtils.getClient().newCall(request);
-                response = call.execute();
-
-                return handleResult(project, response, EmbeddingDeleteResponse.class);
-            } else {
-                return null;
-            }
+            return delete(project, requestBody, REMOTE_RAG_DEFAULT_HOST, EMBEDDING_DELETE_PATH, EmbeddingDeleteResponse.class);
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return null;
@@ -326,19 +292,58 @@ public interface LlmProvider {
     }
 
     default EmbeddingQueryResponse embeddingQuery(EmbeddingQueryRequest embeddingRequest) {
-        Response response;
-
+        Response response = null;
         try {
             String requestBody = JsonUtils.toJson(embeddingRequest);
+            response = post(requestBody, REMOTE_RAG_DEFAULT_HOST, EMBEDDING_SEARCH_PATH);
+            return handleResult(response, EmbeddingQueryResponse.class);
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return null;
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
+        }
+    }
+
+    default EmbeddingDeleteResponse resetIndex(Project project, EmbeddingDeleteRequest embeddingRequest) {
+        try {
+            String requestBody = JsonUtils.toJson(embeddingRequest);
+            return delete(project, requestBody, REMOTE_RAG_DEFAULT_HOST, EMBEDDING_RESET_INDEX_PATH, EmbeddingDeleteResponse.class);
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return null;
+        }
+    }
+
+    default List<ChatSession> retrieveSessions(Map<String, Object> sessionRequest) {
+        Response response = null;
+        try {
+            String requestBody = JsonUtils.toJson(sessionRequest);
+            response = post(requestBody, REMOTE_AGENT_DEFAULT_HOST, SESSIONS_PATH);
+            var result = response.body().string();
+            return JsonUtils.fromJsonList(result, ChatSession.class);
+        } catch (Exception e) {
+            DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
+            return null;
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
+        }
+    }
+
+    default Response post(String requestBody, String host, String path) {
+        try {
             if (requestBody == null) {
                 return null;
             }
-
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
             Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
             if (null != portPId) {
-                String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + EMBEDDING_SEARCH_PATH;
+                String url = host + portPId.first + path;
                 var request = new Request.Builder()
                         .url(url)
                         .header("User-Agent", UserAgentUtils.buildUserAgent())
@@ -347,9 +352,7 @@ public interface LlmProvider {
                         .build();
 
                 Call call = OkhttpUtils.getClient().newCall(request);
-                response = call.execute();
-
-                return handleResult(response, EmbeddingQueryResponse.class);
+                return call.execute();
             } else {
                 return null;
             }
@@ -359,20 +362,17 @@ public interface LlmProvider {
         }
     }
 
-    default EmbeddingDeleteResponse resetIndex(Project project, EmbeddingDeleteRequest embeddingRequest) {
-        Response response;
+    default <T> T delete(Project project, String requestBody, String host, String path, Class<T> clazz) {
+        Response response = null;
 
         try {
-            String requestBody = JsonUtils.toJson(embeddingRequest);
             if (requestBody == null) {
                 return null;
             }
-
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
-
             Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
             if (null != portPId) {
-                String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + EMBEDDING_RESET_INDEX_PATH;
+                String url = host + portPId.first + path;
                 var request = new Request.Builder()
                         .url(url)
                         .header("User-Agent", UserAgentUtils.buildUserAgent())
@@ -383,13 +383,17 @@ public interface LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
 
-                return handleResult(project, response, EmbeddingDeleteResponse.class);
+                return handleResult(project, response, clazz);
             } else {
                 return null;
             }
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return null;
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
         }
     }
 

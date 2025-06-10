@@ -25,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -60,7 +61,7 @@ public class InlineCompletionHandler {
         List<DevPilotCompletion> cachedCompletions =
             InlineCompletionCache.INSTANCE.retrieveAdjustedCompletions(editor, userInput);
         if (!cachedCompletions.isEmpty()
-                && !CompletionTypeEnum.CHAT_COMPLETION.getType().equalsIgnoreCase(completionType)) {
+                && !StringUtils.equalsIgnoreCase(CompletionTypeEnum.CHAT_COMPLETION.getType(), completionType)) {
             // chat completion 不走缓存
             renderCachedCompletions(editor, offset, tabSize, cachedCompletions, completionAdjustment, completionType);
             return;

@@ -3,19 +3,24 @@ package com.zhongan.devpilot.gui.toolwindows.chat;
 import com.intellij.openapi.actionSystem.ActionManager;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.components.Service;
+import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.editor.Editor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.ui.Messages;
 import com.intellij.openapi.ui.popup.Balloon;
 import com.intellij.openapi.util.Computable;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.openapi.wm.WindowManager;
 import com.intellij.psi.PsiElement;
+import com.zhongan.devpilot.DevPilotVersion;
 import com.zhongan.devpilot.actions.editor.popupmenu.BasicEditorAction;
 import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryRequest;
 import com.zhongan.devpilot.embedding.entity.request.EmbeddingQueryResponse;
 import com.zhongan.devpilot.enums.EditorActionEnum;
-import com.zhongan.devpilot.enums.SessionTypeEnum;
 import com.zhongan.devpilot.gui.toolwindows.components.EditorInfo;
 import com.zhongan.devpilot.integrations.llms.LlmProvider;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
@@ -26,10 +31,14 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotCompletionPredictRe
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
+import com.zhongan.devpilot.mcp.McpConfigurationHandler;
+import com.zhongan.devpilot.mcp.McpConnections;
+import com.zhongan.devpilot.mcp.McpServer;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
 import com.zhongan.devpilot.session.ChatSessionManager;
 import com.zhongan.devpilot.session.ChatSessionManagerService;
 import com.zhongan.devpilot.session.model.ChatSession;
+import com.zhongan.devpilot.settings.state.LanguageSettingsState;
 import com.zhongan.devpilot.util.BalloonAlertUtils;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.EncryptionUtil;
@@ -37,7 +46,7 @@ import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.MessageUtil;
 import com.zhongan.devpilot.util.PromptDataMapUtils;
 import com.zhongan.devpilot.util.PsiElementUtils;
-import com.zhongan.devpilot.util.TokenUtils;
+import com.zhongan.devpilot.webview.model.AgentDecisionModel;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.EmbeddedModel;
 import com.zhongan.devpilot.webview.model.JavaCallModel;
@@ -47,12 +56,16 @@ import com.zhongan.devpilot.webview.model.MessageModel;
 import com.zhongan.devpilot.webview.model.RecallModel;
 import com.zhongan.devpilot.webview.model.ThemeModel;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -60,9 +73,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import javax.swing.JFrame;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 
+import static com.zhongan.devpilot.constant.DefaultConst.AGENT_CHAT_TYPE;
 import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_ONE;
 import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_THREE;
 import static com.zhongan.devpilot.constant.DefaultConst.CHAT_STEP_TWO;
@@ -70,9 +86,13 @@ import static com.zhongan.devpilot.constant.DefaultConst.CODE_PREDICT_PROMPT_VER
 import static com.zhongan.devpilot.constant.DefaultConst.D2C_PROMPT_VERSION;
 import static com.zhongan.devpilot.constant.DefaultConst.NORMAL_CHAT_TYPE;
 import static com.zhongan.devpilot.constant.DefaultConst.SMART_CHAT_TYPE;
+import static com.zhongan.devpilot.constant.PlaceholderConst.ANSWER_LANGUAGE;
+import static com.zhongan.devpilot.constant.PlaceholderConst.LANGUAGE;
 
 @Service
 public final class DevPilotChatToolWindowService {
+    private static final Logger LOG = Logger.getInstance(DevPilotChatToolWindowService.class);
+
     private final Project project;
 
     private final DevPilotChatToolWindow devPilotChatToolWindow;
@@ -93,17 +113,32 @@ public final class DevPilotChatToolWindowService {
         this.project = project;
         this.sessionManager = project.getService(ChatSessionManagerService.class).getSessionManager();
         this.devPilotChatToolWindow = new DevPilotChatToolWindow(project);
+        subscribeToFocusEvents();
     }
 
     public DevPilotChatToolWindow getDevPilotChatToolWindow() {
         return this.devPilotChatToolWindow;
     }
 
+    private void subscribeToFocusEvents() {
+        JFrame frame = WindowManager.getInstance().getFrame(project);
+        if (frame != null) {
+            frame.addWindowListener(new WindowAdapter() {
+                @Override
+                public void windowActivated(WindowEvent e) {
+                    if (sessionManager.isSessionUpdated()) {
+                        sessionManager.setSessionUpdated(Boolean.FALSE);
+                        callWebView(Boolean.TRUE);
+                    }
+                }
+            });
+        }
+    }
     public Project getProject() {
         return this.project;
     }
 
-    public void chat(Integer sessionType, String msgType, Map<String, String> data,
+    public void chat(String msgType, Map<String, String> data,
                      String message, Consumer<String> callback, MessageModel messageModel) {
         this.cancel.set(false);
         this.currentMessageId = messageModel.getId();
@@ -113,22 +148,54 @@ public final class DevPilotChatToolWindowService {
         addMessage(messageModel);
         callWebView(MessageModel.buildLoadingMessage());
 
-        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
 
-        if (!StringUtils.isEmpty(messageModel.getMode())) {
-            normalChat(sessionType, msgType, data, message, callback, messageModel);
+        if (DefaultConst.NORMAL_CHAT_TYPE == messageModel.getChatMode()) {
+            normalChat(msgType, data, message, callback, messageModel);
             return;
         }
 
-        smartChat(sessionType, msgType, data, message, callback, messageModel);
+        smartChat(msgType, data, message, callback, messageModel);
     }
 
-    public void normalChat(Integer sessionType, String msgType, Map<String, String> data,
+    public void deepThinking(Map<String, String> data,
+                             String message, MessageModel messageModel) {
+        this.cancel.set(false);
+        this.currentMessageId = messageModel.getId();
+        this.lastMessage = messageModel;
+
+        // 显示初始消息
+        callWebView(messageModel);
+        addMessage(messageModel);
+        callWebView(MessageModel.buildLoadingMessage());
+
+        this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
+
+        DevPilotMessage userMessage;
+        if (data == null || data.isEmpty()) {
+            userMessage = MessageUtil.createUserMessage(message, "PURE_CHAT", messageModel.getId());
+        } else {
+            userMessage = MessageUtil.createPromptMessage(messageModel.getId(), "PURE_CHAT", message, data);
+        }
+
+        // 处理会话
+        ChatSession chatSession = sessionManager.getCurrentSession();
+        chatSession.setChatMode(DefaultConst.AGENT_CHAT_TYPE);
+        List<DevPilotMessage> historyRequestMessageList = chatSession.getHistoryRequestMessageList();
+        historyRequestMessageList.add(userMessage);
+        chatSession.setAbort(Boolean.FALSE);
+        sessionManager.saveSession(chatSession);
+
+        // 启动深度思考
+        this.llmProvider.deepThinking(project, sessionManager.getSessionsDir(), chatSession);
+    }
+
+    public void normalChat(String msgType, Map<String, String> data,
                            String message, Consumer<String> callback, MessageModel messageModel) {
-        sendMessage(sessionType, msgType, data, message, callback, messageModel, null, null, NORMAL_CHAT_TYPE);
+        sendMessage(msgType, data, message, callback, messageModel, null, null, NORMAL_CHAT_TYPE);
     }
 
-    public void smartChat(Integer sessionType, String msgType, Map<String, String> data,
+    public void smartChat(String msgType, Map<String, String> data,
                           String message, Consumer<String> callback, MessageModel messageModel) {
         ApplicationManager.getApplication().executeOnPooledThread(() -> {
             // step1 call model to do code prediction
@@ -189,7 +256,7 @@ public final class DevPilotChatToolWindowService {
                 });
             }
 
-            sendMessage(sessionType, msgType, newMap, message, callback, messageModel, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE);
+            sendMessage(msgType, newMap, message, callback, messageModel, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE);
         });
     }
 
@@ -198,9 +265,9 @@ public final class DevPilotChatToolWindowService {
 
         callWebView(MessageModel.buildLoadingMessage());
 
-        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
 
-        if (!StringUtils.isEmpty(messageModel.getMode())) {
+        if (DefaultConst.NORMAL_CHAT_TYPE == messageModel.getChatMode()) {
             regenerateNormalChat(messageModel, callback);
             return;
         }
@@ -209,7 +276,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void regenerateNormalChat(MessageModel messageModel, Consumer<String> callback) {
-        sendMessage(callback, null, null, null, NORMAL_CHAT_TYPE, messageModel);
+        regenerateMessage(callback, null, null, null, NORMAL_CHAT_TYPE, messageModel);
     }
 
     public void regenerateSmartChat(MessageModel messageModel, Consumer<String> callback) {
@@ -271,7 +338,7 @@ public final class DevPilotChatToolWindowService {
                 });
             }
 
-            sendMessage(callback, data, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE, messageModel);
+            regenerateMessage(callback, data, remoteRefs[0], localRefs[0], SMART_CHAT_TYPE, messageModel);
         });
     }
 
@@ -302,7 +369,7 @@ public final class DevPilotChatToolWindowService {
 
             // 本地向量库召回
             if (!StringUtils.isEmpty(predict.getComments())) {
-                this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+                this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
                 var embeddingRequest = new EmbeddingQueryRequest();
                 embeddingRequest.setProjectName(project.getBasePath());
                 embeddingRequest.setHomeDir(BinaryManager.INSTANCE.getHomeDir().getAbsolutePath());
@@ -334,7 +401,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     public DevPilotCodePrediction completionCodePredict(String filePath, String document, int position, String language) {
-        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
 
         var completionPredictRequest = new DevPilotCompletionPredictRequest();
         completionPredictRequest.setFilePath(filePath);
@@ -478,7 +545,7 @@ public final class DevPilotChatToolWindowService {
         });
     }
 
-    public String sendMessage(Integer sessionType, String msgType, Map<String, String> data,
+    public String sendMessage(String msgType, Map<String, String> data,
                               String message, Consumer<String> callback, MessageModel messageModel,
                               List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         DevPilotMessage userMessage;
@@ -490,31 +557,31 @@ public final class DevPilotChatToolWindowService {
 
         // check session type,default multi session
         List<DevPilotMessage> historyRequestMessageList = sessionManager.getCurrentSession().getHistoryRequestMessageList();
+        historyRequestMessageList.add(userMessage);
+
+        return sendMessage(historyRequestMessageList, msgType, remoteRefs, localRefs, chatType, callback);
+    }
+
+    private String sendMessage(List<DevPilotMessage> historyRequestMessageList,
+                               String msgType,
+                               List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType,
+                               Consumer<String> callback) {
         var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        var sessionTypeEnum = SessionTypeEnum.getEnumByCode(sessionType);
-        if (SessionTypeEnum.INDEPENDENT.equals(sessionTypeEnum)) {
-            // independent message can not update, just readonly
-            devPilotChatCompletionRequest.setStream(false);
-            devPilotChatCompletionRequest.getMessages().add(userMessage);
-        } else {
-            devPilotChatCompletionRequest.setStream(true);
-            historyRequestMessageList.add(userMessage);
-            devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
-        }
+        devPilotChatCompletionRequest.setStream(true);
+        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
 
         if ("EXTERNAL_AGENTS".equals(msgType)) {
             devPilotChatCompletionRequest.setVersion(D2C_PROMPT_VERSION);
         }
 
-        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
-        sessionManager.saveSession(sessionManager.getCurrentSession());
+        this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
 
-        return chatCompletion;
+        sessionManager.saveSession(sessionManager.getCurrentSession());
+        return this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
     }
 
-    public String sendMessage(Consumer<String> callback, Map<String, String> data,
-                              List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType, MessageModel messageModel) {
+    public void regenerateMessage(Consumer<String> callback, Map<String, String> data,
+                                  List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType, MessageModel messageModel) {
         // if data is not empty, the data should add into last history request message
         List<MessageModel> historyMessageList = sessionManager.getCurrentSession().getHistoryMessageList();
         List<DevPilotMessage> historyRequestMessageList = sessionManager.getCurrentSession().getHistoryRequestMessageList();
@@ -526,34 +593,29 @@ public final class DevPilotChatToolWindowService {
             }
             lastHistoryRequestMessage.getPromptData().putAll(data);
         }
-
-        var devPilotChatCompletionRequest = new DevPilotChatCompletionRequest();
-        devPilotChatCompletionRequest.setStream(true);
-        devPilotChatCompletionRequest.getMessages().addAll(copyHistoryRequestMessageList(historyRequestMessageList));
-
-        if ("EXTERNAL_AGENTS".equals(messageModel.getMsgType())) {
-            devPilotChatCompletionRequest.setVersion(D2C_PROMPT_VERSION);
-        }
-
-        this.llmProvider = new LlmProviderFactory().getLlmProvider(project);
-
-        var chatCompletion = this.llmProvider.chatCompletion(project, devPilotChatCompletionRequest, callback, remoteRefs, localRefs, chatType);
-        sessionManager.saveSession(sessionManager.getCurrentSession());
-
-        return chatCompletion;
+        sendMessage(historyRequestMessageList, messageModel.getMsgType(), remoteRefs, localRefs, chatType, callback);
     }
 
     public void interruptSend() {
-        this.cancel.set(true);
-        if (this.lastMessage.getRecall() == null || this.nowStep.get() >= 3) {
-            this.llmProvider.interruptSend();
+        // 判断当前会话的chatMode是否是Agent
+        ChatSession chatSession = sessionManager.getCurrentSession();
+        LOG.info("Interrupt event received for chat: " + chatSession.getId() + " with chatMode:" + chatSession.getChatMode() + ".");
+        if (AGENT_CHAT_TYPE == chatSession.getChatMode()) {
+            // 发请求推送通知Node去处理Cancel事件
+            this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
+            this.llmProvider.cancel(project, sessionManager.getSessionsDir(), sessionManager.getCurrentSession());
         } else {
-            if (this.lastMessage != null) {
-                this.lastMessage.setStreaming(false);
-                this.lastMessage.setRecall(RecallModel.createTerminated(this.nowStep.get()));
-                addMessage(this.lastMessage);
-                callWebView();
-                this.lastMessage = null;
+            this.cancel.set(true);
+            if (this.lastMessage.getRecall() == null || this.nowStep.get() >= 3) {
+                this.llmProvider.interruptSend();
+            } else {
+                if (this.lastMessage != null) {
+                    this.lastMessage.setStreaming(false);
+                    this.lastMessage.setRecall(RecallModel.createTerminated(this.nowStep.get()));
+                    addMessage(this.lastMessage);
+                    callWebView(Boolean.FALSE);
+                    this.lastMessage = null;
+                }
             }
         }
     }
@@ -580,21 +642,32 @@ public final class DevPilotChatToolWindowService {
 
     public void handleCreateNewSession() {
         sessionManager.createNewSession();
-        callWebView();
+        callWebView(Boolean.FALSE);
     }
 
     public void handleSwitchSession(String sessionId) {
         sessionManager.switchSession(sessionId);
-        callWebView();
+        callWebView(Boolean.TRUE);
     }
 
     public void handleDeleteSession(String sessionId) {
-        sessionManager.deleteSession(sessionId);
+        sessionManager.deleteSession(sessionId, Boolean.FALSE);
         renderHistorySession();
     }
 
-    public List<MessageModel> getHistoryMessageList() {
-        return sessionManager.getCurrentSession().getHistoryMessageList();
+    public List<MessageModel> getHistoryMessageList(boolean forceUpdate) {
+        if (forceUpdate) {
+            ChatSession currentSession = sessionManager.getSessions().stream()
+                    .filter(session -> session.getId().equals(sessionManager.getCurrentSession().getId()))
+                    .findFirst()
+                    .orElse(null);
+            if (null == currentSession) {
+                currentSession = sessionManager.createNewSession();
+            }
+            return currentSession.getHistoryMessageList();
+        } else {
+            return sessionManager.getCurrentSession().getHistoryMessageList();
+        }
     }
 
     public void addMessage(MessageModel messageModel) {
@@ -610,9 +683,8 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void clearSession() {
-        sessionManager.getCurrentSession().getHistoryMessageList().clear();
-        sessionManager.getCurrentSession().getHistoryRequestMessageList().clear();
-        callWebView();
+        sessionManager.clearSession();
+        callWebView(Boolean.FALSE);
     }
 
     // Do not clear message show session
@@ -626,6 +698,11 @@ public final class DevPilotChatToolWindowService {
         var dividerModel = MessageModel.buildDividerMessage();
         callWebView(dividerModel);
         sessionManager.getCurrentSession().getHistoryMessageList().add(dividerModel);
+    }
+
+    public void clearRequestSessionAndChangeChatMode(int chatMode) {
+        clearRequestSession();
+        sessionManager.getCurrentSession().setChatMode(chatMode);
     }
 
     public void deleteMessage(String id) {
@@ -652,13 +729,13 @@ public final class DevPilotChatToolWindowService {
 
         historyMessageList.remove(index);
 
-        historyRequestMessageList.removeIf(item -> item.getId().equals(id));
+        historyRequestMessageList.removeIf(item -> StringUtils.equals(id, item.getId()));
         if (assistantMessageId != null) {
             var finalAssistantMessageId = assistantMessageId;
-            historyRequestMessageList.removeIf(item -> item.getId().equals(finalAssistantMessageId));
+            historyRequestMessageList.removeIf(item -> StringUtils.equals(finalAssistantMessageId, item.getId()));
         }
-
-        callWebView();
+        sessionManager.deleteMessage(id);
+        callWebView(Boolean.FALSE);
     }
 
     public void regenerateMessage() {
@@ -670,8 +747,8 @@ public final class DevPilotChatToolWindowService {
         }
 
         var id = lastMessage.getId();
-        historyMessageList.removeIf(item -> item.getId().equals(id));
-        sessionManager.getCurrentSession().getHistoryRequestMessageList().removeIf(item -> item.getId().equals(id));
+        historyMessageList.removeIf(item -> StringUtils.equals(id, item.getId()));
+        sessionManager.getCurrentSession().getHistoryRequestMessageList().removeIf(item -> StringUtils.equals(id, item.getId()));
 
         // todo handle real callback
         lastMessage = historyMessageList.get(historyMessageList.size() - 1);
@@ -684,7 +761,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     // called by ide
-    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement, String mode) {
+    public void handleActions(EditorActionEnum actionEnum, PsiElement psiElement, int mode) {
         ActionManager actionManager = ActionManager.getInstance();
         BasicEditorAction myAction = (BasicEditorAction) actionManager
                 .getAction(DevPilotMessageBundle.get(actionEnum.getLabel()));
@@ -699,7 +776,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     // called by web view
-    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement, String mode) {
+    public void handleActions(CodeReferenceModel codeReferenceModel, EditorActionEnum actionEnum, PsiElement psiElement, int mode) {
         if (codeReferenceModel == null || StringUtils.isEmpty(codeReferenceModel.getSourceCode())) {
             handleActions(actionEnum, psiElement, mode);
             return;
@@ -744,7 +821,7 @@ public final class DevPilotChatToolWindowService {
         // 检查sourceCode是否在codeRefs重复，重复就删除旧的
         var code = editorInfo[0].getSourceCode();
         // 不管存不存在都删除，反正最后都会追加
-        codeRefs.removeIf(codeRef -> codeRef.getSourceCode().equals(code));
+        codeRefs.removeIf(codeRef -> StringUtils.equals(codeRef.getSourceCode(), code));
 
         var codeReference = CodeReferenceModel.getCodeRefFromEditor(editorInfo[0], null);
         codeRefs.add(codeReference);
@@ -769,34 +846,6 @@ public final class DevPilotChatToolWindowService {
         }
 
         return userMessage;
-    }
-
-    private void buildConversationWindowMemory() {
-        List<DevPilotMessage> historyRequestMessageList = sessionManager.getCurrentSession().getHistoryRequestMessageList();
-
-        // 先确保内容不超过 输入token限制
-        List<Integer> tokenCounts = TokenUtils.ComputeTokensFromMessagesUsingGPT35Enc(historyRequestMessageList);
-        int totalTokenCount = tokenCounts.get(0);
-        Collections.reverse(tokenCounts);
-        int keepCount = 1;
-        for (int i = 0; i < tokenCounts.size() - 1; i++) {
-            Integer tokenCount = tokenCounts.get(i);
-            if (totalTokenCount + tokenCount > DefaultConst.GPT_35_TOKEN_MAX_LENGTH) {
-                break;
-            }
-            totalTokenCount += tokenCount;
-            keepCount++;
-        }
-        int removeCount = historyRequestMessageList.size() - keepCount;
-        for (int i = 0; i < removeCount; i++) {
-            historyRequestMessageList.remove(1);
-        }
-
-        // 再检查window size
-        removeCount = historyRequestMessageList.size() - DefaultConst.CONVERSATION_WINDOW_LENGTH;
-        for (int i = 0; i < removeCount; i++) {
-            historyRequestMessageList.remove(1);
-        }
     }
 
     private int getMessageIndex(String id) {
@@ -845,7 +894,7 @@ public final class DevPilotChatToolWindowService {
     }
 
     public void callWebView(MessageModel messageModel) {
-        var messageList = getHistoryMessageList();
+        var messageList = getHistoryMessageList(Boolean.FALSE);
 
         var tmpList = new ArrayList<>(messageList);
         tmpList.add(messageModel);
@@ -857,8 +906,8 @@ public final class DevPilotChatToolWindowService {
         callWebView(javaCallModel);
     }
 
-    public void callWebView() {
-        var messageList = getHistoryMessageList();
+    public void callWebView(boolean forceUpdate) {
+        var messageList = getHistoryMessageList(forceUpdate);
 
         var javaCallModel = new JavaCallModel();
         javaCallModel.setCommand("RenderChatConversation");
@@ -924,6 +973,103 @@ public final class DevPilotChatToolWindowService {
         }
 
         return EncryptionUtil.getMD5Hash(path);
+    }
+
+    public void switchChatMode(Object payload) {
+        ChatSession currentSession = sessionManager.getCurrentSession();
+        if (currentSession == null) {
+            return;
+        }
+
+        ChatSession newSession = JsonUtils.fromJson(JsonUtils.toJson(payload), ChatSession.class);
+        if (newSession == null || newSession.getChatMode() == 0) {
+            return;
+        }
+
+        int currentChatMode = currentSession.getChatMode();
+        int newChatMode = newSession.getChatMode();
+
+        if (!StringUtils.equalsIgnoreCase(newSession.getId(), currentSession.getId()) || (AGENT_CHAT_TYPE == currentChatMode && AGENT_CHAT_TYPE != newChatMode)) {
+            sessionManager.createNewSessionWithChatMode(newChatMode);
+        } else {
+            currentSession.setChatMode(newChatMode);
+        }
+
+        callWebView(Boolean.FALSE);
+    }
+
+    public void listMcpServers() {
+        McpConnections result = McpConfigurationHandler.INSTANCE.loadMcpServersWithConnectionStatus(Boolean.TRUE);
+        var javaCallModel = new JavaCallModel();
+        javaCallModel.setCommand("ShowMcpServers");
+        javaCallModel.setPayload(result);
+        callWebView(javaCallModel);
+    }
+
+    public void openMcpServerConfigurationFile() {
+        VirtualFile virtualFile = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(new File(McpConfigurationHandler.INSTANCE.mcpConfigurationPath()));
+        if (virtualFile != null) {
+            FileEditorManager.getInstance(project).openFile(virtualFile, true);
+        } else {
+            LOG.warn("Error occurred while opening mcp_configuration.json");
+            Messages.showWarningDialog(project, DevPilotMessageBundle.get("devpilot.warning.mcpConfiguration.opening"), DevPilotMessageBundle.get("devpilot.warning"));
+        }
+    }
+
+    public void mcpServerChanged(Object payload) {
+        LOG.warn("-------McpServerChanged---------");
+        Map<String, Object> eventMap = JsonUtils.fromJson(JsonUtils.toJson(payload), Map.class);
+        String operatorType = (String) eventMap.get("operatorType");
+        McpServer server = JsonUtils.fromJson(JsonUtils.toJson(eventMap.get("server")), McpServer.class);
+        McpConnections result = McpConfigurationHandler.INSTANCE.handleMcpServerChanged(operatorType, server);
+
+//        McpConnections result = McpConfigurationHandler.INSTANCE.loadMcpServersWithConnectionStatus(Boolean.TRUE);
+        var javaCallModel = new JavaCallModel();
+        javaCallModel.setCommand("ShowMcpServers");
+        javaCallModel.setPayload(result);
+        callWebView(javaCallModel);
+    }
+
+    public void agentExecutionApprovedOrNot(Object payload) {
+        Map<String, Boolean> eventMap = JsonUtils.fromJson(JsonUtils.toJson(payload), Map.class);
+        boolean approvedOrNot = eventMap.getOrDefault("approved", Boolean.FALSE);
+        var currentSession = sessionManager.getCurrentSession();
+        var historyMessageList = currentSession.getHistoryMessageList();
+        MessageModel lastMessage = historyMessageList.isEmpty() ? null : historyMessageList.get(historyMessageList.size() - 1);
+        if (null != lastMessage && "assistant".equals(lastMessage.getRole())) {
+            var decisions = lastMessage.getDecisions();
+            if (decisions.isEmpty()) {
+                return;
+            }
+            AgentDecisionModel decision = decisions.get(decisions.size() - 1);
+            if (null == decision || !StringUtils.equalsIgnoreCase(decision.getActionType(), "RequireApprove")) {
+                return;
+            }
+
+            decision.setResult(String.valueOf(approvedOrNot));
+
+            if (approvedOrNot) {
+                lastMessage.setStreaming(Boolean.TRUE);
+                this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
+                Map<String, String> data = new HashMap<>();
+                String answerLanguage = LanguageSettingsState.getInstance().getLanguageIndex() == 1 ? "zh_CN" : "en_US";
+                data.put(ANSWER_LANGUAGE, answerLanguage);
+                data.put(LANGUAGE, DevPilotVersion.getDefaultLanguage());
+
+                DevPilotMessage userMessage = MessageUtil.createPromptMessage(UUID.randomUUID().toString(), "PURE_CHAT", "OK", data);
+                ChatSession chatSession = sessionManager.getCurrentSession();
+                List<DevPilotMessage> historyRequestMessageList = chatSession.getHistoryRequestMessageList();
+                historyRequestMessageList.add(userMessage);
+                chatSession.setAbort(Boolean.FALSE);
+                chatSession.setChatMode(DefaultConst.AGENT_CHAT_TYPE);
+                sessionManager.saveSession(chatSession);
+                this.llmProvider.deepThinking(project, sessionManager.getSessionsDir(), chatSession);
+            } else {
+                lastMessage.setStreaming(Boolean.FALSE);
+                sessionManager.sessionUIRefreshed();
+            }
+            callWebView(false);
+        }
     }
 
     static class Rag {

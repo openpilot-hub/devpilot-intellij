@@ -63,7 +63,7 @@ public class PerformanceCheckUtils {
         // list content support update
         request.setMessages(new ArrayList<>() {{ add(devPilotMessage); }});
 
-        final DevPilotChatCompletionResponse response = new LlmProviderFactory().getLlmProvider(project).chatCompletionSync(request);
+        final DevPilotChatCompletionResponse response = LlmProviderFactory.INSTANCE.getLlmProvider(project).chatCompletionSync(request);
         try {
             DevPilotNotification.debug("Getting PerformanceCheckResponse is [" + response.isSuccessful() + "], content is [" + response.getContent() + "].");
             if (!response.isSuccessful()) {
@@ -131,7 +131,7 @@ public class PerformanceCheckUtils {
      */
     public static void showDiffWindow(String selectedText, Project project, Editor editor) {
         final String code = getChatCompletionResult(selectedText, project);
-        if (code.equals(selectedText)) {
+        if (StringUtils.equals(code, selectedText)) {
             return;
         }
         DocumentUtil.diffCommentAndFormatWindow(project, editor, code);

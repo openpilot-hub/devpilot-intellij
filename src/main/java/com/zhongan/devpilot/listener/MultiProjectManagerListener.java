@@ -7,6 +7,7 @@ import com.intellij.openapi.project.ProjectManagerListener;
 import com.zhongan.devpilot.agents.AgentsRunner;
 import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.session.ChatSessionManagerService;
+import com.zhongan.devpilot.sse.SSEClient;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -75,6 +76,8 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
                 BinaryManager.INSTANCE.findProcessAndKill();
             }
             AgentsRunner.INSTANCE.run();
+            LOG.info("Try to connect agent.");
+            SSEClient.getInstance(project).connect();
             project.getService(ChatSessionManagerService.class);
         } catch (Exception e) {
             LOG.warn("Error occurred while running agents.", e);
@@ -82,6 +85,7 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
     }
 
     public void projectClosing(@NotNull Project project) {
+        SSEClient.removeInstance(project);
         Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
         if (openProjects.length == 1) {
             BinaryManager.INSTANCE.findProcessAndKill();
