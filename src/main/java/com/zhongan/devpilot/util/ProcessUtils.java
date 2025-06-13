@@ -29,12 +29,41 @@ public class ProcessUtils {
     private ProcessUtils() {
     }
 
+    public static String getWindowsCmdCommand() {
+        String cmdPath = "cmd.exe"; // 默认值
+        File cmdFile = new File(System.getenv("WINDIR") + "\\system32\\cmd.exe");
+        if (!cmdFile.exists()) {
+            // 尝试另一个常见位置
+            cmdFile = new File("c:\\Windows\\system32\\cmd.exe");
+        }
+
+        if (cmdFile.exists()) {
+            cmdPath = cmdFile.getAbsolutePath();
+        }
+        return cmdPath;
+    }
+
     public static boolean isProcessAlive(long pid) {
         String osName = System.getProperty("os.name").toLowerCase();
         String command;
         if (isWindowsPlatform()) {
             log.info(String.format("Check alive Windows mode. Pid: [%d]", pid));
-            command = "C:\\Windows\\System32\\cmd.exe /c C:\\Windows\\System32\\tasklist.exe /FI \"PID eq " + pid + "\"";
+            try {
+                // 使用WMI查询更可靠
+                String[] commands = {getWindowsCmdCommand(), "/c", "wmic process where ProcessId=" + pid + " get ProcessId /format:list"};
+                Process pr = Runtime.getRuntime().exec(commands);
+                BufferedReader reader = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("ProcessId=" + pid)) {
+                        return true;
+                    }
+                }
+                return false;
+            } catch (Exception ex) {
+                log.warn("检查进程状态异常", ex);
+                return false;
+            }
         } else {
             if (!osName.contains(NIX_OS) && !osName.contains(LINUX_OS) && !osName.contains(MAC_OS)) {
                 log.info(String.format("Unsupported OS: Check alive for Pid: [%d] return false", pid));
@@ -43,9 +72,8 @@ public class ProcessUtils {
 
             log.info(String.format("Check alive Linux/Unix mode. Pid: [%d]", pid));
             command = "ps -p " + pid;
+            return isProcessIdRunning(pid, command);
         }
-
-        return isProcessIdRunning(pid, command);
     }
 
     public static boolean isWindowsPlatform() {
@@ -133,13 +161,14 @@ public class ProcessUtils {
         List<Long> pids;
         if (isWindowsPlatform()) {
             log.info(String.format("Get pid list Windows mode. Name: [%s]", name));
-            command = new String[]{"cmd", "/c", "tasklist /FI \"IMAGENAME eq " + name + ".exe\""};
+            String cmdCommandPath = getWindowsCmdCommand();
+            command = new String[]{cmdCommandPath, "/c", "tasklist /FI \"IMAGENAME eq " + name + ".exe\""};
             pids = getPidListWindows(command);
             if (pids == null || pids.isEmpty()) {
-                command = new String[]{"c:\\windows\\system32\\cmd.exe", "/c", "c:\\windows\\system32\\tasklist.exe /FI \"IMAGENAME eq " + name + ".exe\""};
+                command = new String[]{cmdCommandPath, "/c", "c:\\windows\\system32\\tasklist.exe /FI \"IMAGENAME eq " + name + ".exe\""};
                 pids = getPidListWindows(command);
                 if (pids == null || pids.isEmpty()) {
-                    command = new String[]{"cmd", "/c", "wmic process where \"name='" + name + "'\" get processid"};
+                    command = new String[]{cmdCommandPath, "/c", "wmic process where \"name='" + name + "'\" get processid"};
                     return getPidListByWmic(command);
                 }
             }

@@ -7,7 +7,6 @@ import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
 import com.zhongan.devpilot.actions.toolbar.ToolbarFeedbackAction;
 import com.zhongan.devpilot.actions.toolbar.ToolbarHistorySessionAction;
-import com.zhongan.devpilot.actions.toolbar.ToolbarManualIndexAction;
 import com.zhongan.devpilot.actions.toolbar.ToolbarMcpConfigurationAction;
 import com.zhongan.devpilot.actions.toolbar.ToolbarNewSessionAction;
 import com.zhongan.devpilot.actions.toolbar.ToolbarUserProfileAction;
@@ -36,7 +35,7 @@ public class DevPilotChatToolWindowFactory implements ToolWindowFactory {
             webPanel.add(devPilotChatToolWindow.getDevPilotChatToolWindowPanel());
             Content content = contentFactory.createContent(webPanel, "", false);
             toolWindow.getContentManager().addContent(content);
-            toolWindow.setTitleActions(List.of(new ToolbarMcpConfigurationAction(), new ToolbarNewSessionAction(),new ToolbarHistorySessionAction(),new ToolbarFeedbackAction(), new ToolbarUserProfileAction(), new ToolbarManualIndexAction()));
+            toolWindow.setTitleActions(List.of(new ToolbarMcpConfigurationAction(), new ToolbarNewSessionAction(), new ToolbarHistorySessionAction(), new ToolbarFeedbackAction(), new ToolbarUserProfileAction()));
         }
     }
 

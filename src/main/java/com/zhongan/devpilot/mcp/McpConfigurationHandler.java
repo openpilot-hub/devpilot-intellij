@@ -63,7 +63,7 @@ public class McpConfigurationHandler {
         if (forceUpdate || null == mcpConnections || MapUtils.isEmpty(mcpConnections.getMcpServers())) {
             mcpConnections = loadMcpConnections();
         }
-        return  mcpConnections;
+        return mcpConnections;
     }
 
     public void initialMcpServer() {

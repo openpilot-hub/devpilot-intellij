@@ -115,7 +115,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
                 if (response.code() == 400) {
-                    service.callErrorInfo("Request failed." );
+                    service.callErrorInfo("Request failed.");
                 }
             }
         } catch (Exception e) {
@@ -158,7 +158,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 body.put("sessionId", session.getId());
                 LOG.warn("Cancel request for current session:" + session.getId() + " by client:" + clientId + ".");
 
-
                 var request = requestBuilder
                         .post(RequestBody.create(JsonUtils.toJson(body), MediaType.parse("application/json")))
                         .build();
@@ -167,7 +166,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
                 if (response.code() == 400) {
-                    service.callErrorInfo("Cancel request failed." );
+                    service.callErrorInfo("Cancel request failed.");
                 }
             }
         } catch (Exception e) {
@@ -279,11 +278,11 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
             var request = new Request.Builder()
-                .url(host + "/devpilot/v2/chat/completions")
-                .header("User-Agent", UserAgentUtils.buildUserAgent())
-                .header("Auth-Type", LoginUtils.getLoginType())
-                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
-                .build();
+                    .url(host + "/devpilot/v2/chat/completions")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", LoginUtils.getLoginType())
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
 
             Call call = OkhttpUtils.getClient().newCall(request);
             response = call.execute();
@@ -313,9 +312,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         if (response.isSuccessful()) {
             var message = objectMapper.readValue(result, DevPilotSuccessResponse.class)
-                .getChoices()
-                .get(0)
-                .getMessage();
+                    .getChoices()
+                    .get(0)
+                    .getMessage();
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setRole("assistant");
             devPilotMessage.setContent(message.getContent());
@@ -330,8 +329,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.warn(DevPilotMessageBundle.get("devpilot.notification.version.message"));
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
-                .getError()
-                .getMessage());
+                    .getError()
+                    .getMessage());
         }
     }
 
@@ -502,11 +501,11 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             if (null != portPId) {
                 String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + REMOTE_RAG_DEFAULT_PATH;
                 var request = new Request.Builder()
-                    .url(url)
-                    .header("User-Agent", UserAgentUtils.buildUserAgent())
-                    .header("Auth-Type", LoginUtils.getLoginType())
-                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
-                    .build();
+                        .url(url)
+                        .header("User-Agent", UserAgentUtils.buildUserAgent())
+                        .header("Auth-Type", LoginUtils.getLoginType())
+                        .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                        .build();
 
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();

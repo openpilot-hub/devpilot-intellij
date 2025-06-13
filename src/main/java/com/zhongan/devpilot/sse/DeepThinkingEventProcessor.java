@@ -45,7 +45,7 @@ public class DeepThinkingEventProcessor {
                 processEvent(project, eventData, tag);
             } else if (StringUtils.equalsIgnoreCase(tag, "request-failed")) {
                 processFailedEvent(project, eventData, tag);
-            } else if(StringUtils.equalsIgnoreCase(tag, "request-cancelled")) {
+            } else if (StringUtils.equalsIgnoreCase(tag, "request-cancelled")) {
                 processCancelledEvent(project, eventData, tag);
             } else if (StringUtils.equalsIgnoreCase(tag, "mcp-decision")) {
                 processMcpDecision(eventData, tag);
@@ -59,7 +59,6 @@ public class DeepThinkingEventProcessor {
             DevPilotNotification.error("处理深度思考事件时发生错误: " + e.getMessage());
         }
     }
-
 
     private void processMcpDecision(Map<String, String> eventData, String tag) {
         PartialMessage partialMessage = preparePartialMessage(eventData, tag, Boolean.TRUE);

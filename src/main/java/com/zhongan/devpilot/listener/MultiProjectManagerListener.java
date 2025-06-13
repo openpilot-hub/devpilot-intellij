@@ -12,6 +12,7 @@ import com.zhongan.devpilot.sse.SSEClient;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jetbrains.annotations.NotNull;
 
@@ -22,6 +23,8 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
     private final ScheduledExecutorService agentStateMonitorScheduler = Executors.newSingleThreadScheduledExecutor();
 
     private final ScheduledExecutorService agentAutoUpgradeScheduler = Executors.newSingleThreadScheduledExecutor();
+
+    private final AtomicInteger restartFailCount = new AtomicInteger(0);
 
     public MultiProjectManagerListener() {
         agentStateMonitorScheduler.scheduleAtFixedRate(
@@ -38,7 +41,16 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
                         }
 
                         try {
-                            AgentsRunner.INSTANCE.run();
+                            boolean success = AgentsRunner.INSTANCE.run();
+                            if (success) {
+                                restartFailCount.set(0);
+                            } else {
+                                int count = restartFailCount.incrementAndGet();
+                                if (count > 3) {
+                                    LOG.error("Agent连续启动失败" + count + "次，可能存在严重问题");
+                                    Thread.sleep(10000);
+                                }
+                            }
                         } catch (Exception e) {
                             LOG.error("Restart agent failed.", e);
                         } finally {

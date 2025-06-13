@@ -18,7 +18,6 @@ import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_AGENT_DEFAULT_HO
 public class EventUtil {
     private static final Logger LOG = Logger.getInstance(EventUtil.class);
 
-
     /**
      * 发送事件请求到远程代理
      *

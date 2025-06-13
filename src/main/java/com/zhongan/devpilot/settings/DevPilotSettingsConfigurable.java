@@ -8,7 +8,6 @@ import com.intellij.openapi.util.NlsContexts;
 import com.zhongan.devpilot.actions.editor.popupmenu.PopupMenuEditorActionGroupUtil;
 import com.zhongan.devpilot.agents.AgentsRunner;
 import com.zhongan.devpilot.agents.BinaryManager;
-import com.zhongan.devpilot.embedding.LocalEmbeddingService;
 import com.zhongan.devpilot.settings.state.AvailabilityCheck;
 import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
 import com.zhongan.devpilot.settings.state.CompletionSettingsState;
@@ -149,9 +148,9 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
         var pastEnable = localRagSettings.getEnable();
         localRagSettings.setEnable(settingsComponent.getLocalRagEnabled());
         // if local rag was disabled and now enabled, start the embedding service for current project
-        if (!pastEnable && localRagSettings.getEnable()) {
-            LocalEmbeddingService.immediateStartCurrentProject();
-        }
+//        if (!pastEnable && localRagSettings.getEnable()) {
+//            LocalEmbeddingService.immediateStartCurrentProject();
+//        }
     }
 
     @Override

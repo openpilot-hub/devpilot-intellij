@@ -40,7 +40,6 @@ public class MessageModel {
 
     private List<AgentDecisionModel> decisions = new ArrayList<>();
 
-
     public static MessageModel buildCodeMessage(String id, Long time, String content,
                                                 String username, List<CodeReferenceModel> codeReference, int mode) {
         MessageModel messageModel = new MessageModel();

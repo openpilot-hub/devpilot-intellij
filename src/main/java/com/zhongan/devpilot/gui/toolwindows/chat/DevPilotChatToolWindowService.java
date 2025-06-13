@@ -134,6 +134,7 @@ public final class DevPilotChatToolWindowService {
             });
         }
     }
+
     public Project getProject() {
         return this.project;
     }

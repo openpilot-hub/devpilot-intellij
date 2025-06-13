@@ -149,7 +149,7 @@ public class ChatSessionManager {
         map.put("session", session);
         map.put("sessionDir", basePath);
         publishEvent("Session-Saved", map);
-        log.info("Publish Session-Saved event for session:" + session.getId() + " by client:" + clientId + ", current session:" +  currentSession.getId() + ".");
+        log.info("Publish Session-Saved event for session:" + session.getId() + " by client:" + clientId + ", current session:" + currentSession.getId() + ".");
     }
 
     public void deleteSession(String sessionId, boolean directDeleteFlag) {
@@ -163,7 +163,7 @@ public class ChatSessionManager {
         Map<String, Object> map = buildClientSessionMap();
         map.put("deletedSessionId", sessionId);
         publishEvent("Session-Deleted", map);
-        log.info("Publish Session-Deleted event for deleted session:" + sessionId + " by client:" + clientId + ", current session:" +  currentSession.getId() + ".");
+        log.info("Publish Session-Deleted event for deleted session:" + sessionId + " by client:" + clientId + ", current session:" + currentSession.getId() + ".");
     }
 
     public void switchSession(String sessionId) {
@@ -277,7 +277,7 @@ public class ChatSessionManager {
         synchronized (syncLock) {
             this.clientId = clientId;
             sessions = LlmProviderFactory.INSTANCE.getLlmProvider(this.project).retrieveSessions(buildClientSessionMap());
-            
+
             if (null == currentSession) {
                 if (sessions.isEmpty()) {
                     createNewSession();

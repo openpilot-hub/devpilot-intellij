@@ -113,7 +113,7 @@ public final class TrialServiceProvider implements LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
                 if (response.code() == 400) {
-                    service.callErrorInfo("Deep thinking failed." );
+                    service.callErrorInfo("Deep thinking failed.");
                 }
             }
         } catch (Exception e) {
@@ -156,7 +156,6 @@ public final class TrialServiceProvider implements LlmProvider {
                 body.put("sessionId", session.getId());
                 LOG.warn("Cancel request for current session:" + session.getId() + " by client:" + clientId + ".");
 
-
                 var request = requestBuilder
                         .post(RequestBody.create(JsonUtils.toJson(body), MediaType.parse("application/json")))
                         .build();
@@ -164,7 +163,7 @@ public final class TrialServiceProvider implements LlmProvider {
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
                 if (response.code() == 400) {
-                    service.callErrorInfo("Cancel request failed." );
+                    service.callErrorInfo("Cancel request failed.");
                 }
             }
         } catch (Exception e) {
