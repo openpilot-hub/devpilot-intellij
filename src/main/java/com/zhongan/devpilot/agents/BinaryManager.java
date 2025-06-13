@@ -174,8 +174,9 @@ public class BinaryManager {
         try {
             Request request = new Request.Builder().url("http://localhost:" + port + "/health").get().build();
             Call call = OkhttpUtils.getClient().newCall(request);
-            Response response = call.execute();
-            isRunning = response.isSuccessful();
+            try (Response response = call.execute()) {
+                isRunning = response.isSuccessful();
+            }
         } catch (Exception e) {
             LOG.warn("Failed to check agent health", e);
             return false;
@@ -189,7 +190,7 @@ public class BinaryManager {
             File[] files = binDir.listFiles();
             if (files != null) {
                 for (File file : files) {
-                    if (file.isDirectory() && !file.getName().equals(IDE_INFO_MAP.get("version"))) {
+                    if (file.isDirectory() && !StringUtils.equals(file.getName(), IDE_INFO_MAP.get("version"))) {
                         FileUtils.deleteQuietly(file);
                     }
                 }
@@ -249,7 +250,7 @@ public class BinaryManager {
                     removeOldBinary(getHomeDir());
                 } else if (localUpgrade != null && compareAgentVersions(localUpgrade.second, latestVersion) == 0) { // 2. 如果 upgrade 目录 zip 版本相同，检查 MD5
                     String localMd5 = getFileMd5(localUpgrade.first);
-                    if (localMd5.equals(latestMd5)) {
+                    if (StringUtils.equals(localMd5, latestMd5)) {
                         LOG.info("Local upgrade zip matches remote version and MD5, using cached zip.");
                         unzipAndCopy(localUpgrade.first, zipTmpDir, binDir);
                         removeOldBinary(getHomeDir());
@@ -503,7 +504,7 @@ public class BinaryManager {
     private String getDefaultBinaryPath(File root) {
         Optional<File> versionDir = Arrays.stream(Optional.ofNullable(root.listFiles()).orElse(new File[]{}))
                 .filter(File::isDirectory)
-                .filter(dir -> dir.getName().equals(IDE_INFO_MAP.get("version")))
+                .filter(dir -> StringUtils.equals(dir.getName(), IDE_INFO_MAP.get("version")))
                 .findFirst();
 
         if (versionDir.isPresent()) {
@@ -565,7 +566,7 @@ public class BinaryManager {
 
                 if (entry.isDirectory()) {
                     handleDirectory(targetPath, parts);
-                    if (parts[parts.length - 1].equalsIgnoreCase(COMPATIBLE_ARCH)) {
+                    if (StringUtils.equalsIgnoreCase(parts[parts.length - 1], COMPATIBLE_ARCH)) {
                         finalDir = targetPath.toFile();
                     }
                 } else {
@@ -597,7 +598,7 @@ public class BinaryManager {
     }
 
     private static boolean needUnzip(String entryName) {
-        return entryName.equalsIgnoreCase(COMPATIBLE_ARCH) || entryName.equals("extension");
+        return StringUtils.equalsIgnoreCase(entryName, COMPATIBLE_ARCH) || StringUtils.equals(entryName, "extension");
     }
 
     private String extractBundledAgentVersion() {
@@ -698,8 +699,7 @@ public class BinaryManager {
                 .header("Auth-Type", LoginUtils.getLoginType())
                 .url(url).get().build();
         Call call = OkhttpUtils.getClient().newCall(request);
-        try {
-            Response response = call.execute();
+        try (Response response = call.execute()) {
             if (!response.isSuccessful()) {
                 return null;
             }
@@ -726,7 +726,7 @@ public class BinaryManager {
             File[] oldDirs = upgradeDir.listFiles(File::isDirectory);
             if (oldDirs != null) {
                 for (File oldDir : oldDirs) {
-                    if (!oldDir.getName().equals(latestVersion)) {
+                    if (!StringUtils.equals(oldDir.getName(), latestVersion)) {
                         try {
                             FileUtils.deleteDirectory(oldDir);
                         } catch (IOException ex) {

@@ -14,6 +14,7 @@ import com.intellij.openapi.editor.ex.util.EditorUtil;
 import com.intellij.openapi.editor.impl.EditorImpl;
 import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.project.Project;
+import com.intellij.openapi.util.Computable;
 import com.intellij.openapi.util.Disposer;
 import com.intellij.openapi.util.Key;
 import com.intellij.openapi.util.TextRange;
@@ -69,8 +70,14 @@ public class CompletionPreview implements Disposable {
     }
 
     public static synchronized DevPilotCompletion createInstance(
-        Editor editor, List<DevPilotCompletion> completions, int offset) {
-        CompletionPreview preview = getInstance(editor);
+            Editor editor, List<DevPilotCompletion> completions, int offset) {
+        CompletionPreview preview = ApplicationManager.getApplication().runReadAction((Computable<CompletionPreview>) () -> {
+            CompletionPreview existingPreview = CompletionPreview.getInstance(editor);
+            if (existingPreview != null) {
+                Disposer.dispose(existingPreview);
+            }
+            return new CompletionPreview(editor, completions, offset);
+        });
 
         if (preview != null) {
             Disposer.dispose(preview);
@@ -78,7 +85,10 @@ public class CompletionPreview implements Disposable {
 
         preview = new CompletionPreview(editor, completions, offset);
 
-        editor.putUserData(INLINE_COMPLETION_PREVIEW, preview);
+        CompletionPreview finalPreview = preview;
+        ApplicationManager.getApplication().runWriteAction(() -> {
+            editor.putUserData(CompletionPreview.INLINE_COMPLETION_PREVIEW, finalPreview);
+        });
 
         return preview.createPreview();
     }

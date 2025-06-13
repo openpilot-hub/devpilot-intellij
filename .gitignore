@@ -45,3 +45,5 @@ bin/
 
 src/main/resources/config/local.properties
 src/main/resources/binaries/
+
+.cursorignore

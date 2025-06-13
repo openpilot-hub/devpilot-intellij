@@ -45,6 +45,22 @@ public class DefaultConst {
 
     public static final String EMBEDDING_SUBMIT_PATH = "/submitChunks";
 
+    public static final String REMOTE_AGENT_DEFAULT_HOST = ConfigBundleUtils.getConfig("devpilot.remote.agent.host", "http://localhost") + ":";
+
+    public static final String DEEP_THINKING_PATH = "/deepThinking";
+
+    public static final String DEEP_THINKING_CANCEL_PATH = "/deepThinking/cancel";
+
+    public static final String EVENT_BUS_PATH = "/event";
+
+    public static final String SSE_PATH = "/sse";
+
+    public static final String SESSIONS_PATH = "/sessions";
+
+    public static final String MCP_CONNECTIONS_PATH = "/mcpConnections";
+
+    public static final String UPDATE_MCP_SERVER_PATH = "/mcpServer";
+
     public static final String EMBEDDING_DELETE_PATH = "/deleteChunks";
 
     public static final String EMBEDDING_SEARCH_PATH = "/local-rag";
@@ -84,5 +100,7 @@ public class DefaultConst {
     public static final int NORMAL_CHAT_TYPE = 1;
 
     public static final int SMART_CHAT_TYPE = 2;
+
+    public static final int AGENT_CHAT_TYPE = 3;
 
 }

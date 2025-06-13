@@ -21,14 +21,17 @@ import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagRequest;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotRagResponse;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotSuccessResponse;
+import com.zhongan.devpilot.session.model.ChatSession;
 import com.zhongan.devpilot.settings.state.AIGatewaySettingsState;
 import com.zhongan.devpilot.settings.state.LanguageSettingsState;
+import com.zhongan.devpilot.sse.SSEClient;
 import com.zhongan.devpilot.util.DevPilotMessageBundle;
 import com.zhongan.devpilot.util.GatewayRequestUtils;
 import com.zhongan.devpilot.util.GatewayRequestV2Utils;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
 import com.zhongan.devpilot.util.OkhttpUtils;
+import com.zhongan.devpilot.util.ProcessUtils;
 import com.zhongan.devpilot.util.UserAgentUtils;
 import com.zhongan.devpilot.webview.model.CodeReferenceModel;
 import com.zhongan.devpilot.webview.model.MessageModel;
@@ -36,6 +39,7 @@ import com.zhongan.devpilot.webview.model.RecallModel;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,11 +55,15 @@ import okhttp3.Response;
 import okhttp3.sse.EventSource;
 
 import static com.zhongan.devpilot.constant.DefaultConst.AGENT_INSTRUCT_COMPLETION;
+import static com.zhongan.devpilot.constant.DefaultConst.DEEP_THINKING_CANCEL_PATH;
+import static com.zhongan.devpilot.constant.DefaultConst.DEEP_THINKING_PATH;
+import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_AGENT_DEFAULT_HOST;
 import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_HOST;
 import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_RAG_DEFAULT_PATH;
 
 @Service(Service.Level.PROJECT)
 public final class AIGatewayServiceProvider implements LlmProvider {
+    private static final Logger LOG = Logger.getInstance(AIGatewayServiceProvider.class);
 
     private final ObjectMapper objectMapper = new ObjectMapper()
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -67,14 +75,118 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     private MessageModel resultModel = new MessageModel();
 
     @Override
+    public String deepThinking(Project project, String sessionDir, ChatSession session) {
+        var service = project.getService(DevPilotChatToolWindowService.class);
+        this.toolWindowService = service;
+
+        if (!LoginUtils.isLogin()) {
+            service.callErrorInfo("Deep thinking failed: please login");
+            DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
+            return "";
+        }
+        Response response = null;
+        try {
+            Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
+            if (null != portPId) {
+                String url = REMOTE_AGENT_DEFAULT_HOST + portPId.first + DEEP_THINKING_PATH;
+                var requestBuilder = new Request.Builder()
+                        .url(url)
+                        .header("User-Agent", UserAgentUtils.buildUserAgent())
+                        .header("Auth-Type", LoginUtils.getLoginType());
+
+                Map<String, Object> body = new HashMap<>();
+                String clientId = SSEClient.getInstance(project).getClientId();
+                body.put("clientId", clientId);
+                body.put("sessionDir", sessionDir);
+                body.put("sessionId", session.getId());
+                body.put("session", session);
+                body.put("osName", ProcessUtils.getOSName());
+                body.put("basePath", project.getBasePath());
+
+                String lastUserMessageId = session.getHistoryRequestMessageList().get(session.getHistoryRequestMessageList().size() - 1).getId();
+
+                LOG.warn("Send request for current session:" + session.getId() + " by client:" + clientId + ". Last user message id:" + lastUserMessageId + "with chatMode:" + session.getChatMode() + ".");
+
+                var request = requestBuilder
+                        .post(RequestBody.create(JsonUtils.toJson(body), MediaType.parse("application/json")))
+                        .build();
+
+                DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
+                Call call = OkhttpUtils.getClient().newCall(request);
+                response = call.execute();
+                if (response.code() == 400) {
+                    service.callErrorInfo("Request failed.");
+                }
+            }
+        } catch (Exception e) {
+            DevPilotNotification.debug("Request failed: " + e.getMessage());
+            service.callErrorInfo("Request failed: " + e.getMessage());
+            return "";
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
+        }
+
+        return "";
+    }
+
+    @Override
+    public void cancel(Project project, String sessionDir, ChatSession session) {
+        var service = project.getService(DevPilotChatToolWindowService.class);
+        this.toolWindowService = service;
+
+        if (!LoginUtils.isLogin()) {
+            service.callErrorInfo("Cancel deep thinking failed: please login");
+            DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
+        }
+        Response response = null;
+        try {
+            Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
+            if (null != portPId) {
+                String url = REMOTE_AGENT_DEFAULT_HOST + portPId.first + DEEP_THINKING_CANCEL_PATH;
+                var requestBuilder = new Request.Builder()
+                        .url(url)
+                        .header("User-Agent", UserAgentUtils.buildUserAgent())
+                        .header("Auth-Type", LoginUtils.getLoginType());
+
+                Map<String, Object> body = new HashMap<>();
+                String clientId = SSEClient.getInstance(project).getClientId();
+
+                body.put("clientId", clientId);
+                body.put("sessionDir", sessionDir);
+                body.put("sessionId", session.getId());
+                LOG.warn("Cancel request for current session:" + session.getId() + " by client:" + clientId + ".");
+
+                var request = requestBuilder
+                        .post(RequestBody.create(JsonUtils.toJson(body), MediaType.parse("application/json")))
+                        .build();
+
+                DevPilotNotification.debug(LoginUtils.getLoginType() + "---" + UserAgentUtils.buildUserAgent());
+                Call call = OkhttpUtils.getClient().newCall(request);
+                response = call.execute();
+                if (response.code() == 400) {
+                    service.callErrorInfo("Cancel request failed.");
+                }
+            }
+        } catch (Exception e) {
+            DevPilotNotification.debug("Cancel deep thinking failed:" + e.getMessage());
+            service.callErrorInfo("Cancel deep thinking failed:" + e.getMessage());
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
+        }
+    }
+
+    @Override
     public String chatCompletion(Project project, DevPilotChatCompletionRequest chatCompletionRequest,
                                  Consumer<String> callback, List<CodeReferenceModel> remoteRefs, List<CodeReferenceModel> localRefs, int chatType) {
         var service = project.getService(DevPilotChatToolWindowService.class);
         this.toolWindowService = service;
 
         if (!LoginUtils.isLogin()) {
-            service.callErrorInfo("Chat completion failed: please login");
-            DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
+            handleNoAuth(service);
             return "";
         }
 
@@ -129,7 +241,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
                 toolWindowService.addMessage(resultModel);
             }
 
-            toolWindowService.callWebView();
+            toolWindowService.callWebView(Boolean.FALSE);
             // after interrupt, reset result model
             resultModel = null;
         }
@@ -143,7 +255,6 @@ public final class AIGatewayServiceProvider implements LlmProvider {
     @Override
     public void handleNoAuth(DevPilotChatToolWindowService service) {
         LoginUtils.logout();
-        service.callErrorInfo("Chat completion failed: No auth, please login");
         DevPilotNotification.linkInfo("Please Login", "Account", LoginUtils.loginUrl());
     }
 
@@ -156,7 +267,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
         }
 
-        Response response;
+        Response response = null;
 
         try {
             String requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
@@ -167,11 +278,11 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             DevPilotNotification.debug("Send Request :[" + requestBody + "].");
 
             var request = new Request.Builder()
-                .url(host + "/devpilot/v2/chat/completions")
-                .header("User-Agent", UserAgentUtils.buildUserAgent())
-                .header("Auth-Type", LoginUtils.getLoginType())
-                .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
-                .build();
+                    .url(host + "/devpilot/v2/chat/completions")
+                    .header("User-Agent", UserAgentUtils.buildUserAgent())
+                    .header("Auth-Type", LoginUtils.getLoginType())
+                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                    .build();
 
             Call call = OkhttpUtils.getClient().newCall(request);
             response = call.execute();
@@ -185,6 +296,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
         }
     }
 
@@ -197,9 +312,9 @@ public final class AIGatewayServiceProvider implements LlmProvider {
 
         if (response.isSuccessful()) {
             var message = objectMapper.readValue(result, DevPilotSuccessResponse.class)
-                .getChoices()
-                .get(0)
-                .getMessage();
+                    .getChoices()
+                    .get(0)
+                    .getMessage();
             var devPilotMessage = new DevPilotMessage();
             devPilotMessage.setRole("assistant");
             devPilotMessage.setContent(message.getContent());
@@ -214,8 +329,8 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.warn(DevPilotMessageBundle.get("devpilot.notification.version.message"));
         } else {
             return DevPilotChatCompletionResponse.failed(objectMapper.readValue(result, DevPilotFailedResponse.class)
-                .getError()
-                .getMessage());
+                    .getError()
+                    .getMessage());
         }
     }
 
@@ -226,7 +341,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return null;
         }
 
-        Response response;
+        Response response = null;
         try {
             String requestBody = GatewayRequestUtils.completionRequestPureJson(instructCompletionRequest);
 
@@ -255,6 +370,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } catch (Exception e) {
             Logger.getInstance(getClass()).warn("Instruct completion failed: " + e.getMessage());
             return null;
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
         }
     }
 
@@ -330,7 +449,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
         }
 
-        Response response;
+        Response response = null;
 
         try {
             String requestBody = GatewayRequestV2Utils.encodeRequest(chatCompletionRequest);
@@ -359,12 +478,16 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
         }
     }
 
     @Override
     public List<DevPilotRagResponse> ragCompletion(DevPilotRagRequest ragRequest) {
-        Response response;
+        Response response = null;
 
         try {
             String requestBody = JsonUtils.toJson(ragRequest);
@@ -378,11 +501,11 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             if (null != portPId) {
                 String url = REMOTE_RAG_DEFAULT_HOST + portPId.first + REMOTE_RAG_DEFAULT_PATH;
                 var request = new Request.Builder()
-                    .url(url)
-                    .header("User-Agent", UserAgentUtils.buildUserAgent())
-                    .header("Auth-Type", LoginUtils.getLoginType())
-                    .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
-                    .build();
+                        .url(url)
+                        .header("User-Agent", UserAgentUtils.buildUserAgent())
+                        .header("Auth-Type", LoginUtils.getLoginType())
+                        .post(RequestBody.create(requestBody, MediaType.parse("application/json")))
+                        .build();
 
                 Call call = OkhttpUtils.getClient().newCall(request);
                 response = call.execute();
@@ -397,6 +520,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return null;
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
         }
 
         return null;
@@ -411,7 +538,7 @@ public final class AIGatewayServiceProvider implements LlmProvider {
             return DevPilotChatCompletionResponse.failed("Chat completion failed: host is empty");
         }
 
-        Response response;
+        Response response = null;
 
         try {
             String requestBody = GatewayRequestV2Utils.encodeRequest(completionPredictRequest);
@@ -441,6 +568,10 @@ public final class AIGatewayServiceProvider implements LlmProvider {
         } catch (Exception e) {
             DevPilotNotification.debug("Chat completion failed: " + e.getMessage());
             return DevPilotChatCompletionResponse.failed("Chat completion failed: " + e.getMessage());
+        } finally {
+            if (null != response) {
+                response.body().close();
+            }
         }
     }
 

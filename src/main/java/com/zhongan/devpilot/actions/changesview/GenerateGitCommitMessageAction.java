@@ -54,6 +54,16 @@ public class GenerateGitCommitMessageAction extends AnAction {
     public GenerateGitCommitMessageAction() {
     }
 
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    public Object getActionUpdateThread() {
+        try {
+            Class actionUpdateThreadClass = Class.forName("com.intellij.openapi.actionSystem.ActionUpdateThread");
+            return Enum.valueOf(actionUpdateThreadClass, "EDT");
+        } catch (ClassNotFoundException e) {
+            return null;
+        }
+    }
+
     @Override
     public void update(@NotNull AnActionEvent e) {
         super.update(e);
@@ -102,7 +112,7 @@ public class GenerateGitCommitMessageAction extends AnAction {
                     devPilotChatCompletionRequest.setVersion(GIT_COMMIT_PROMPT_VERSION);
                     devPilotChatCompletionRequest.getMessages().add(MessageUtil.createPromptMessage(System.currentTimeMillis() + "", "GENERATE_COMMIT", Map.of("locale", getLocale(), "diff", diff)));
                     devPilotChatCompletionRequest.setStream(Boolean.FALSE);
-                    var llmProvider = new LlmProviderFactory().getLlmProvider(project);
+                    var llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
                     DevPilotChatCompletionResponse result = llmProvider.chatCompletionSync(devPilotChatCompletionRequest);
 
                     if (result.isSuccessful()) {

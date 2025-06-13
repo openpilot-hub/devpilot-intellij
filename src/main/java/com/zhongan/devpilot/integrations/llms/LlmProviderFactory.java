@@ -10,6 +10,8 @@ import com.zhongan.devpilot.settings.state.DevPilotLlmSettingsState;
 @Service
 public final class LlmProviderFactory {
 
+    public static final LlmProviderFactory INSTANCE = new LlmProviderFactory();
+
     public LlmProvider getLlmProvider(Project project) {
         var settings = DevPilotLlmSettingsState.getInstance();
         var loginType = LoginTypeEnum.getLoginTypeEnum(settings.getLoginType());

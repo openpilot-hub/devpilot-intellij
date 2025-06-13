@@ -1,5 +1,6 @@
 package com.zhongan.devpilot.provider.ut;
 
+import com.zhongan.devpilot.provider.ut.java.DefaultJavaUtFrameworkProvider;
 import com.zhongan.devpilot.provider.ut.java.JavaUtFrameworkProvider;
 import com.zhongan.devpilot.util.LanguageUtil;
 
@@ -15,7 +16,12 @@ public class UtFrameworkProviderFactory {
 
         switch (language.getLanguageName().toLowerCase(Locale.ROOT)) {
             case "java":
-                return JavaUtFrameworkProvider.INSTANCE;
+                try {
+                    Class.forName("org.jetbrains.idea.maven.model.MavenArtifact");
+                    return JavaUtFrameworkProvider.INSTANCE;
+                } catch (ClassNotFoundException e) {
+                    return DefaultJavaUtFrameworkProvider.INSTANCE;
+                }
             case "go":
             case "python":
         }
@@ -31,7 +37,12 @@ public class UtFrameworkProviderFactory {
 
         switch (language.toLowerCase(Locale.ROOT)) {
             case "java":
-                return JavaUtFrameworkProvider.INSTANCE;
+                try {
+                    Class.forName("org.jetbrains.idea.maven.model.MavenArtifact");
+                    return JavaUtFrameworkProvider.INSTANCE;
+                } catch (ClassNotFoundException e) {
+                    return DefaultJavaUtFrameworkProvider.INSTANCE;
+                }
             case "go":
             case "python":
         }

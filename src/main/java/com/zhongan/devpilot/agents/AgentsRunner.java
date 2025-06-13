@@ -1,19 +1,26 @@
 package com.zhongan.devpilot.agents;
 
+import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.zhongan.devpilot.mcp.McpConfigurationHandler;
 import com.zhongan.devpilot.util.ProcessUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.jetbrains.annotations.NotNull;
 
@@ -48,6 +55,14 @@ public class AgentsRunner {
             return doRun(homeDir);
         } finally {
             initialRunning.set(false);
+
+            ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                try {
+                    McpConfigurationHandler.INSTANCE.initialMcpServer();
+                } catch (Exception e) {
+                    LOG.warn("Failed to connect to SSE server in AgentsRunner finally block.", e);
+                }
+            });
         }
     }
 
@@ -60,9 +75,57 @@ public class AgentsRunner {
             List<String> commands = createCommand(BinaryManager.INSTANCE.getBinaryPath(homeDir), port);
             ProcessBuilder builder = new ProcessBuilder(commands);
             builder.directory(homeDir);
+
+            Map<String, String> env = builder.environment();
+            String pathVariableValue = PathEnvironmentVariableUtil.getPathVariableValue();
+            if (StringUtils.isNotBlank(pathVariableValue)) {
+                String currentPath = env.get("PATH");
+                if (StringUtils.isNotBlank(currentPath)) {
+                    env.put("PATH", pathVariableValue + File.pathSeparator + currentPath);
+                } else {
+                    env.put("PATH", pathVariableValue);
+                }
+            }
+
+            LOG.info("启动命令: " + String.join(" ", commands));
+            LOG.info("工作目录: " + homeDir.getAbsolutePath());
+            LOG.info("环境变量PATH: " + env.get("PATH"));
+
             Process process = builder.start();
+
+            new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        LOG.info("Agent输出: " + line);
+                    }
+                } catch (IOException e) {
+                    LOG.warn("读取进程输出异常", e);
+                }
+            }).start();
+
+            new Thread(() -> {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        LOG.warn("Agent错误: " + line);
+                    }
+                } catch (IOException e) {
+                    LOG.warn("读取进程错误输出异常", e);
+                }
+            }).start();
+
             boolean aliveFlag = process.isAlive();
             if (aliveFlag) {
+                try {
+                    Thread.sleep(2000);
+                    aliveFlag = process.isAlive();
+                    if (!aliveFlag) {
+                        LOG.warn("进程启动后立即退出，可能存在兼容性问题");
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
                 long pid = NumberUtils.LONG_ZERO;
                 try {
                     pid = process.pid();
@@ -109,26 +172,12 @@ public class AgentsRunner {
     protected List<String> createCommand(@NotNull String binaryPath, int port) {
         List<String> commands = new ArrayList<>();
         if (ProcessUtils.isWindowsPlatform()) {
-            String command = "cmd";
-            File cmdFile = new File(System.getenv("WINDIR") + "\\system32\\cmd.exe");
-            if (!cmdFile.exists()) {
-                cmdFile = new File("c:\\Windows\\system32\\cmd.exe");
-            }
-
-            if (cmdFile.exists()) {
-                command = "\"" + cmdFile.getAbsolutePath() + "\"";
-            }
-
-            commands.add(command);
+            commands.add(ProcessUtils.getWindowsCmdCommand());
             commands.add("/c");
+            commands.add("\"" + binaryPath + "\"");
+        } else {
+            commands.add(binaryPath);
         }
-
-        if (ProcessUtils.isWindowsPlatform()) {
-            binaryPath = binaryPath.replace("(", "^(").replace(")", "^)").replace("&", "^&").replace(">", "^>").replace("<", "^<").replace("|", "^|");
-            binaryPath = "\"" + binaryPath + "\"";
-        }
-
-        commands.add(binaryPath);
         commands.add("--port");
         commands.add(String.valueOf(port));
 

@@ -71,7 +71,7 @@ public class GitUtil {
         Boolean embedded = Boolean.FALSE;
         if (!map.containsKey(appName) || (System.currentTimeMillis() - map.get(appName).getTimestamp()) > syncTimeInterval) {
             // 调用接口
-            Response response;
+            Response response = null;
             try {
                 Request request = new Request.Builder()
                         .url(queryAppCodeEmbeddedStateUrl + appName)
@@ -90,6 +90,10 @@ public class GitUtil {
                 }
             } catch (Exception e) {
                 return Boolean.FALSE;
+            } finally {
+                if (null != response) {
+                    response.body().close();
+                }
             }
 
             map.put(appName, new State(embedded, System.currentTimeMillis()));

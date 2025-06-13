@@ -13,6 +13,16 @@ public class ChatSession {
 
     private long updateTime;
 
+    private int chatMode;
+
+    private boolean abort;
+
+    private boolean containsRequireToolPrompts;
+
+    private boolean containsRequireResourcePrompts;
+
+    private boolean containsRequirePromptsPrompts;
+
     private List<MessageModel> historyMessageList;
 
     private List<DevPilotMessage> historyRequestMessageList;
@@ -30,7 +40,7 @@ public class ChatSession {
         this.id = id;
     }
 
-    public long getCreateTime() {
+    public Long getCreateTime() {
         return createTime;
     }
 
@@ -60,5 +70,45 @@ public class ChatSession {
 
     public void setHistoryRequestMessageList(List<DevPilotMessage> historyRequestMessageList) {
         this.historyRequestMessageList = historyRequestMessageList;
+    }
+
+    public int getChatMode() {
+        return chatMode;
+    }
+
+    public void setChatMode(int chatMode) {
+        this.chatMode = chatMode;
+    }
+
+    public boolean isAbort() {
+        return abort;
+    }
+
+    public void setAbort(boolean abort) {
+        this.abort = abort;
+    }
+
+    public boolean isContainsRequireToolPrompts() {
+        return containsRequireToolPrompts;
+    }
+
+    public void setContainsRequireToolPrompts(boolean containsRequireToolPrompts) {
+        this.containsRequireToolPrompts = containsRequireToolPrompts;
+    }
+
+    public boolean isContainsRequireResourcePrompts() {
+        return containsRequireResourcePrompts;
+    }
+
+    public void setContainsRequireResourcePrompts(boolean containsRequireResourcePrompts) {
+        this.containsRequireResourcePrompts = containsRequireResourcePrompts;
+    }
+
+    public boolean isContainsRequirePromptsPrompts() {
+        return containsRequirePromptsPrompts;
+    }
+
+    public void setContainsRequirePromptsPrompts(boolean containsRequirePromptsPrompts) {
+        this.containsRequirePromptsPrompts = containsRequirePromptsPrompts;
     }
 }

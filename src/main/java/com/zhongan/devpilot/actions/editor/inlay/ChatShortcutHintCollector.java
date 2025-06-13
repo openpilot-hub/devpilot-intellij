@@ -27,6 +27,7 @@ import com.intellij.psi.PsiWhiteSpace;
 import com.intellij.psi.util.PsiUtilCore;
 import com.intellij.util.SmartList;
 import com.zhongan.devpilot.DevPilotIcons;
+import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.enums.EditorActionEnum;
 import com.zhongan.devpilot.gui.toolwindows.chat.DevPilotChatToolWindowService;
 import com.zhongan.devpilot.settings.state.ChatShortcutSettingState;
@@ -192,7 +193,7 @@ public class ChatShortcutHintCollector extends FactoryInlayHintsCollector {
             });
         }
 
-        service.handleActions(actionEnum, psiElement, "");
+        service.handleActions(actionEnum, psiElement, DefaultConst.SMART_CHAT_TYPE);
     }
 
     private static int getAnchorOffset(@NotNull PsiElement psiElement) {

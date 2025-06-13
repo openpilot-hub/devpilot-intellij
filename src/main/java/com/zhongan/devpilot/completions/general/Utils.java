@@ -23,7 +23,7 @@ public final class Utils {
             return false;
         } else {
             String tail = doc.getText(new TextRange(begin, positionBeforeSuggestionPrefix));
-            return tail.equals(".");
+            return ".".equals(tail);
         }
     }
 

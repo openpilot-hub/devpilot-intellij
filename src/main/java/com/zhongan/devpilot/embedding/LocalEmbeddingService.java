@@ -20,7 +20,6 @@ import com.zhongan.devpilot.embedding.enums.DevPilotFileType;
 import com.zhongan.devpilot.embedding.scanner.IgnoreAwareScanner;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.provider.file.FileAnalyzeProviderFactory;
-import com.zhongan.devpilot.settings.state.LocalRagSettingsState;
 import com.zhongan.devpilot.util.GitUtil;
 import com.zhongan.devpilot.util.JsonUtils;
 import com.zhongan.devpilot.util.LoginUtils;
@@ -39,7 +38,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -62,14 +60,14 @@ public class LocalEmbeddingService {
      * Starts thread processing interval 15 minutes
      */
     public static void start(Project project) {
-        scheduler.scheduleWithFixedDelay(() -> {
-            var enabled = LocalRagSettingsState.getInstance().getEnable();
-
-            // only the setting enabled will process the project index
-            if (enabled) {
-                wrapIndexTask(project, LocalEmbeddingService::indexProject);
-            }
-        }, 15L, 15L, TimeUnit.MINUTES);
+//        scheduler.scheduleWithFixedDelay(() -> {
+//            var enabled = LocalRagSettingsState.getInstance().getEnable();
+//
+//            // only the setting enabled will process the project index
+//            if (enabled) {
+//                wrapIndexTask(project, LocalEmbeddingService::indexProject);
+//            }
+//        }, 15L, 15L, TimeUnit.MINUTES);
     }
 
     public static void immediateStart(Project project) {
@@ -248,7 +246,7 @@ public class LocalEmbeddingService {
         diff.setModifiedFileList(newFiles.stream()
                 .filter(newFile -> {
                     var oldFile = oldFileMap.get(newFile.getFilePath());
-                    return oldFile != null && !oldFile.getFileHash().equals(newFile.getFileHash());
+                    return oldFile != null && !StringUtils.equals(oldFile.getFileHash(), newFile.getFileHash());
                 })
                 .collect(Collectors.toList()));
 
@@ -257,7 +255,7 @@ public class LocalEmbeddingService {
 
     private static void batchUploadIndex(Project project, LocalIndex index, IndexFileDiff diff) {
         var fileList = index.getIndexedFiles();
-        var llmProvider = new LlmProviderFactory().getLlmProvider(project);
+        var llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
 
         // first handle delete file
         if (diff != null && !CollectionUtils.isEmpty(diff.getDeletedFileList())) {
