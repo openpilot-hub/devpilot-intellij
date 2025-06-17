@@ -250,7 +250,7 @@ public class SSEClient {
     private HttpURLConnection establishConnection() {
         try {
             String sseUrl = REMOTE_AGENT_DEFAULT_HOST + currentPort + SSE_PATH;
-            LOG.info("尝试连接SSE服务: " + sseUrl);
+            LOG.warn("尝试连接SSE服务: " + sseUrl);
 
             URL url = new URL(sseUrl);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
