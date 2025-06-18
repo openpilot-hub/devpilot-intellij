@@ -34,6 +34,7 @@ import okhttp3.Response;
 
 import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_AGENT_DEFAULT_HOST;
 import static com.zhongan.devpilot.constant.DefaultConst.SSE_PATH;
+import static com.zhongan.devpilot.util.ProjectUtil.getProjectIdentifier;
 
 public class SSEClient {
 
@@ -496,24 +497,25 @@ public class SSEClient {
                 while (!Thread.currentThread().isInterrupted()) {
                     try {
                         Thread.sleep(HEARTBEAT_INTERVAL);
-                        LOG.info("判断是否需要发送ping消息...");
+                        String projectIdentifier = getProjectIdentifier(project);
+                        LOG.info("项目[" + projectIdentifier + "] 判断是否需要发送ping消息...");
                         long timeSinceLastMessage = System.currentTimeMillis() - lastMessageTime;
 
                         if (timeSinceLastMessage > HEARTBEAT_INTERVAL) {
                             if (sendPingMessage()) {
-                                LOG.info("发送ping消息成功...");
+                                LOG.info("项目[" + projectIdentifier + "] 发送ping消息成功...");
                                 Thread.sleep(HEARTBEAT_INTERVAL / 2);
 
                                 timeSinceLastMessage = System.currentTimeMillis() - lastMessageTime;
                                 if (timeSinceLastMessage > HEARTBEAT_INTERVAL * 1.5) {
-                                    LOG.warn("发送ping后仍无响应(" + timeSinceLastMessage + "ms)，重新连接...");
+                                    LOG.warn("项目[" + projectIdentifier + "] 发送ping后仍无响应(" + timeSinceLastMessage + "ms)，重新连接...");
                                     disconnect();
                                     Thread.sleep(1000);
                                     connect();
                                     break;
                                 }
                             } else {
-                                LOG.warn("ping消息发送失败，重新连接...");
+                                LOG.warn("项目[" + projectIdentifier + "] ping消息发送失败，重新连接...");
                                 disconnect();
                                 Thread.sleep(1000);
                                 connect();

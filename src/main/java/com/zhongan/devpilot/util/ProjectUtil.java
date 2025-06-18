@@ -48,4 +48,11 @@ public class ProjectUtil {
     public static boolean isSandboxProject() {
         return StringUtils.contains(PathManager.getSystemPath(), "sandbox");
     }
+
+    public static String getProjectIdentifier(@Nullable Project project) {
+        if (project == null || project.isDisposed()) {
+            return "未知项目";
+        }
+        return project.getName() + "(" + project.getBasePath() + ")";
+    }
 }
