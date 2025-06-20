@@ -27,11 +27,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -64,21 +64,35 @@ public class BinaryManager {
 
     public volatile AtomicBoolean reStarting = new AtomicBoolean(false);
 
+    private final Map<String, String> bundledMD5Cache = new ConcurrentHashMap<>();
+
+    private static final int BUFFER_SIZE = 8192;
+
+    private static final String AARCH64 = "aarch64";
+
+    private static final String ARCH_ = "_";
+
+    private static final String X86_64 = "x86_64";
+
+    private static final String WINDOWS_PLATFORM = "windows";
+
+    private static final String MAC_PLATFORM = "darwin";
+
+    private static final String LINUX_PLATFORM = "linux";
+
+    private static final String BUNDLED_VERSION = "3.0.2";
+
     static {
         COMPATIBLE_ARCH = String.format("%s_%s", getSystemArch(), getPlatformName());
         IDE_INFO_MAP.put("type", DevPilotVersion.getVersionName().replace(" ", "_"));
     }
 
     public String getIdeInfoPath() {
-        return "." + IDE_INFO_MAP.get("type") + "info";
+        return "." + getIdeType() + "info";
     }
 
     public String getVersion() {
         return IDE_INFO_MAP.get("version");
-    }
-
-    public String getType() {
-        return IDE_INFO_MAP.get("type");
     }
 
     public String getCompatibleArch() {
@@ -87,6 +101,13 @@ public class BinaryManager {
 
     @Contract(pure = true)
     private BinaryManager() {
+        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(LINUX_PLATFORM), "cfec545d08a39a20a9db35f64703717b");
+        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(LINUX_PLATFORM), "29cb500570bb9565d80a508408546e51");
+        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(MAC_PLATFORM), "19de1b929938e4e6dc95b0e4a7dc7bec");
+        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(MAC_PLATFORM), "ae5f89cb723af940e9086c9d1d0596be");
+        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(WINDOWS_PLATFORM), "ae362f1ee59561aaf0a2a71420a068c9");
+        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(WINDOWS_PLATFORM), "d535382f1b521b16ab626d592a65b004");
+        bundledMD5Cache.put("zip", "ac8871f4c26d49bc02481a44cbedce59");
     }
 
     public boolean shouldStartAgent() {
@@ -112,7 +133,7 @@ public class BinaryManager {
             LOG.warn("Failed to create parent home directory." + homeDir.getName());
             return null;
         } else {
-            File finalHomeDir = new File(homeDir, IDE_INFO_MAP.get("type"));
+            File finalHomeDir = new File(homeDir, getIdeType());
             if (!finalHomeDir.exists() && !finalHomeDir.mkdirs()) {
                 LOG.warn("Failed to create final home directory." + finalHomeDir.getName());
                 return null;
@@ -126,7 +147,6 @@ public class BinaryManager {
                     return null;
                 }
             }
-
             return finalHomeDir;
         }
     }
@@ -202,79 +222,70 @@ public class BinaryManager {
         File zipTmpDir = buildTempDir();
         try {
             AgentInfoResp agentInfoResp = fetchLatestAgentInfo(getVersion());
-            // 检查 autoUpgradeEnabled，如果为 false，直接使用内嵌版本
-            if (agentInfoResp != null && !agentInfoResp.isAutoUpgradeEnabled()) {
-                LOG.info("Auto upgrade is disabled, using bundled version");
-                File archDir = unZipBinary(zipTmpDir.getAbsolutePath());
-                if (archDir == null || !archDir.exists()) {
-                    LOG.warn("Failed to unzip bundled binary for " + COMPATIBLE_ARCH);
-                    return false;
+            String localBinaryMd5 = StringUtils.EMPTY;
+
+            if (agentInfoResp != null && agentInfoResp.isAutoUpgradeEnabled()) {
+                String versionBinaryPath = getBinaryVersionPath(binDir, agentInfoResp.getVersion());
+                File versionBinaryFile = new File(versionBinaryPath);
+                if (versionBinaryFile.exists()) {
+                    localBinaryMd5 = getFileMd5(versionBinaryFile);
                 }
-                File versionDir = archDir.getParentFile();
-                IDE_INFO_MAP.put("version", versionDir.getName());
-                copyDirs(versionDir, binDir);
-                removeOldBinary(getHomeDir());
-                return true;
-            }
-            File upgradeDir = new File(getHomeDir(), "upgrade");
-            Pair<File, String> localUpgrade = findLatestLocalUpgradeZip(upgradeDir);
-            String bundledVersion = extractBundledAgentVersion();
-            if (agentInfoResp == null) {
-                LOG.warn("Failed to fetch latest agent info, checking local upgrade directory...");
-                // 检查 upgrade 目录的 zip 是否比内嵌 zip 版本高
-                if (localUpgrade != null && compareAgentVersions(localUpgrade.second, bundledVersion) > 0) {
-                    LOG.info("Using upgrade directory zip: " + localUpgrade.first.getName());
-                    unzipAndCopy(localUpgrade.first, zipTmpDir, binDir);
-                    removeOldBinary(getHomeDir());
-                } else {
-                    // upgrade 目录不存在 zip 或版本较低，使用内嵌 zip
-                    LOG.info("Using bundled zip version: " + bundledVersion);
-                    File archDir = unZipBinary(zipTmpDir.getAbsolutePath());
-                    if (archDir == null || !archDir.exists()) {
-                        LOG.warn("Fail to unzip binary for " + COMPATIBLE_ARCH);
-                        return false;
-                    }
-                    File versionDir = archDir.getParentFile();
-                    IDE_INFO_MAP.put("version", versionDir.getName());
-                    copyDirs(versionDir, binDir);
-                    removeOldBinary(getHomeDir());
-                }
-            } else {
                 String latestVersion = agentInfoResp.getVersion();
                 String latestMd5 = agentInfoResp.getMd5();
-                File latestAgentZip;
-                // 1. 如果 upgrade 目录 zip 版本更高，直接使用
-                if (localUpgrade != null && compareAgentVersions(localUpgrade.second, latestVersion) > 0) {
-                    LOG.info("Using higher version from upgrade directory: " + localUpgrade.first.getName());
-                    unzipAndCopy(localUpgrade.first, zipTmpDir, binDir);
-                    removeOldBinary(getHomeDir());
-                } else if (localUpgrade != null && compareAgentVersions(localUpgrade.second, latestVersion) == 0) { // 2. 如果 upgrade 目录 zip 版本相同，检查 MD5
-                    String localMd5 = getFileMd5(localUpgrade.first);
-                    if (StringUtils.equals(localMd5, latestMd5)) {
-                        LOG.info("Local upgrade zip matches remote version and MD5, using cached zip.");
-                        unzipAndCopy(localUpgrade.first, zipTmpDir, binDir);
-                        removeOldBinary(getHomeDir());
-                    } else {
-                        LOG.warn("Local zip MD5 mismatch, deleting old zip and downloading new version.");
-                        localUpgrade.first.delete();
-                        latestAgentZip = downloadAgent(agentInfoResp.getUrl(), latestVersion, upgradeDir);
-                        if (latestAgentZip != null) {
-                            unzipAndCopy(latestAgentZip, zipTmpDir, binDir);
-                            removeOldBinary(getHomeDir());
+                LOG.info("Retrieved agent info for " + COMPATIBLE_ARCH + ", version: " + latestVersion + ", md5: " + latestMd5);
+
+                if (StringUtils.equalsIgnoreCase(localBinaryMd5, agentInfoResp.getArchMd5().get(COMPATIBLE_ARCH))) {
+                    LOG.info("Local environment is already upgraded.");
+                    IDE_INFO_MAP.put("version", agentInfoResp.getVersion());
+                    return Boolean.TRUE;
+                }
+
+                // 查看本地是否已下载
+                File upgradeDir = new File(getHomeDir(), "upgrade");
+                Pair<File, String> localUpgrade = findLatestLocalUpgradeZip(upgradeDir);
+                if (localUpgrade != null) {
+                    String localMd5 = localUpgrade.second;
+                    File latestAgentZip;
+                    if (!StringUtils.equalsIgnoreCase(localMd5, bundledMD5Cache.get("zip"))) {
+                        if (StringUtils.equalsIgnoreCase(localMd5, latestMd5)) {
+                            latestAgentZip = localUpgrade.first;
+                            LOG.info("New agent is already downloaded.");
+                        } else {
+                            LOG.info("Downloading new version: " + latestVersion + ", with zip md5:[" + agentInfoResp.getMd5() + "].");
+                            localUpgrade.first.delete();
+                            latestAgentZip = downloadAgent(agentInfoResp.getUrl(), latestVersion, upgradeDir);
                         }
-                    }
-                } else { // 3. 如果 upgrade 目录 zip 版本较低，删除旧文件并下载最新 zip
-                    LOG.info("Downloading new version: " + latestVersion);
-                    if (localUpgrade != null) {
-                        localUpgrade.first.delete();
-                    }
-                    latestAgentZip = downloadAgent(agentInfoResp.getUrl(), latestVersion, upgradeDir);
-                    if (latestAgentZip != null) {
-                        unzipAndCopy(latestAgentZip, zipTmpDir, binDir);
-                        removeOldBinary(getHomeDir());
+                        if (latestAgentZip != null) {
+                            removeOldBinary(getHomeDir());
+                            unzipAndCopy(latestAgentZip, zipTmpDir, binDir);
+                            IDE_INFO_MAP.put("version", agentInfoResp.getVersion());
+                            return Boolean.TRUE;
+                        }
                     }
                 }
             }
+            LOG.info("Using bundled version.");
+            String bundledBinaryPath = getBinaryVersionPath(binDir, BUNDLED_VERSION);
+            File bundledBinaryFile = new File(bundledBinaryPath);
+            if (bundledBinaryFile.exists()) {
+                localBinaryMd5 = getFileMd5(bundledBinaryFile);
+            }
+
+            if (StringUtils.equalsIgnoreCase(localBinaryMd5, bundledMD5Cache.get(COMPATIBLE_ARCH))) {
+                LOG.info("Local agent is same as bundled version.");
+                IDE_INFO_MAP.put("version", BUNDLED_VERSION);
+                return Boolean.TRUE;
+            }
+
+            removeOldBinary(getHomeDir());
+            File archDir = unZipBinary(zipTmpDir.getAbsolutePath());
+            if (archDir == null || !archDir.exists()) {
+                LOG.warn("解压内嵌二进制文件失败: " + COMPATIBLE_ARCH);
+                return false;
+            }
+            File versionDir = archDir.getParentFile();
+            IDE_INFO_MAP.put("version", versionDir.getName());
+            copyDirs(versionDir, binDir);
         } catch (Exception e) {
             LOG.warn("Error occurred while processing files", e);
             return false;
@@ -289,40 +300,32 @@ public class BinaryManager {
     }
 
     /**
-     * 查找 upgrade 目录下最新的 zip 及其版本号
+     * 查找 upgrade 目录下最新的 zip 及其md5值
      */
     private Pair<File, String> findLatestLocalUpgradeZip(File upgradeDir) {
         if (!upgradeDir.exists() || !upgradeDir.isDirectory()) {
             return null;
         }
         File latestZip = null;
-        String latestVersion = null;
+        String md5 = null;
         File[] versionDirs = upgradeDir.listFiles(File::isDirectory);
         if (versionDirs != null) {
             for (File versionDir : versionDirs) {
-                String version = versionDir.getName();
                 File zipFile = new File(versionDir, "DevPilot.zip");
                 if (zipFile.exists() && zipFile.isFile()) {
-                    if (latestVersion == null || compareAgentVersions(version, latestVersion) > 0) {
-                        latestVersion = version;
-                        latestZip = zipFile;
-                    }
+                    latestZip = zipFile;
+                    md5 = getFileMd5(latestZip);
                 }
             }
         }
-        return latestZip != null ? new Pair<>(latestZip, latestVersion) : null;
+        return latestZip != null ? new Pair<>(latestZip, md5) : null;
     }
 
     private String getFileMd5(File file) {
-        FileInputStream fileInputStream = null;
-        try {
-            fileInputStream = new FileInputStream(file);
-            String localMd5 = Base64.getEncoder().encodeToString(DigestUtils.md5(fileInputStream));
-            return localMd5;
+        try (FileInputStream fileInputStream = new FileInputStream(file)) {
+            return DigestUtils.md5Hex(fileInputStream);
         } catch (Exception e) {
             return "";
-        } finally {
-            IOUtils.closeQuietly(fileInputStream);
         }
     }
 
@@ -592,8 +595,14 @@ public class BinaryManager {
         if (Files.exists(targetPath)) {
             Files.delete(targetPath);
         }
-        Files.createFile(targetPath);
-        FileUtils.copyToFile(zis, targetPath.toFile());
+        try (FileOutputStream fos = new FileOutputStream(targetPath.toFile())) {
+            byte[] buffer = new byte[BUFFER_SIZE];
+            int len;
+            while ((len = zis.read(buffer)) > 0) {
+                fos.write(buffer, 0, len);
+            }
+        }
+
         targetPath.toFile().setExecutable(true);
     }
 
@@ -601,29 +610,10 @@ public class BinaryManager {
         return StringUtils.equalsIgnoreCase(entryName, COMPATIBLE_ARCH) || StringUtils.equals(entryName, "extension");
     }
 
-    private String extractBundledAgentVersion() {
-        File zipTmpDir = buildTempDir();
-        try {
-            File archDir = unZipBinary(zipTmpDir.getAbsolutePath());
-            if (archDir == null || !archDir.exists()) {
-                return "";
-            }
-            File versionDir = archDir.getParentFile();
-            return versionDir.getName();
-        } catch (Exception e) {
-            return "";
-        } finally {
-            try {
-                FileUtils.deleteDirectory(zipTmpDir);
-            } catch (IOException ignore) {
-            }
-        }
-    }
-
     private static String getSystemArch() {
-        String arch = CpuArch.is32Bit() ? "i686" : "x86_64";
-        if ("aarch64".equals(System.getProperty("os.arch"))) {
-            arch = "aarch64";
+        String arch = CpuArch.is32Bit() ? "i686" : X86_64;
+        if (AARCH64.equals(System.getProperty("os.arch"))) {
+            arch = AARCH64;
         }
         return arch;
     }
@@ -635,26 +625,21 @@ public class BinaryManager {
     private static String getPlatformName() {
         String platform;
         if (SystemInfo.isWindows) {
-            platform = "windows";
+            platform = WINDOWS_PLATFORM;
         } else if (SystemInfo.isMac) {
-            platform = "darwin";
+            platform = MAC_PLATFORM;
         } else {
             if (!SystemInfo.isLinux) {
                 LOG.warn("DevPilot only supports platform Windows, macOS, Linux");
                 throw new RuntimeException("DevPilot only supports platform Windows, macOS, Linux");
             }
-            platform = "linux";
+            platform = LINUX_PLATFORM;
         }
         return platform;
     }
 
     private File buildTempDir() {
         return new File(System.getProperty("java.io.tmpdir"), String.format("devpilot_%d", System.currentTimeMillis()));
-    }
-
-    public void upgradeAgent() {
-        BinaryManager.INSTANCE.findProcessAndKill();
-        AgentsRunner.INSTANCE.run(true);
     }
 
     /**
@@ -673,11 +658,13 @@ public class BinaryManager {
                 LOG.info("Auto upgrade is disabled.");
                 return false;
             }
-            String latestVersion = agentInfoResp.getVersion();
-            String currentVersion = IDE_INFO_MAP.get("version");
-            if (currentVersion != null && compareAgentVersions(latestVersion, currentVersion) > 0) {
-                LOG.info("New agent version available: " + latestVersion + ", current version: " + currentVersion);
-                return true;
+            String localBinaryPath = getBinaryPath(getHomeDir());
+            String localBinaryMd5 = Optional.ofNullable(localBinaryPath).map(path -> getFileMd5(new File(path))).orElse(StringUtils.EMPTY);
+
+            String dstBinaryMd5 = agentInfoResp.getArchMd5().get(COMPATIBLE_ARCH);
+            if (!StringUtils.equalsIgnoreCase(localBinaryMd5, dstBinaryMd5)) {
+                LOG.info("New agent available: " + dstBinaryMd5 + ", current agent md5 is: " + localBinaryMd5);
+                return Boolean.TRUE;
             }
         } catch (Exception e) {
             LOG.warn("Error checking for agent upgrade", e);
@@ -705,10 +692,12 @@ public class BinaryManager {
             }
             ResponseBody body = response.body();
             if (body != null) {
-                return JsonUtils.fromJson(body.string(), AgentInfoResp.class);
-            } else {
-                return null;
+                String bodyString = body.string();
+                if (StringUtils.isNotEmpty(bodyString)) {
+                    return JsonUtils.fromJson(bodyString, AgentInfoResp.class);
+                }
             }
+            return null;
         } catch (Exception e) {
             LOG.warn("fetchLatestAgentInfo error: " + e);
             return null;
@@ -778,25 +767,6 @@ public class BinaryManager {
             return port;
         }
 
-    }
-
-    public int compareAgentVersions(String version1, String version2) {
-        if (version1.equals(version2)) {
-            return 0;
-        }
-        String[] parts1 = version1.split("\\.");
-        String[] parts2 = version2.split("\\.");
-        int length = Math.max(parts1.length, parts2.length);
-        for (int i = 0; i < length; i++) {
-            int part1 = i < parts1.length ? Integer.parseInt(parts1[i]) : 0;
-            int part2 = i < parts2.length ? Integer.parseInt(parts2[i]) : 0;
-            if (part1 < part2) {
-                return -1;
-            } else if (part1 > part2) {
-                return 1;
-            }
-        }
-        return 0;
     }
 
 }

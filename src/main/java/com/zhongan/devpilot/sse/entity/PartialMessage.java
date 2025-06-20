@@ -1,7 +1,9 @@
 package com.zhongan.devpilot.sse.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.zhongan.devpilot.session.model.ChatSession;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PartialMessage {
 
     private String clientId;

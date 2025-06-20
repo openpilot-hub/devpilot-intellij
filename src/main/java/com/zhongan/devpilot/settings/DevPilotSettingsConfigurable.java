@@ -132,7 +132,7 @@ public class DevPilotSettingsConfigurable implements Configurable, Disposable {
                 String oldPath = personalAdvancedSettings.getLocalStorage();
                 personalAdvancedSettings.setLocalStorage(localStoragePath);
                 BinaryManager.INSTANCE.findProcessAndKill(new File(oldPath));
-                AgentsRunner.INSTANCE.run(false);
+                AgentsRunner.INSTANCE.runAsync(Boolean.TRUE);
             }
         } catch (Exception e) {
             LOG.warn("Error occurred while running agents.", e);

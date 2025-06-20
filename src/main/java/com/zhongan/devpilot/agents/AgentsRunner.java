@@ -1,9 +1,7 @@
 package com.zhongan.devpilot.agents;
 
 import com.intellij.execution.configurations.PathEnvironmentVariableUtil;
-import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
-import com.zhongan.devpilot.mcp.McpConfigurationHandler;
 import com.zhongan.devpilot.util.ProcessUtils;
 
 import java.io.BufferedReader;
@@ -15,6 +13,7 @@ import java.net.ServerSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -33,36 +32,58 @@ public class AgentsRunner {
 
     public static volatile AtomicBoolean initialRunning = new AtomicBoolean(false);
 
-    public synchronized boolean run(boolean force) {
+    private final List<AgentRefreshedObserver> refreshObservers = new ArrayList<>();
+
+    public void addRefreshObserver(AgentRefreshedObserver observer) {
+        refreshObservers.add(observer);
+    }
+
+    public void removeRefreshObserver(AgentRefreshedObserver observer) {
+        refreshObservers.remove(observer);
+    }
+
+    public void triggerRefresh() {
+        for (AgentRefreshedObserver observer : refreshObservers) {
+            try {
+                observer.onRefresh();
+            } catch (Exception e) {
+                LOG.error("执行刷新观察者失败", e);
+            }
+        }
+    }
+
+    public synchronized CompletableFuture<Boolean> runAsync(boolean force) {
         initialRunning.set(true);
         try {
-            File homeDir = BinaryManager.INSTANCE.getHomeDir();
-            if (homeDir == null) {
-                LOG.warn("Home dir is null, skip running DevPilot-Agents.");
-                return false;
-            }
-            BinaryManager.AgentCheckResult checkRes = BinaryManager.INSTANCE.checkIfAgentRunning(homeDir);
-            if (!force && checkRes.isRunning()) {
-                LOG.info("Skip running DevPilot-Agents for already running.");
-                return true;
-            }
-            BinaryManager.INSTANCE.findProcessAndKill();
-            boolean processRes = BinaryManager.INSTANCE.postProcessBeforeRunning(homeDir);
-            if (!processRes) {
-                LOG.info("Skip running DevPilot-Agents for failure of init binary.");
-                return false;
-            }
-            return doRun(homeDir);
+            return CompletableFuture.supplyAsync(() -> {
+                File homeDir = BinaryManager.INSTANCE.getHomeDir();
+                if (homeDir == null) {
+                    LOG.warn("Home dir is null, skip running DevPilot-Agents.");
+                    return false;
+                }
+
+                if (!force) {
+                    BinaryManager.AgentCheckResult checkRes = BinaryManager.INSTANCE.checkIfAgentRunning(homeDir);
+                    if (checkRes.isRunning()) {
+                        LOG.info("Skip running DevPilot-Agents for already running.");
+                        return true;
+                    }
+                }
+                BinaryManager.INSTANCE.findProcessAndKill();
+
+                boolean processRes = BinaryManager.INSTANCE.postProcessBeforeRunning(homeDir);
+                if (!processRes) {
+                    LOG.info("Skip running DevPilot-Agents for failure of init binary.");
+                    return false;
+                }
+                boolean status = doRun(homeDir);
+                if (status) {
+                    triggerRefresh();
+                }
+                return status;
+            });
         } finally {
             initialRunning.set(false);
-
-            ApplicationManager.getApplication().executeOnPooledThread(() -> {
-                try {
-                    McpConfigurationHandler.INSTANCE.initialMcpServer();
-                } catch (Exception e) {
-                    LOG.warn("Failed to connect to SSE server in AgentsRunner finally block.", e);
-                }
-            });
         }
     }
 
@@ -139,10 +160,6 @@ public class AgentsRunner {
             LOG.warn("Failed to run DevPilot-Agents.", e);
             return false;
         }
-    }
-
-    public synchronized boolean run() throws Exception {
-        return run(false);
     }
 
     protected int getAvailablePort() {

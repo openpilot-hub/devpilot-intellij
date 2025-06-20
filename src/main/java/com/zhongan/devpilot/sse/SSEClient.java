@@ -5,6 +5,7 @@ import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
+import com.zhongan.devpilot.agents.AgentRefreshedObserver;
 import com.zhongan.devpilot.agents.AgentsRunner;
 import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.mcp.McpConfigurationHandler;
@@ -36,7 +37,7 @@ import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_AGENT_DEFAULT_HO
 import static com.zhongan.devpilot.constant.DefaultConst.SSE_PATH;
 import static com.zhongan.devpilot.util.ProjectUtil.getProjectIdentifier;
 
-public class SSEClient {
+public class SSEClient implements AgentRefreshedObserver {
 
     private static final Logger LOG = Logger.getInstance(SSEClient.class);
 
@@ -92,9 +93,16 @@ public class SSEClient {
         return clientInstances.computeIfAbsent(project, SSEClient::new);
     }
 
+    @Override
+    public void onRefresh() {
+        disconnect();
+        connect();
+    }
+
     public static void removeInstance(Project project) {
         SSEClient client = clientInstances.remove(project);
         if (client != null) {
+            AgentsRunner.INSTANCE.removeRefreshObserver(client);
             client.disconnect();
         }
     }
@@ -176,15 +184,7 @@ public class SSEClient {
         if (portPId == null || portPId.first == null) {
             LOG.info("Agent未运行或端口信息不可用，尝试重新启动Agent");
             try {
-                boolean success = ApplicationManager.getApplication().executeOnPooledThread(() -> {
-                    try {
-                        return AgentsRunner.INSTANCE.run(true);
-                    } catch (Exception e) {
-                        LOG.warn("重启Agent失败", e);
-                        return false;
-                    }
-                }).get(30, TimeUnit.SECONDS);
-
+                boolean success = AgentsRunner.INSTANCE.runAsync(true).get(30, TimeUnit.SECONDS);
                 if (success) {
                     LOG.info("Agent重启成功，重新尝试连接");
                     Thread.sleep(2000);

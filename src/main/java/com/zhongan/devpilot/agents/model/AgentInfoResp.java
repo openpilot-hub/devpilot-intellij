@@ -1,5 +1,11 @@
 package com.zhongan.devpilot.agents.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import java.util.HashMap;
+import java.util.Map;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class AgentInfoResp {
 
     private String url;
@@ -9,6 +15,8 @@ public class AgentInfoResp {
     private String md5;
 
     private boolean autoUpgradeEnabled = true;
+
+    private Map<String, String> archMd5 = new HashMap<>();
 
     public String getUrl() {
         return url;
@@ -42,4 +50,11 @@ public class AgentInfoResp {
         this.autoUpgradeEnabled = autoUpgradeEnabled;
     }
 
+    public Map<String, String> getArchMd5() {
+        return archMd5;
+    }
+
+    public void setArchMd5(Map<String, String> archMd5) {
+        this.archMd5 = archMd5;
+    }
 }

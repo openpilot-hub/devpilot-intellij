@@ -129,7 +129,7 @@ public class ProcessUtils {
             return Collections.emptyList();
         }
         boolean fromSources = ProjectUtil.isSandboxProject();
-        return getPidListFromName(BinaryManager.INSTANCE.getType() + File.separator + (fromSources ? ("sandbox" + File.separator) : StringUtils.EMPTY) + "bin" + File.separator + BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
+        return getPidListFromName(BinaryManager.INSTANCE.getIdeType() + File.separator + (fromSources ? ("sandbox" + File.separator) : StringUtils.EMPTY) + "bin" + File.separator + BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
     }
 
     private static boolean isProcessIdRunning(long pid, String command) {
