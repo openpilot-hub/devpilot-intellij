@@ -40,6 +40,7 @@ public class DevPilotErrorReporter extends ErrorReportSubmitter {
     private boolean shouldHandleError(IdeaLoggingEvent event) {
         boolean isDevpilotDeprecatedUseNotice = false;
         boolean isReadAccessError = false;
+        boolean isActionUpdateThreadError = false;
         Throwable t = event.getThrowable();
         if (t == null) {
             return true;
@@ -53,13 +54,17 @@ public class DevPilotErrorReporter extends ErrorReportSubmitter {
                     if (message.contains(DEPRECATED_USAGE) || (message.contains(DEPRECATED_DEFAULT_PREFIX) && message.contains(DEPRECATED_DEFAULT_SUFFIX))) {
                         isDevpilotDeprecatedUseNotice = true;
                     }
+
+                    if (message.contains("ActionUpdateThread") || message.contains("getActionUpdateThread")) {
+                        isActionUpdateThreadError = true;
+                    }
                 }
             }
             if (t.getMessage() != null && StringUtils.containsIgnoreCase(t.getMessage(), READ_ACCESS_ERROR)) {
                 isReadAccessError = true;
             }
         }
-        return !isDevpilotDeprecatedUseNotice && !isReadAccessError;
+        return !isDevpilotDeprecatedUseNotice && !isReadAccessError && !isActionUpdateThreadError;
     }
 
     @NotNull
