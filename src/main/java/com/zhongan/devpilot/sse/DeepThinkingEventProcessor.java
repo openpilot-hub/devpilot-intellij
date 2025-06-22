@@ -54,7 +54,7 @@ public class DeepThinkingEventProcessor {
             } else {
                 LOG.warn("Unknown DeepThinking event tag:" + tag + ".");
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("Error processing DeepThinking event", e);
             DevPilotNotification.error("处理深度思考事件时发生错误: " + e.getMessage());
         }

@@ -32,6 +32,7 @@ import org.apache.commons.lang3.StringUtils;
 import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_AGENT_DEFAULT_HOST;
 import static com.zhongan.devpilot.constant.DefaultConst.SSE_PATH;
@@ -155,7 +156,7 @@ public class SSEClient implements AgentRefreshedObserver {
                 } catch (IOException e) {
                     LOG.warn("SSE连接IO异常: " + e.getMessage(), e);
                     handleConnectionError(ConnectionErrorType.NETWORK_ERROR);
-                } catch (Exception e) {
+                } catch (Throwable e) {
                     LOG.warn("SSE连接异常: " + e.getMessage(), e);
                     handleConnectionError(ConnectionErrorType.UNKNOWN_ERROR);
                 } finally {
@@ -374,7 +375,7 @@ public class SSEClient implements AgentRefreshedObserver {
                     LOG.debug("收到未知类型事件: " + eventType);
                 }
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.warn("处理SSE事件时发生异常: " + e.getMessage(), e);
         }
     }
@@ -502,17 +503,8 @@ public class SSEClient implements AgentRefreshedObserver {
 
                         if (timeSinceLastMessage > HEARTBEAT_INTERVAL) {
                             if (sendPingMessage()) {
+                                lastMessageTime = System.currentTimeMillis();
                                 LOG.info("项目[" + projectIdentifier + "] 发送ping消息成功...");
-                                Thread.sleep(HEARTBEAT_INTERVAL / 2);
-
-                                timeSinceLastMessage = System.currentTimeMillis() - lastMessageTime;
-                                if (timeSinceLastMessage > HEARTBEAT_INTERVAL * 1.5) {
-                                    LOG.warn("项目[" + projectIdentifier + "] 发送ping后仍无响应(" + timeSinceLastMessage + "ms)，重新连接...");
-                                    disconnect();
-                                    Thread.sleep(1000);
-                                    connect();
-                                    break;
-                                }
                             } else {
                                 LOG.warn("项目[" + projectIdentifier + "] ping消息发送失败，重新连接...");
                                 disconnect();
@@ -553,9 +545,14 @@ public class SSEClient implements AgentRefreshedObserver {
 
             Call call = OkhttpUtils.getClient().newCall(request);
             try (Response response = call.execute()) {
+                ResponseBody responseBody = response.body();
+                if (responseBody != null) {
+                    String responseBodyString = responseBody.string();
+                    LOG.info("Getting ping response: " + responseBodyString + ", request is: " + response.isSuccessful() + ".");
+                }
                 return response.isSuccessful();
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.warn("发送ping消息异常: " + e.getMessage(), e);
             return false;
         }
