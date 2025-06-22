@@ -2,6 +2,7 @@ package com.zhongan.devpilot.session;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.constant.DefaultConst;
@@ -295,17 +296,21 @@ public class ChatSessionManager {
     }
 
     private void publishEvent(String event, Object data) {
-        ApplicationManager.getApplication().invokeAndWait(() -> {
-            log.info("Publish session event.");
-            try {
-                Map<String, Object> body = new HashMap<>();
-                body.put("eventType", event);
-                body.put("data", data);
-                sendEventRequest(body);
-            } catch (Exception e) {
-                log.warn("Exception occurred while handling sending session event.", e);
-            }
-        });
+        try {
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                log.info("Publish session event.");
+                try {
+                    Map<String, Object> body = new HashMap<>();
+                    body.put("eventType", event);
+                    body.put("data", data);
+                    sendEventRequest(body);
+                } catch (Throwable e) {
+                    log.warn("Exception occurred while handling sending session event.", e);
+                }
+            });
+        } catch (ProcessCanceledException e) {
+            log.warn("Process canceled while handling sending session event:" + event + ".", e);
+        }
     }
 
     public String getSessionsDir() {

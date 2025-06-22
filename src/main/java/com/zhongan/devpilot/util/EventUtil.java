@@ -11,6 +11,7 @@ import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 import static com.zhongan.devpilot.constant.DefaultConst.EVENT_BUS_PATH;
 import static com.zhongan.devpilot.constant.DefaultConst.REMOTE_AGENT_DEFAULT_HOST;
@@ -38,7 +39,15 @@ public class EventUtil {
 
                 Call call = OkhttpUtils.getClient().newCall(request);
                 try (Response response = call.execute()) {
-                    LOG.info("Send event." + response);
+                    if (response.isSuccessful()) {
+                        ResponseBody responseBody = response.body();
+                        if (responseBody != null) {
+                            String responseBodyString = responseBody.string();
+                            LOG.info("Send event successful. Response: " + responseBodyString);
+                        }
+                    } else {
+                        LOG.warn("Send event failed. Response code: " + response.code());
+                    }
                     return response.isSuccessful();
                 }
             }

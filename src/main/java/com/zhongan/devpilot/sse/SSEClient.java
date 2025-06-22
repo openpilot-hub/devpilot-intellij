@@ -380,9 +380,8 @@ public class SSEClient implements AgentRefreshedObserver {
     }
 
     private void handlePongEvent() {
-        // 更新最后消息接收时间
         lastMessageTime = System.currentTimeMillis();
-        LOG.debug("收到Pong响应，更新心跳时间戳: " + lastMessageTime);
+        LOG.info("收到Pong响应，更新心跳时间戳: " + lastMessageTime);
     }
 
     private void handleClientConnectedEvent(Map<String, String> eventMap) {
@@ -405,7 +404,7 @@ public class SSEClient implements AgentRefreshedObserver {
                     LOG.warn("SSE连接后初始化MCP服务器失败", e);
                 }
             });
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.warn("处理客户端连接事件时发生异常", e);
         } finally {
             connectionLock.unlock();
