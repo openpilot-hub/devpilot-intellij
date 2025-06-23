@@ -101,13 +101,13 @@ public class BinaryManager {
 
     @Contract(pure = true)
     private BinaryManager() {
-        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(LINUX_PLATFORM), "3bbfcfa38b64fa026126634b97edf2ed");
-        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(LINUX_PLATFORM), "04d43b088cba9cad6aff715b8a7acf79");
-        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(MAC_PLATFORM), "bf317cc9dc301e9b7810afdf6da3e26f");
-        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(MAC_PLATFORM), "cf8b801eeb863ad1bee9c44c11e1391d");
-        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(WINDOWS_PLATFORM), "ec2ad799c89a74a26647c3a8a66348b3");
-        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(WINDOWS_PLATFORM), "71488a1a92c3e0ff64767783c810eccc");
-        bundledMD5Cache.put("zip", "3677c4d39131d813e4d4e067cf317856");
+        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(LINUX_PLATFORM), "12138f762e979a621e3c533894684bde");
+        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(LINUX_PLATFORM), "ba26be3a26ff283bf86595d128100c70");
+        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(MAC_PLATFORM), "d7360a661063a67a25a703198d071f68");
+        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(MAC_PLATFORM), "2a3548ac62be7d0950cfb9a96ad7600f");
+        bundledMD5Cache.put(AARCH64.concat(ARCH_).concat(WINDOWS_PLATFORM), "9d5c13d487475cc090ebf4682522042f");
+        bundledMD5Cache.put(X86_64.concat(ARCH_).concat(WINDOWS_PLATFORM), "2aaac66da4104bc6e3c32e26bd7890ca");
+        bundledMD5Cache.put("zip", "ff43b93a7ba8e993ec6df65db131ab2c");
     }
 
     public boolean shouldStartAgent() {

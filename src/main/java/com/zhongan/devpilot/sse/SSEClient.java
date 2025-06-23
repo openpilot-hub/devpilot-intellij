@@ -52,7 +52,7 @@ public class SSEClient implements AgentRefreshedObserver {
 
     private volatile Integer currentPort = null;
 
-    private static final int MAX_RETRY_COUNT = 3;
+    private static final int MAX_RETRY_COUNT = 5;
 
     private static final long INITIAL_RETRY_INTERVAL = 5000;
 
@@ -69,6 +69,12 @@ public class SSEClient implements AgentRefreshedObserver {
     private volatile Thread connectionThread;
 
     private volatile Thread heartbeatThread;
+
+    private volatile Thread heartbeatMonitorThread;
+
+    private final AtomicBoolean shouldBeActive = new AtomicBoolean(false);
+
+    private static final long HEARTBEAT_MONITOR_INTERVAL = 60000; // 60秒
 
     private volatile long lastMessageTime = System.currentTimeMillis();
 
@@ -96,8 +102,10 @@ public class SSEClient implements AgentRefreshedObserver {
 
     @Override
     public void onRefresh() {
-        disconnect();
-        connect();
+        if (!sendPingMessage()) {
+            disconnect();
+            connect();
+        }
     }
 
     public static void removeInstance(Project project) {
@@ -113,6 +121,9 @@ public class SSEClient implements AgentRefreshedObserver {
             LOG.warn("无法连接：项目为空或已销毁");
             return;
         }
+
+        shouldBeActive.set(true);
+        startHeartbeatMonitor();
 
         if (connectionThread != null && connectionThread.isAlive()) {
             LOG.info("连接线程已存在，跳过本次连接请求");
@@ -413,6 +424,9 @@ public class SSEClient implements AgentRefreshedObserver {
     }
 
     public void disconnect() {
+        shouldBeActive.set(false);
+        stopHeartbeatMonitor();
+
         stopHeartbeat();
 
         if (connectionThread != null && connectionThread.isAlive()) {
@@ -435,6 +449,64 @@ public class SSEClient implements AgentRefreshedObserver {
             retryCount.set(0);
         } finally {
             connectionLock.unlock();
+        }
+    }
+
+    private void startHeartbeatMonitor() {
+        try {
+            heartbeatLock.lock();
+            if (heartbeatMonitorThread != null && heartbeatMonitorThread.isAlive()) {
+                LOG.info("心跳监控线程已存在，无需重新启动");
+                return;
+            }
+
+            heartbeatMonitorThread = new Thread(() -> {
+                LOG.info("心跳监控线程已启动");
+                while (!Thread.currentThread().isInterrupted()) {
+                    try {
+                        Thread.sleep(HEARTBEAT_MONITOR_INTERVAL);
+
+                        // 只有当客户端应该保持活跃且已连接时才检查心跳线程
+                        if (shouldBeActive.get() && connected.get()) {
+                            // 检查心跳线程是否存在且活跃
+                            if (heartbeatThread == null || !heartbeatThread.isAlive()) {
+                                LOG.warn("检测到心跳线程已终止，正在重新启动...");
+                                startHeartbeat();
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        LOG.warn("心跳监控线程被中断");
+                        Thread.currentThread().interrupt();
+                        break;
+                    } catch (Exception e) {
+                        LOG.warn("心跳监控线程发生异常: " + e.getMessage(), e);
+                    }
+                }
+                LOG.info("心跳监控线程已终止");
+            });
+
+            heartbeatMonitorThread.setName("SSE-Heartbeat-Monitor-Thread-" + System.currentTimeMillis());
+            heartbeatMonitorThread.setDaemon(true); // 设为守护线程，不阻止JVM退出
+            heartbeatMonitorThread.start();
+        } finally {
+            heartbeatLock.unlock();
+        }
+    }
+
+    // 添加停止心跳监控线程的方法
+    private void stopHeartbeatMonitor() {
+        try {
+            heartbeatLock.lock();
+            if (heartbeatMonitorThread != null && heartbeatMonitorThread.isAlive()) {
+                heartbeatMonitorThread.interrupt();
+                try {
+                    heartbeatMonitorThread.join(1000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            }
+        } finally {
+            heartbeatLock.unlock();
         }
     }
 
@@ -494,7 +566,8 @@ public class SSEClient implements AgentRefreshedObserver {
             }
 
             heartbeatThread = new Thread(() -> {
-                while (!Thread.currentThread().isInterrupted()) {
+                LOG.info("心跳线程已启动");
+                while (!Thread.currentThread().isInterrupted() && shouldBeActive.get() && connected.get()) {
                     try {
                         Thread.sleep(HEARTBEAT_INTERVAL);
                         String projectIdentifier = getProjectIdentifier(project);
@@ -507,9 +580,15 @@ public class SSEClient implements AgentRefreshedObserver {
                                 LOG.info("项目[" + projectIdentifier + "] 发送ping消息成功...");
                             } else {
                                 LOG.warn("项目[" + projectIdentifier + "] ping消息发送失败，重新连接...");
-                                disconnect();
-                                Thread.sleep(1000);
-                                connect();
+                                ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                                    disconnect();
+                                    try {
+                                        Thread.sleep(1000);
+                                    } catch (InterruptedException ex) {
+                                        Thread.currentThread().interrupt();
+                                    }
+                                    connect();
+                                });
                                 break;
                             }
                         }
@@ -517,8 +596,17 @@ public class SSEClient implements AgentRefreshedObserver {
                         LOG.warn("Heartbeat thread interrupted...");
                         Thread.currentThread().interrupt();
                         break;
+                    } catch (Throwable e) {
+                        LOG.warn("心跳线程发生异常: " + e.getMessage(), e);
+                        // 异常恢复：如果不是中断异常，尝试继续运行
+                        if (!Thread.currentThread().isInterrupted()) {
+                            LOG.info("心跳线程尝试从异常中恢复...");
+                            continue;
+                        }
+                        break;
                     }
                 }
+                LOG.info("心跳线程已终止");
             });
             heartbeatThread.setName("SSE-Heartbeat-Thread-" + System.currentTimeMillis());
             heartbeatThread.start();

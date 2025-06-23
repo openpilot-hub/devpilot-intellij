@@ -10,6 +10,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class AgentsRunner {
         for (AgentRefreshedObserver observer : refreshObservers) {
             try {
                 observer.onRefresh();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 LOG.error("执行刷新观察者失败", e);
             }
         }
@@ -115,10 +116,14 @@ public class AgentsRunner {
             Process process = builder.start();
 
             new Thread(() -> {
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
                     String line;
                     while ((line = reader.readLine()) != null) {
                         LOG.info("Agent输出: " + line);
+                        if (StringUtils.contains(line, "Server is listening on port")) {
+                            LOG.warn("监听到Agent启动成功, 将触发刷新操作...");
+                            triggerRefresh();
+                        }
                     }
                 } catch (IOException e) {
                     LOG.warn("读取进程输出异常", e);
