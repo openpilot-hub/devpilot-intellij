@@ -71,6 +71,7 @@ public class DeepThinkingEventProcessor {
                         .filter(decision -> StringUtils.equalsIgnoreCase(decision.getResponseId(), partialMessage.getResponseId()))
                         .findFirst()
                         .ifPresent(matchedDecision -> {
+                            lastMessage.setId(partialMessage.getResponseId());
                             matchedDecision.setResult(partialMessage.getResult());
                             matchedDecision.setName(partialMessage.getServerName());
                             matchedDecision.setComponentName(partialMessage.getComponentName());
@@ -265,6 +266,7 @@ public class DeepThinkingEventProcessor {
         } else {
             lastDecision.setThought(partialMessage.getThought());
         }
+        assistantMessage.setId(partialMessage.getResponseId());
 
         refreshUI(project, assistantMessage, existAssistantFlag);
     }
@@ -289,6 +291,7 @@ public class DeepThinkingEventProcessor {
         } else {
             lastDecision.setActionContent(getPartialMessageAction(partialMessage.getAction()));
         }
+        assistantMessage.setId(partialMessage.getResponseId());
 
         refreshUI(project, assistantMessage, existAssistantFlag);
 
