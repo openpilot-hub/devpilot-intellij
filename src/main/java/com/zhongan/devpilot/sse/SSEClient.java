@@ -1,9 +1,11 @@
 package com.zhongan.devpilot.sse;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.util.Pair;
+import com.intellij.util.concurrency.AppExecutorUtil;
 import com.zhongan.devpilot.actions.notifications.DevPilotNotification;
 import com.zhongan.devpilot.agents.AgentRefreshedObserver;
 import com.zhongan.devpilot.agents.AgentsRunner;
@@ -17,17 +19,31 @@ import com.zhongan.devpilot.util.UserAgentUtils;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.WeakHashMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import okhttp3.Call;
 import okhttp3.Request;
@@ -42,77 +58,201 @@ public class SSEClient implements AgentRefreshedObserver {
 
     private static final Logger LOG = Logger.getInstance(SSEClient.class);
 
-    private volatile String clientId = StringUtils.EMPTY;
 
-    private final Project project;
+    // 连接状态枚举
+    private enum ConnectionState {
+        DISCONNECTED,
+        CONNECTING,
+        CONNECTED,
+        RECONNECTING,
+        FAILED
+    }
 
-    private final AtomicBoolean connected = new AtomicBoolean(false);
-
-    private final AtomicBoolean connecting = new AtomicBoolean(false);
-
-    private volatile Integer currentPort = null;
-
-    private static final int MAX_RETRY_COUNT = 5;
-
-    private static final long INITIAL_RETRY_INTERVAL = 5000;
-
-    private static final long MAX_RETRY_INTERVAL = 60000;
-
-    private static final long HEARTBEAT_INTERVAL = 30000;
-
-    private static final int CONNECTION_TIMEOUT = 5000;
-
-    private final AtomicInteger retryCount = new AtomicInteger(0);
-
-    private volatile long currentRetryInterval = INITIAL_RETRY_INTERVAL;
-
-    private volatile Thread connectionThread;
-
-    private volatile Thread heartbeatThread;
-
-    private volatile Thread heartbeatMonitorThread;
-
-    private final AtomicBoolean shouldBeActive = new AtomicBoolean(false);
-
-    private static final long HEARTBEAT_MONITOR_INTERVAL = 60000; // 60秒
-
-    private volatile long lastMessageTime = System.currentTimeMillis();
-
-    private static final Map<Project, SSEClient> clientInstances = new ConcurrentHashMap<>();
-
-    private final ReentrantLock connectionLock = new ReentrantLock();
-
-    private final ReentrantLock heartbeatLock = new ReentrantLock();
-
+    // 连接错误类型枚举
     private enum ConnectionErrorType {
         NETWORK_ERROR,
         AGENT_NOT_RUNNING,
         INVALID_PORT,
-        AUTHENTICATION_ERROR,
         UNKNOWN_ERROR
     }
 
-    private SSEClient(Project project) {
-        this.project = project;
+    // 事件处理器接口
+    private interface EventProcessor {
+        void process(Project project, Map<String, String> eventData);
     }
 
-    public static SSEClient getInstance(Project project) {
-        return clientInstances.computeIfAbsent(project, SSEClient::new);
+    private volatile String clientId = StringUtils.EMPTY;
+    private final Project project;
+    private final AtomicReference<ConnectionState> state = new AtomicReference<>(ConnectionState.DISCONNECTED);
+    private volatile Integer currentPort = null;
+    private final AtomicInteger retryCount = new AtomicInteger(0);
+    private volatile long currentRetryInterval;
+    private final AtomicBoolean shouldBeActive = new AtomicBoolean(false);
+    private volatile long lastMessageTime = System.currentTimeMillis();
+
+    // 线程和执行器
+    private final ExecutorService threadPool;
+    private final ScheduledExecutorService heartbeatScheduler;
+    private final CopyOnWriteArrayList<Future<?>> connectionFutures = new CopyOnWriteArrayList<>();
+
+    // 锁
+    private final ReentrantLock connectionLock = new ReentrantLock();
+    private final ReentrantLock heartbeatLock = new ReentrantLock();
+
+    // 配置
+    private Config config;
+
+    // 事件处理器映射
+    private final Map<String, EventProcessor> eventProcessors = new HashMap<>();
+
+    // 客户端实例管理
+    private static final Map<Project, SSEClient> clientInstances = Collections.synchronizedMap(new WeakHashMap<>());
+
+
+    // 配置类
+    public static class Config {
+        // 默认值
+        private static final int DEFAULT_MAX_RETRY_COUNT = 5;
+        private static final long DEFAULT_INITIAL_RETRY_INTERVAL = 5000;
+        private static final long DEFAULT_MAX_RETRY_INTERVAL = 60000;
+        private static final long DEFAULT_HEARTBEAT_INTERVAL = 30000;
+        private static final int DEFAULT_CONNECTION_TIMEOUT = 5000;
+        private static final long DEFAULT_HEARTBEAT_MONITOR_INTERVAL = 60000;
+
+        // 可配置参数
+        private int maxRetryCount = DEFAULT_MAX_RETRY_COUNT;
+        private long initialRetryInterval = DEFAULT_INITIAL_RETRY_INTERVAL;
+        private long maxRetryInterval = DEFAULT_MAX_RETRY_INTERVAL;
+        private long heartbeatInterval = DEFAULT_HEARTBEAT_INTERVAL;
+        private int connectionTimeout = DEFAULT_CONNECTION_TIMEOUT;
+        private long heartbeatMonitorInterval = DEFAULT_HEARTBEAT_MONITOR_INTERVAL;
+
+        public Config() {
+        }
+
+        public Config(int maxRetryCount, long initialRetryInterval, long maxRetryInterval,
+                      long heartbeatInterval, int connectionTimeout) {
+            this.maxRetryCount = maxRetryCount;
+            this.initialRetryInterval = initialRetryInterval;
+            this.maxRetryInterval = maxRetryInterval;
+            this.heartbeatInterval = heartbeatInterval;
+            this.connectionTimeout = connectionTimeout;
+        }
+
+        // Getters and setters
+        public int getMaxRetryCount() {
+            return maxRetryCount;
+        }
+
+        public void setMaxRetryCount(int maxRetryCount) {
+            this.maxRetryCount = maxRetryCount;
+        }
+
+        public long getInitialRetryInterval() {
+            return initialRetryInterval;
+        }
+
+        public void setInitialRetryInterval(long initialRetryInterval) {
+            this.initialRetryInterval = initialRetryInterval;
+        }
+
+        public long getMaxRetryInterval() {
+            return maxRetryInterval;
+        }
+
+        public void setMaxRetryInterval(long maxRetryInterval) {
+            this.maxRetryInterval = maxRetryInterval;
+        }
+
+        public long getHeartbeatInterval() {
+            return heartbeatInterval;
+        }
+
+        public void setHeartbeatInterval(long heartbeatInterval) {
+            this.heartbeatInterval = heartbeatInterval;
+        }
+
+        public int getConnectionTimeout() {
+            return connectionTimeout;
+        }
+
+        public void setConnectionTimeout(int connectionTimeout) {
+            this.connectionTimeout = connectionTimeout;
+        }
+
+        public long getHeartbeatMonitorInterval() {
+            return heartbeatMonitorInterval;
+        }
+
+        public void setHeartbeatMonitorInterval(long heartbeatMonitorInterval) {
+            this.heartbeatMonitorInterval = heartbeatMonitorInterval;
+        }
+    }
+
+    private SSEClient(@NotNull Project project, @Nullable Config config) {
+        this.project = project;
+        this.config = config != null ? config : new Config();
+        this.currentRetryInterval = this.config.initialRetryInterval;
+
+        // 创建线程池
+        this.threadPool = AppExecutorUtil.createBoundedApplicationPoolExecutor(
+                "SSE-Thread-Pool", 5
+        );
+
+        this.heartbeatScheduler = Executors.newSingleThreadScheduledExecutor(
+                new ThreadFactoryBuilder().setNameFormat("SSE-Heartbeat-%d").setDaemon(true).build()
+        );
+
+        // 注册事件处理器
+        registerEventProcessors();
+    }
+
+    private void registerEventProcessors() {
+        eventProcessors.put("ClientConnected", this::handleClientConnectedEvent);
+        eventProcessors.put("DeepThinking", (p, data) -> DeepThinkingEventProcessor.INSTANCE.processDeepThinkingEvent(p, data));
+        eventProcessors.put("Session", (p, data) -> SessionEventProcessor.INSTANCE.processSessionEvent(p, data));
+        eventProcessors.put("McpServers", (p, data) -> McpServerEventProcessor.INSTANCE.processMcpServerEvent(p, data));
+        eventProcessors.put("Pong", (p, data) -> handlePongEvent());
+    }
+
+    public static SSEClient getInstance(@NotNull Project project) {
+        return clientInstances.computeIfAbsent(project, p -> new SSEClient(p, new Config()));
+    }
+
+    public static SSEClient getInstance(@NotNull Project project, @Nullable Config config) {
+        return clientInstances.computeIfAbsent(project, p -> new SSEClient(p, config));
+    }
+
+    public static void removeInstance(@NotNull Project project) {
+        SSEClient client = clientInstances.remove(project);
+        if (client != null) {
+            AgentsRunner.INSTANCE.removeRefreshObserver(client);
+            client.disconnect();
+        }
+        cleanupInstances();
+    }
+
+    public static void cleanupInstances() {
+        synchronized (clientInstances) {
+            Iterator<Map.Entry<Project, SSEClient>> iterator = clientInstances.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Project, SSEClient> entry = iterator.next();
+                Project project = entry.getKey();
+                if (project == null || project.isDisposed()) {
+                    SSEClient client = entry.getValue();
+                    if (client != null) {
+                        client.disconnect();
+                    }
+                    iterator.remove();
+                }
+            }
+        }
     }
 
     @Override
     public void onRefresh() {
         if (!sendPingMessage()) {
-            disconnect();
-            connect();
-        }
-    }
-
-    public static void removeInstance(Project project) {
-        SSEClient client = clientInstances.remove(project);
-        if (client != null) {
-            AgentsRunner.INSTANCE.removeRefreshObserver(client);
-            client.disconnect();
+            reconnect();
         }
     }
 
@@ -122,72 +262,74 @@ public class SSEClient implements AgentRefreshedObserver {
             return;
         }
 
-        shouldBeActive.set(true);
-        startHeartbeatMonitor();
-
-        if (connectionThread != null && connectionThread.isAlive()) {
-            LOG.info("连接线程已存在，跳过本次连接请求");
+        if (!transitionState(ConnectionState.DISCONNECTED, ConnectionState.CONNECTING)) {
+            LOG.info("连接已在进行中或已连接，跳过本次连接请求");
             return;
         }
 
-        // 重置重试计数和间隔
+        shouldBeActive.set(true);
         retryCount.set(0);
-        currentRetryInterval = INITIAL_RETRY_INTERVAL;
+        currentRetryInterval = config.initialRetryInterval;
 
-        connectionThread = new Thread(() -> {
-            while (retryCount.get() < MAX_RETRY_COUNT && !Thread.currentThread().isInterrupted()) {
-                HttpURLConnection connection = null;
-                try {
-                    Pair<Integer, Long> portPId = getAgentPort();
-                    if (portPId == null) {
-                        handleConnectionError(ConnectionErrorType.AGENT_NOT_RUNNING);
-                        continue;
-                    }
+        Future<?> future = threadPool.submit(this::connectionTask);
+        connectionFutures.add(future);
+    }
 
-                    if (!validateAndUpdatePort(portPId)) {
-                        continue;
-                    }
+    private void connectionTask() {
+        String projectIdentifier = getProjectIdentifier(project);
+        LOG.info("开始为项目[" + projectIdentifier + "]建立SSE连接");
 
-                    if (!trySetConnecting()) {
-                        return;
-                    }
+        while (retryCount.get() < config.maxRetryCount && !Thread.currentThread().isInterrupted() && shouldBeActive.get()) {
+            HttpURLConnection connection = null;
+            try {
+                logConnectionAttempt();
 
-                    connection = establishConnection();
-                    if (connection == null) {
-                        handleConnectionError(ConnectionErrorType.NETWORK_ERROR);
-                        continue;
-                    }
-
-                    connected.set(true);
-                    retryCount.set(0);
-
-                    startHeartbeat();
-                    processEventStream(connection);
-
-                } catch (IOException e) {
-                    LOG.warn("SSE连接IO异常: " + e.getMessage(), e);
-                    handleConnectionError(ConnectionErrorType.NETWORK_ERROR);
-                } catch (Throwable e) {
-                    LOG.warn("SSE连接异常: " + e.getMessage(), e);
-                    handleConnectionError(ConnectionErrorType.UNKNOWN_ERROR);
-                } finally {
-                    resetConnectionState();
-                    if (connection != null) {
-                        connection.disconnect();
-                    }
+                Pair<Integer, Long> portPId = getAgentPort();
+                if (portPId == null) {
+                    handleConnectionError(ConnectionErrorType.AGENT_NOT_RUNNING);
+                    continue;
                 }
-            }
 
-            if (retryCount.get() >= MAX_RETRY_COUNT) {
-                LOG.error("连接SSE服务器失败：已达到最大重试次数(" + MAX_RETRY_COUNT + ")，最后使用的端口: " + currentPort);
-                ApplicationManager.getApplication().invokeLater(() -> {
-                    DevPilotNotification.warn("连接SSE服务器失败，请检查网络或重启IDE");
-                });
-            }
-        });
+                if (!validateAndUpdatePort(portPId)) {
+                    continue;
+                }
 
-        connectionThread.setName("SSE-Connection-Thread-" + System.currentTimeMillis());
-        connectionThread.start();
+                connection = establishConnection();
+                if (connection == null) {
+                    handleConnectionError(ConnectionErrorType.NETWORK_ERROR);
+                    continue;
+                }
+
+                transitionState(ConnectionState.CONNECTING, ConnectionState.CONNECTED);
+                retryCount.set(0);
+                lastMessageTime = System.currentTimeMillis();
+
+                processEventStream(connection);
+
+            } catch (IOException e) {
+                LOG.warn("SSE连接IO异常: " + e.getMessage(), e);
+                handleConnectionError(ConnectionErrorType.NETWORK_ERROR);
+            } catch (Throwable e) {
+                LOG.warn("SSE连接异常: " + e.getMessage(), e);
+                handleConnectionError(ConnectionErrorType.UNKNOWN_ERROR);
+            } finally {
+                resetConnectionState();
+                closeQuietly(connection);
+            }
+        }
+
+        if (retryCount.get() >= config.maxRetryCount && shouldBeActive.get()) {
+            LOG.error("连接SSE服务器失败：已达到最大重试次数(" + config.maxRetryCount + ")，最后使用的端口: " + currentPort);
+            ApplicationManager.getApplication().invokeLater(() -> {
+                DevPilotNotification.warn("连接SSE服务器失败，请检查网络或重启IDE");
+            });
+        }
+    }
+
+    private void logConnectionAttempt() {
+        String projectIdentifier = getProjectIdentifier(project);
+        LOG.info("尝试为项目[" + projectIdentifier + "]建立SSE连接，端口: " + currentPort +
+                ", 重试次数: " + retryCount.get() + "/" + config.maxRetryCount);
     }
 
     private Pair<Integer, Long> getAgentPort() {
@@ -196,17 +338,11 @@ public class SSEClient implements AgentRefreshedObserver {
         if (portPId == null || portPId.first == null) {
             LOG.info("Agent未运行或端口信息不可用，尝试重新启动Agent");
             try {
-                boolean success = AgentsRunner.INSTANCE.runAsync(true).get(30, TimeUnit.SECONDS);
-                if (success) {
-                    LOG.info("Agent重启成功，重新尝试连接");
-                    Thread.sleep(2000);
-                    return BinaryManager.INSTANCE.retrieveAlivePort();
-                } else {
-                    LOG.warn("Agent重启失败，将在下次重试时再次尝试");
-                    return null;
-                }
-            } catch (Exception e) {
-                LOG.warn("尝试重启Agent过程中发生异常", e);
+                // 等待一段时间后再次尝试获取端口
+                Thread.sleep(3000);
+                return BinaryManager.INSTANCE.retrieveAlivePort();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
                 return null;
             }
         }
@@ -226,7 +362,7 @@ public class SSEClient implements AgentRefreshedObserver {
 
             if (currentPort != null && !currentPort.equals(portPId.first)) {
                 LOG.info("端口变更: " + currentPort + " -> " + portPId.first + "，断开旧连接");
-                boolean needDisconnect = connected.get() || connecting.get();
+                boolean needDisconnect = isConnected() || isConnecting();
                 if (needDisconnect) {
                     disconnect();
                 } else {
@@ -246,51 +382,55 @@ public class SSEClient implements AgentRefreshedObserver {
         }
     }
 
-    private boolean trySetConnecting() {
-        try {
-            connectionLock.lock();
-            if (connecting.get()) {
-                LOG.info("连接正在建立中，跳过本次连接请求,端口是：" + currentPort + ".");
-                return false;
-            }
-            connecting.set(true);
-            return true;
-        } finally {
-            connectionLock.unlock();
-        }
-    }
-
     private HttpURLConnection establishConnection() {
+        HttpURLConnection connection = null;
         try {
             String sseUrl = REMOTE_AGENT_DEFAULT_HOST + currentPort + SSE_PATH;
-            LOG.warn("尝试连接SSE服务: " + sseUrl);
+            LOG.info("尝试连接SSE服务: " + sseUrl);
 
             URL url = new URL(sseUrl);
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Accept", "text/event-stream");
+            connection.setRequestProperty("User-Agent", UserAgentUtils.buildUserAgent());
+            connection.setRequestProperty("Auth-Type", LoginUtils.getLoginType());
             connection.setDoInput(true);
-            connection.setConnectTimeout(CONNECTION_TIMEOUT);
+            connection.setConnectTimeout(config.connectionTimeout);
+            connection.setReadTimeout(0); // 无限读取超时
             connection.connect();
 
             int responseCode = connection.getResponseCode();
             if (responseCode != 200) {
                 LOG.warn("SSE连接失败，响应码: " + responseCode);
-                connection.disconnect();
+                closeQuietly(connection);
                 return null;
             }
 
             return connection;
         } catch (IOException e) {
             LOG.warn("建立SSE连接失败: " + e.getMessage(), e);
+            closeQuietly(connection);
             return null;
         }
     }
 
+    private void closeQuietly(HttpURLConnection connection) {
+        if (connection != null) {
+            try {
+                connection.disconnect();
+            } catch (Exception e) {
+                LOG.debug("关闭连接时发生异常", e);
+            }
+        }
+    }
+
     private void processEventStream(HttpURLConnection connection) throws IOException {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+        try (InputStream inputStream = connection.getInputStream();
+             InputStreamReader inputReader = new InputStreamReader(inputStream, StandardCharsets.UTF_8);
+             BufferedReader reader = new BufferedReader(inputReader)) {
+
             String line;
-            while ((line = reader.readLine()) != null && !Thread.currentThread().isInterrupted()) {
+            while ((line = reader.readLine()) != null && !Thread.currentThread().isInterrupted() && shouldBeActive.get()) {
                 if (line.isEmpty()) {
                     continue;
                 }
@@ -309,57 +449,7 @@ public class SSEClient implements AgentRefreshedObserver {
                     }
                 }
             }
-        } catch (IOException e) {
-            LOG.warn("SSE事件流处理中断: " + e.getMessage(), e);
-            throw e;
         }
-    }
-
-    private void handleConnectionError(ConnectionErrorType errorType) {
-        int count = retryCount.incrementAndGet();
-        connecting.set(false);
-
-        String errorMessage;
-        switch (errorType) {
-            case NETWORK_ERROR:
-                errorMessage = "网络连接错误";
-                break;
-            case AGENT_NOT_RUNNING:
-                errorMessage = "Agent未运行";
-                break;
-            case INVALID_PORT:
-                errorMessage = "无效端口";
-                break;
-            case AUTHENTICATION_ERROR:
-                errorMessage = "认证失败";
-                break;
-            default:
-                errorMessage = "未知错误";
-        }
-
-        LOG.warn("SSE连接失败(" + errorMessage + ")，重试次数: " + count + ", 当前端口: " + currentPort);
-
-        try {
-            Thread.sleep(currentRetryInterval);
-            currentRetryInterval = Math.min(currentRetryInterval * 2, MAX_RETRY_INTERVAL);
-        } catch (InterruptedException ie) {
-            Thread.currentThread().interrupt();
-        }
-    }
-
-    private void resetConnectionState() {
-        try {
-            connectionLock.lock();
-            connected.set(false);
-            connecting.set(false);
-            clientId = StringUtils.EMPTY;
-        } finally {
-            connectionLock.unlock();
-        }
-    }
-
-    public void shutdown() {
-        disconnect();
     }
 
     private void processEvent(String message) {
@@ -369,19 +459,12 @@ public class SSEClient implements AgentRefreshedObserver {
 
         try {
             Map<String, String> eventMap = JsonUtils.fromJson(message, Map.class);
-            if (null != eventMap) {
-                var eventType = eventMap.get("event");
-                if (StringUtils.equalsIgnoreCase("ClientConnected", String.valueOf(eventType))) {
-                    handleClientConnectedEvent(eventMap);
-                } else if (StringUtils.equalsIgnoreCase("DeepThinking", String.valueOf(eventType))) {
-                    DeepThinkingEventProcessor.INSTANCE.processDeepThinkingEvent(project, eventMap);
-                } else if (StringUtils.equalsIgnoreCase("Session", String.valueOf(eventType))) {
-                    SessionEventProcessor.INSTANCE.processSessionEvent(project, eventMap);
-                } else if (StringUtils.equalsIgnoreCase("McpServers", String.valueOf(eventType))) {
-                    McpServerEventProcessor.INSTANCE.processMcpServerEvent(project, eventMap);
-                } else if (StringUtils.equalsIgnoreCase("Pong", String.valueOf(eventType))) {
-                    // 处理pong响应
-                    handlePongEvent();
+            if (eventMap != null) {
+                String eventType = eventMap.get("event");
+                EventProcessor processor = eventProcessors.get(eventType);
+
+                if (processor != null) {
+                    processor.process(project, eventMap);
                 } else {
                     LOG.debug("收到未知类型事件: " + eventType);
                 }
@@ -393,14 +476,17 @@ public class SSEClient implements AgentRefreshedObserver {
 
     private void handlePongEvent() {
         lastMessageTime = System.currentTimeMillis();
-        LOG.info("收到Pong响应，更新心跳时间戳: " + lastMessageTime);
+        LOG.debug("收到Pong响应，更新心跳时间戳: " + lastMessageTime);
     }
 
-    private void handleClientConnectedEvent(Map<String, String> eventMap) {
+    private void handleClientConnectedEvent(Project project, Map<String, String> eventMap) {
         try {
             connectionLock.lock();
             clientId = String.valueOf(eventMap.get("clientId"));
             LOG.info("添加SSE客户端: " + clientId + " 项目路径: " + project.getBasePath());
+
+            startHeartbeat();
+            startHeartbeatMonitor();
 
             if (project.isDisposed()) {
                 LOG.warn("项目已销毁，跳过会话加载");
@@ -423,28 +509,80 @@ public class SSEClient implements AgentRefreshedObserver {
         }
     }
 
+    private void handleConnectionError(ConnectionErrorType errorType) {
+        int count = retryCount.incrementAndGet();
+        transitionState(ConnectionState.CONNECTING, ConnectionState.FAILED);
+
+        String errorMessage = getErrorMessage(errorType);
+        LOG.warn("SSE连接失败(" + errorMessage + ")，重试次数: " + count + ", 当前端口: " + currentPort);
+
+        // 根据错误类型采取不同策略
+        switch (errorType) {
+            case NETWORK_ERROR:
+                exponentialBackoffRetry();
+                break;
+            case AGENT_NOT_RUNNING:
+            default:
+                // 默认重试策略
+                simpleRetry();
+        }
+    }
+
+    private String getErrorMessage(ConnectionErrorType errorType) {
+        switch (errorType) {
+            case NETWORK_ERROR:
+                return "网络连接错误";
+            case AGENT_NOT_RUNNING:
+                return "Agent未运行";
+            case INVALID_PORT:
+                return "无效端口";
+            default:
+                return "未知错误";
+        }
+    }
+
+    private void exponentialBackoffRetry() {
+        try {
+            Thread.sleep(currentRetryInterval);
+            currentRetryInterval = Math.min(currentRetryInterval * 2, config.maxRetryInterval);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void simpleRetry() {
+        try {
+            Thread.sleep(config.initialRetryInterval);
+        } catch (InterruptedException ie) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void resetConnectionState() {
+        try {
+            connectionLock.lock();
+            transitionState(state.get(), ConnectionState.DISCONNECTED);
+            clientId = StringUtils.EMPTY;
+        } finally {
+            connectionLock.unlock();
+        }
+    }
+
     public void disconnect() {
         shouldBeActive.set(false);
-        stopHeartbeatMonitor();
 
-        stopHeartbeat();
-
-        if (connectionThread != null && connectionThread.isAlive()) {
-            connectionThread.interrupt();
-            try {
-                connectionThread.join(2000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        // 取消所有连接任务
+        for (Future<?> future : connectionFutures) {
+            future.cancel(true);
         }
+        connectionFutures.clear();
 
         removeClientFromServer();
 
         try {
             connectionLock.lock();
             LOG.info("断开SSE连接: " + clientId + " 项目路径: " + (project != null ? project.getBasePath() : "未知"));
-            connecting.set(false);
-            connected.set(false);
+            transitionState(state.get(), ConnectionState.DISCONNECTED);
             clientId = StringUtils.EMPTY;
             retryCount.set(0);
         } finally {
@@ -452,61 +590,60 @@ public class SSEClient implements AgentRefreshedObserver {
         }
     }
 
+    public void shutdown() {
+        disconnect();
+
+        heartbeatScheduler.shutdownNow();
+    }
+
+    private void reconnect() {
+        CompletableFuture.runAsync(() -> {
+            LOG.info("正在重新连接SSE服务...");
+            disconnect();
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException ex) {
+                Thread.currentThread().interrupt();
+            }
+            connect();
+        }, threadPool);
+    }
+
     private void startHeartbeatMonitor() {
         try {
             heartbeatLock.lock();
-            if (heartbeatMonitorThread != null && heartbeatMonitorThread.isAlive()) {
-                LOG.info("心跳监控线程已存在，无需重新启动");
-                return;
+            if (!heartbeatScheduler.isShutdown()) {
+                heartbeatScheduler.scheduleAtFixedRate(
+                        this::monitorHeartbeat,
+                        config.heartbeatMonitorInterval,
+                        config.heartbeatMonitorInterval,
+                        TimeUnit.MILLISECONDS
+                );
+                LOG.info("心跳监控已启动");
             }
-
-            heartbeatMonitorThread = new Thread(() -> {
-                LOG.info("心跳监控线程已启动");
-                while (!Thread.currentThread().isInterrupted()) {
-                    try {
-                        Thread.sleep(HEARTBEAT_MONITOR_INTERVAL);
-
-                        // 只有当客户端应该保持活跃且已连接时才检查心跳线程
-                        if (shouldBeActive.get() && connected.get()) {
-                            // 检查心跳线程是否存在且活跃
-                            if (heartbeatThread == null || !heartbeatThread.isAlive()) {
-                                LOG.warn("检测到心跳线程已终止，正在重新启动...");
-                                startHeartbeat();
-                            }
-                        }
-                    } catch (InterruptedException e) {
-                        LOG.warn("心跳监控线程被中断");
-                        Thread.currentThread().interrupt();
-                        break;
-                    } catch (Exception e) {
-                        LOG.warn("心跳监控线程发生异常: " + e.getMessage(), e);
-                    }
-                }
-                LOG.info("心跳监控线程已终止");
-            });
-
-            heartbeatMonitorThread.setName("SSE-Heartbeat-Monitor-Thread-" + System.currentTimeMillis());
-            heartbeatMonitorThread.setDaemon(true); // 设为守护线程，不阻止JVM退出
-            heartbeatMonitorThread.start();
         } finally {
             heartbeatLock.unlock();
         }
     }
 
-    // 添加停止心跳监控线程的方法
-    private void stopHeartbeatMonitor() {
-        try {
-            heartbeatLock.lock();
-            if (heartbeatMonitorThread != null && heartbeatMonitorThread.isAlive()) {
-                heartbeatMonitorThread.interrupt();
-                try {
-                    heartbeatMonitorThread.join(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
+    private void monitorHeartbeat() {
+        if (!isConnected() || !shouldBeActive.get()) {
+            return;
+        }
+
+        long timeSinceLastMessage = System.currentTimeMillis() - lastMessageTime;
+        if (timeSinceLastMessage > config.heartbeatInterval * 2) {
+            LOG.warn("检测到心跳超时，最后消息时间: " + lastMessageTime +
+                    ", 当前时间: " + System.currentTimeMillis() +
+                    ", 差值: " + timeSinceLastMessage + "ms");
+
+            if (sendPingMessage()) {
+                lastMessageTime = System.currentTimeMillis();
+                LOG.info("心跳恢复成功");
+            } else {
+                LOG.warn("心跳恢复失败，尝试重新连接");
+                reconnect();
             }
-        } finally {
-            heartbeatLock.unlock();
         }
     }
 
@@ -554,64 +691,40 @@ public class SSEClient implements AgentRefreshedObserver {
     }
 
     public String getClientId() {
-        return connected.get() ? clientId : StringUtils.EMPTY;
+        return isConnected() ? clientId : StringUtils.EMPTY;
     }
 
     private void startHeartbeat() {
         try {
             heartbeatLock.lock();
-            if (heartbeatThread != null && heartbeatThread.isAlive()) {
-                LOG.warn("Heartbeat thread is alive...");
-                return;
+            if (!heartbeatScheduler.isShutdown()) {
+                heartbeatScheduler.scheduleAtFixedRate(
+                        this::sendHeartbeat,
+                        config.heartbeatInterval,
+                        config.heartbeatInterval,
+                        TimeUnit.MILLISECONDS
+                );
+                LOG.info("心跳发送器已启动");
             }
-
-            heartbeatThread = new Thread(() -> {
-                LOG.info("心跳线程已启动");
-                while (!Thread.currentThread().isInterrupted() && shouldBeActive.get() && connected.get()) {
-                    try {
-                        Thread.sleep(HEARTBEAT_INTERVAL);
-                        String projectIdentifier = getProjectIdentifier(project);
-                        LOG.info("项目[" + projectIdentifier + "] 判断是否需要发送ping消息...");
-                        long timeSinceLastMessage = System.currentTimeMillis() - lastMessageTime;
-
-                        if (timeSinceLastMessage > HEARTBEAT_INTERVAL) {
-                            if (sendPingMessage()) {
-                                lastMessageTime = System.currentTimeMillis();
-                                LOG.info("项目[" + projectIdentifier + "] 发送ping消息成功...");
-                            } else {
-                                LOG.warn("项目[" + projectIdentifier + "] ping消息发送失败，重新连接...");
-                                ApplicationManager.getApplication().executeOnPooledThread(() -> {
-                                    disconnect();
-                                    try {
-                                        Thread.sleep(1000);
-                                    } catch (InterruptedException ex) {
-                                        Thread.currentThread().interrupt();
-                                    }
-                                    connect();
-                                });
-                                break;
-                            }
-                        }
-                    } catch (InterruptedException e) {
-                        LOG.warn("Heartbeat thread interrupted...");
-                        Thread.currentThread().interrupt();
-                        break;
-                    } catch (Throwable e) {
-                        LOG.warn("心跳线程发生异常: " + e.getMessage(), e);
-                        // 异常恢复：如果不是中断异常，尝试继续运行
-                        if (!Thread.currentThread().isInterrupted()) {
-                            LOG.info("心跳线程尝试从异常中恢复...");
-                            continue;
-                        }
-                        break;
-                    }
-                }
-                LOG.info("心跳线程已终止");
-            });
-            heartbeatThread.setName("SSE-Heartbeat-Thread-" + System.currentTimeMillis());
-            heartbeatThread.start();
         } finally {
             heartbeatLock.unlock();
+        }
+    }
+
+    private void sendHeartbeat() {
+        if (!isConnected() || !shouldBeActive.get()) {
+            return;
+        }
+
+        String projectIdentifier = getProjectIdentifier(project);
+        LOG.debug("项目[" + projectIdentifier + "] 发送ping消息...");
+
+        if (sendPingMessage()) {
+            lastMessageTime = System.currentTimeMillis();
+            LOG.debug("项目[" + projectIdentifier + "] ping消息发送成功");
+        } else {
+            LOG.warn("项目[" + projectIdentifier + "] ping消息发送失败，重新连接...");
+            reconnect();
         }
     }
 
@@ -636,7 +749,7 @@ public class SSEClient implements AgentRefreshedObserver {
                 ResponseBody responseBody = response.body();
                 if (responseBody != null) {
                     String responseBodyString = responseBody.string();
-                    LOG.info("Getting ping response: " + responseBodyString + ", request is: " + response.isSuccessful() + ".");
+                    LOG.info("收到ping响应: " + responseBodyString + ", 请求成功: " + response.isSuccessful());
                 }
                 return response.isSuccessful();
             }
@@ -646,19 +759,22 @@ public class SSEClient implements AgentRefreshedObserver {
         }
     }
 
-    private void stopHeartbeat() {
-        try {
-            heartbeatLock.lock();
-            if (heartbeatThread != null && heartbeatThread.isAlive()) {
-                heartbeatThread.interrupt();
-                try {
-                    heartbeatThread.join(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-            }
-        } finally {
-            heartbeatLock.unlock();
-        }
+    private boolean isConnected() {
+        return state.get() == ConnectionState.CONNECTED;
     }
+
+    private boolean isConnecting() {
+        return state.get() == ConnectionState.CONNECTING || state.get() == ConnectionState.RECONNECTING;
+    }
+
+    private boolean transitionState(ConnectionState from, ConnectionState to) {
+        boolean success = state.compareAndSet(from, to);
+        if (success) {
+            LOG.info("SSE连接状态变更: " + from + " -> " + to +
+                    ", 项目: " + getProjectIdentifier(project) +
+                    ", 端口: " + currentPort);
+        }
+        return success;
+    }
+
 }

@@ -602,9 +602,15 @@ public final class DevPilotChatToolWindowService {
         ChatSession chatSession = sessionManager.getCurrentSession();
         LOG.info("Interrupt event received for chat: " + chatSession.getId() + " with chatMode:" + chatSession.getChatMode() + ".");
         if (AGENT_CHAT_TYPE == chatSession.getChatMode()) {
-            // 发请求推送通知Node去处理Cancel事件
-            this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
-            this.llmProvider.cancel(project, sessionManager.getSessionsDir(), sessionManager.getCurrentSession());
+            List<MessageModel> historyMessageList = sessionManager.getCurrentSession().getHistoryMessageList();
+            if (!historyMessageList.isEmpty()) {
+                MessageModel lastMessage = historyMessageList.get(historyMessageList.size() - 1);
+                lastMessage.setStreaming(false);
+                callWebView(Boolean.FALSE);
+                // 发请求推送通知Node去处理Cancel事件
+                this.llmProvider = LlmProviderFactory.INSTANCE.getLlmProvider(project);
+                this.llmProvider.cancel(project, sessionManager.getSessionsDir(), sessionManager.getCurrentSession());
+            }
         } else {
             this.cancel.set(true);
             if (this.lastMessage.getRecall() == null || this.nowStep.get() >= 3) {
