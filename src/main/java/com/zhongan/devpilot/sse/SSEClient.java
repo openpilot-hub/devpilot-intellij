@@ -281,6 +281,7 @@ public class SSEClient implements AgentRefreshedObserver {
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
             connection.setRequestProperty("Accept", "text/event-stream");
+            connection.setRequestProperty("Accept-Charset", "UTF-8");
             connection.setDoInput(true);
             connection.setConnectTimeout(CONNECTION_TIMEOUT);
             connection.connect();
@@ -316,7 +317,6 @@ public class SSEClient implements AgentRefreshedObserver {
                 if (line.isEmpty()) {
                     continue;
                 }
-                LOG.info("----Line: [" + line + "]----");
 
                 if (line.startsWith("event:")) {
                     lastMessageTime = System.currentTimeMillis();
