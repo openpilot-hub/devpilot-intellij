@@ -67,6 +67,7 @@ public class AgentsRunner {
                     BinaryManager.AgentCheckResult checkRes = BinaryManager.INSTANCE.checkIfAgentRunning(homeDir);
                     if (checkRes.isRunning()) {
                         LOG.info("Skip running DevPilot-Agents for already running.");
+                        triggerRefresh();
                         return true;
                     }
                 }
