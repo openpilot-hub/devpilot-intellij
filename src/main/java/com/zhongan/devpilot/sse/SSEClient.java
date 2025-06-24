@@ -198,7 +198,7 @@ public class SSEClient implements AgentRefreshedObserver {
         Pair<Integer, Long> portPId = BinaryManager.INSTANCE.retrieveAlivePort();
 
         if (portPId == null || portPId.first == null) {
-            LOG.info("Agent未运行或端口信息不可用，尝试重新启动Agent");
+            LOG.info("Agent未运行或端口信息不可用，等待下次重试");
             return null;
         }
 
