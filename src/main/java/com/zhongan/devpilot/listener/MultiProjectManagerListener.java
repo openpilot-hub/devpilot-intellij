@@ -87,9 +87,9 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
             if (openProjects.length == 1) {
                 BinaryManager.INSTANCE.findProcessAndKill();
             }
+            project.getService(ChatSessionManagerService.class);
             AgentsRunner.INSTANCE.addRefreshObserver(SSEClient.getInstance(project));
             AgentsRunner.INSTANCE.runAsync(Boolean.FALSE);
-            project.getService(ChatSessionManagerService.class);
         } catch (Exception e) {
             LOG.warn("Error occurred while running agents.", e);
         }

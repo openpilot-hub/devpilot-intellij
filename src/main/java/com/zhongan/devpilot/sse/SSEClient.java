@@ -108,6 +108,8 @@ public class SSEClient implements AgentRefreshedObserver {
         if (!sendPingMessage()) {
             disconnect();
             connect();
+        } else {
+            project.getService(ChatSessionManagerService.class).getSessionManager().setClientId(clientId);
         }
     }
 
@@ -314,6 +316,7 @@ public class SSEClient implements AgentRefreshedObserver {
                 if (line.isEmpty()) {
                     continue;
                 }
+                LOG.info("----Line: [" + line + "]----");
 
                 if (line.startsWith("event:")) {
                     lastMessageTime = System.currentTimeMillis();
