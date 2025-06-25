@@ -41,7 +41,7 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
                         }
 
                         try {
-                            boolean success = AgentsRunner.INSTANCE.run();
+                            boolean success = AgentsRunner.INSTANCE.runAsync(Boolean.FALSE).get(30, TimeUnit.SECONDS);
                             if (success) {
                                 restartFailCount.set(0);
                             } else {
@@ -71,7 +71,7 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
                             return;
                         }
                         try {
-                            BinaryManager.INSTANCE.upgradeAgent();
+                            AgentsRunner.INSTANCE.runAsync(true);
                         } catch (Exception e) {
                             LOG.error("Upgrade agent failed.", e);
                         } finally {
@@ -87,10 +87,9 @@ public class MultiProjectManagerListener implements ProjectManagerListener {
             if (openProjects.length == 1) {
                 BinaryManager.INSTANCE.findProcessAndKill();
             }
-            AgentsRunner.INSTANCE.run();
-            LOG.info("Try to connect agent.");
-            SSEClient.getInstance(project).connect();
             project.getService(ChatSessionManagerService.class);
+            AgentsRunner.INSTANCE.addRefreshObserver(SSEClient.getInstance(project));
+            AgentsRunner.INSTANCE.runAsync(Boolean.FALSE);
         } catch (Exception e) {
             LOG.warn("Error occurred while running agents.", e);
         }

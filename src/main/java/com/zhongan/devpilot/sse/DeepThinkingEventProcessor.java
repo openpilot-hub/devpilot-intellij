@@ -54,7 +54,7 @@ public class DeepThinkingEventProcessor {
             } else {
                 LOG.warn("Unknown DeepThinking event tag:" + tag + ".");
             }
-        } catch (Exception e) {
+        } catch (Throwable e) {
             LOG.error("Error processing DeepThinking event", e);
             DevPilotNotification.error("处理深度思考事件时发生错误: " + e.getMessage());
         }
@@ -71,6 +71,7 @@ public class DeepThinkingEventProcessor {
                         .filter(decision -> StringUtils.equalsIgnoreCase(decision.getResponseId(), partialMessage.getResponseId()))
                         .findFirst()
                         .ifPresent(matchedDecision -> {
+                            lastMessage.setId(partialMessage.getResponseId());
                             matchedDecision.setResult(partialMessage.getResult());
                             matchedDecision.setName(partialMessage.getServerName());
                             matchedDecision.setComponentName(partialMessage.getComponentName());
@@ -265,6 +266,7 @@ public class DeepThinkingEventProcessor {
         } else {
             lastDecision.setThought(partialMessage.getThought());
         }
+        assistantMessage.setId(partialMessage.getResponseId());
 
         refreshUI(project, assistantMessage, existAssistantFlag);
     }
@@ -289,6 +291,7 @@ public class DeepThinkingEventProcessor {
         } else {
             lastDecision.setActionContent(getPartialMessageAction(partialMessage.getAction()));
         }
+        assistantMessage.setId(partialMessage.getResponseId());
 
         refreshUI(project, assistantMessage, existAssistantFlag);
 

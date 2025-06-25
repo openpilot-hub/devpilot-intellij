@@ -31,10 +31,10 @@ public class ProcessUtils {
 
     public static String getWindowsCmdCommand() {
         String cmdPath = "cmd.exe"; // 默认值
-        File cmdFile = new File(System.getenv("WINDIR") + "\\system32\\cmd.exe");
+        File cmdFile = new File(System.getenv("WINDIR") + "\\System32\\cmd.exe");
         if (!cmdFile.exists()) {
             // 尝试另一个常见位置
-            cmdFile = new File("c:\\Windows\\system32\\cmd.exe");
+            cmdFile = new File("c:\\Windows\\System32\\cmd.exe");
         }
 
         if (cmdFile.exists()) {
@@ -129,7 +129,7 @@ public class ProcessUtils {
             return Collections.emptyList();
         }
         boolean fromSources = ProjectUtil.isSandboxProject();
-        return getPidListFromName(BinaryManager.INSTANCE.getType() + File.separator + (fromSources ? ("sandbox" + File.separator) : StringUtils.EMPTY) + "bin" + File.separator + BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
+        return getPidListFromName(BinaryManager.INSTANCE.getIdeType() + File.separator + (fromSources ? ("sandbox" + File.separator) : StringUtils.EMPTY) + "bin" + File.separator + BinaryManager.INSTANCE.getVersion() + File.separator + BinaryManager.INSTANCE.getCompatibleArch() + File.separator + EXECUTABLE_NAME);
     }
 
     private static boolean isProcessIdRunning(long pid, String command) {
@@ -165,7 +165,7 @@ public class ProcessUtils {
             command = new String[]{cmdCommandPath, "/c", "tasklist /FI \"IMAGENAME eq " + name + ".exe\""};
             pids = getPidListWindows(command);
             if (pids == null || pids.isEmpty()) {
-                command = new String[]{cmdCommandPath, "/c", "c:\\windows\\system32\\tasklist.exe /FI \"IMAGENAME eq " + name + ".exe\""};
+                command = new String[]{cmdCommandPath, "/c", "c:\\windows\\System32\\tasklist.exe /FI \"IMAGENAME eq " + name + ".exe\""};
                 pids = getPidListWindows(command);
                 if (pids == null || pids.isEmpty()) {
                     command = new String[]{cmdCommandPath, "/c", "wmic process where \"name='" + name + "'\" get processid"};

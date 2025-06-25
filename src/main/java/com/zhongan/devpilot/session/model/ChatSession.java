@@ -1,11 +1,13 @@
 package com.zhongan.devpilot.session.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.zhongan.devpilot.integrations.llms.entity.DevPilotMessage;
 import com.zhongan.devpilot.webview.model.MessageModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ChatSession {
     private String id;
 

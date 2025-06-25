@@ -2,12 +2,15 @@ package com.zhongan.devpilot.session;
 
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.diagnostic.Logger;
+import com.intellij.openapi.progress.ProcessCanceledException;
 import com.intellij.openapi.project.Project;
 import com.zhongan.devpilot.agents.BinaryManager;
 import com.zhongan.devpilot.constant.DefaultConst;
 import com.zhongan.devpilot.integrations.llms.LlmProviderFactory;
 import com.zhongan.devpilot.session.model.ChatSession;
+import com.zhongan.devpilot.sse.SSEClient;
 import com.zhongan.devpilot.util.JsonUtils;
+import com.zhongan.devpilot.util.ProjectUtil;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +66,7 @@ public class ChatSessionManager {
             currentSession = sessions.get(0);
             log.warn("Initial current session by construction. Current session id:" + currentSession.getId() + ".");
         }
-        switchSession(currentSession.getId());
+//        switchSession(currentSession.getId());
     }
 
     private void initializeSessionsDirectory() {
@@ -145,7 +148,7 @@ public class ChatSessionManager {
         }
         session.setUpdateTime(System.currentTimeMillis());
         Map<String, Object> map = new HashMap<>();
-        map.put("clientId", clientId);
+        map.put("clientId", getClientId());
         map.put("session", session);
         map.put("sessionDir", basePath);
         publishEvent("Session-Saved", map);
@@ -177,15 +180,22 @@ public class ChatSessionManager {
         Map<String, Object> map = buildClientSessionMap();
         map.put("currentVersion", System.currentTimeMillis());
         publishEvent("Session-Switched", map);
-        log.info("Publish Session-Switched event for session:" + currentSession.getId() + " by client:" + clientId + ".");
+        log.info("Publish Session-Switched event for session:" + currentSession.getId() + " by client:" + clientId + " for project:" + ProjectUtil.getProjectIdentifier(project) + ".");
     }
 
     private Map<String, Object> buildClientSessionMap() {
         Map<String, Object> map = new HashMap<>();
-        map.put("clientId", clientId);
+        map.put("clientId", getClientId());
         map.put("sessionId", currentSession.getId());
         map.put("sessionDir", basePath);
         return map;
+    }
+
+    private String getClientId() {
+        if (StringUtils.isEmpty(clientId)) {
+            clientId = SSEClient.getInstance(project).getClientId();
+        }
+        return clientId;
     }
 
     public ChatSession getCurrentSession() {
@@ -222,7 +232,7 @@ public class ChatSessionManager {
     public void deleteMessage(String id) {
         currentSession.setUpdateTime(System.currentTimeMillis());
         Map<String, Object> map = new HashMap<>();
-        map.put("clientId", clientId);
+        map.put("clientId", getClientId());
         map.put("session", currentSession);
         map.put("sessionDir", basePath);
         map.put("deletedId", id);
@@ -232,7 +242,7 @@ public class ChatSessionManager {
     public void sessionUIRefreshed() {
         if (CollectionUtils.isNotEmpty(currentSession.getHistoryMessageList())) {
             Map<String, Object> map = new HashMap<>();
-            map.put("clientId", clientId);
+            map.put("clientId", getClientId());
             map.put("session", currentSession);
             map.put("sessionDir", basePath);
             publishEvent("Session-UI-Refreshed", map);
@@ -260,12 +270,18 @@ public class ChatSessionManager {
         currentSession.setContainsRequirePromptsPrompts(Boolean.FALSE);
         currentSession.setUpdateTime(System.currentTimeMillis());
         Map<String, Object> map = new HashMap<>();
-        map.put("clientId", clientId);
+        map.put("clientId", getClientId());
         map.put("session", currentSession);
         map.put("sessionDir", basePath);
         publishEvent("Session-Cleared", map);
         log.info("Cleared Session-Cleared event for session:" + currentSession.getId() + " by client:" + clientId + ".");
 
+    }
+
+    public void setClientId(String clientId) {
+        synchronized (syncLock) {
+            this.clientId = clientId;
+        }
     }
 
     /**
@@ -295,17 +311,27 @@ public class ChatSessionManager {
     }
 
     private void publishEvent(String event, Object data) {
-        ApplicationManager.getApplication().invokeAndWait(() -> {
-            log.info("Publish session event.");
-            try {
-                Map<String, Object> body = new HashMap<>();
-                body.put("eventType", event);
-                body.put("data", data);
-                sendEventRequest(body);
-            } catch (Exception e) {
-                log.warn("Exception occurred while handling sending session event.", e);
-            }
-        });
+        try {
+            ApplicationManager.getApplication().invokeAndWait(() -> {
+                log.info("Publish session event.");
+
+                if (StringUtils.isEmpty(clientId)) {
+                    log.warn("Empty clientId in project:" + ProjectUtil.getProjectIdentifier(project) + ", skip event:" + event + ".");
+                    return;
+                }
+
+                try {
+                    Map<String, Object> body = new HashMap<>();
+                    body.put("eventType", event);
+                    body.put("data", data);
+                    sendEventRequest(body);
+                } catch (Throwable e) {
+                    log.warn("Exception occurred while handling sending session event.", e);
+                }
+            });
+        } catch (ProcessCanceledException e) {
+            log.warn("Process canceled while handling sending session event:" + event + ".", e);
+        }
     }
 
     public String getSessionsDir() {
