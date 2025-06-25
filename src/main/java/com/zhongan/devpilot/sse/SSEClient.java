@@ -136,7 +136,6 @@ public class SSEClient implements AgentRefreshedObserver {
         retryCount.set(0);
         currentRetryInterval.set(INITIAL_RETRY_INTERVAL);
 
-
         connectionThread = new Thread(() -> {
             while (retryCount.get() < MAX_RETRY_COUNT && !Thread.currentThread().isInterrupted()) {
                 HttpURLConnection connection = null;
@@ -367,8 +366,6 @@ public class SSEClient implements AgentRefreshedObserver {
         }
     }
 
-
-
     public void shutdown() {
         disconnect();
     }
@@ -398,7 +395,6 @@ public class SSEClient implements AgentRefreshedObserver {
             LOG.warn("处理SSE事件时发生异常: " + e.getMessage(), e);
         }
     }
-
 
     private void handleClientConnectedEvent(Map<String, String> eventMap) {
         boolean lockAcquired = false;
